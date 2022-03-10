@@ -7,13 +7,13 @@ alias ltr="ls -ltr"
 alias dnfi='sudo dnf install'
 alias dnfs='sudo dnf search'
 
-# jupyter notebook tunel for COSMA
-alias jtunnel='ssh -N -L localhost:8444:localhost:8444 dc-barr3@cosma7c'
-
 export VISUAL=vim
 export EDITOR="$VISUAL"
 export PATH=$PATH:/usr/lib64/openmpi/bin
 #stty -ixon
+
+# Use neovim for vim if present.
+[ -x "$(command -v nvim)" ] && alias vim="nvim" vimdiff="nvim -d"
 
 # Set case-Insensitive completion
 #bind 'set completion-ignore-case on'
@@ -30,19 +30,37 @@ export PYTHONPATH=/usr/lib64/python3.10/site-packages:$PYTHONPATH           # Ji
 export JUPYTER_PATH=$HOME/Codes/Peano/python
 
 # Define Aliases
+# Verbosity and settings that you pretty much just always are going to want.
+alias \
+	cp="cp -iv" \
+	mv="mv -iv" \
+	rm="rm -vI" \
+	bc="bc -ql" \
+	mkd="mkdir -pv" \
+	yt="youtube-dl --add-metadata -i" \
+	yta="yt -x -f bestaudio/best" \
+	ffmpeg="ffmpeg -hide_banner"
 
-alias ls="ls --color -hF"
-alias sl='ls'
-alias ltr="ls -ltr" 
+# Colorize commands when possible.
+alias \
+	ls="ls -hN --color=auto --group-directories-first" \
+	ltr="ls -ltr -hN --color=auto --group-directories-first" \
+    sl="ls" \
+	grep="grep --color=auto" \
+	diff="diff --color=auto" \
+	ccat="highlight --out-format=ansi"
+
 alias dnfget='sudo dnf install'
 alias dush='du -shc --apparent-size'
 alias jn='jupyter-notebook'
+
+
 alias renderpeanogrid='pvpython ~/Codes/Peano/python/peano4/visualisation/render.py grid.peano-patch-file'
 
-
+# dotfiles git repo
 alias dotfiles="/usr/bin/git --git-dir=$HOME/.dotfiles/.git --work-tree=$HOME"
 
-# Cosma-related
+# Remote jupyter notebooks
 alias jtunnel='ssh -N -L localhost:8444:localhost:8444 dc-barr3@cosma7c'
 alias jtunnelh='ssh -N -L localhost:8443:localhost:8443 hgcq36@hamilton'
 
