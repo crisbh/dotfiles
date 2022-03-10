@@ -1,11 +1,3 @@
-# Define Aliases
-alias weather='curl wttr.in'
-
-alias ls="ls --color -hF"
-alias sl='ls'
-alias ltr="ls -ltr" 
-alias dnfi='sudo dnf install'
-alias dnfs='sudo dnf search'
 
 export VISUAL=vim
 export EDITOR="$VISUAL"
@@ -21,7 +13,6 @@ export PATH=$PATH:/usr/lib64/openmpi/bin
 
 # PIP suggestion
 PATH=$PATH:$HOME/.local/bin
-
 
 # Peano/Exahype Python path
 export PYTHONPATH=$HOME/Codes/Peano/python/
@@ -49,27 +40,21 @@ alias \
 	grep="grep --color=auto" \
 	diff="diff --color=auto" \
 	ccat="highlight --out-format=ansi"
-
-alias dnfget='sudo dnf install'
+    
+# Weather in terminal
+alias weather='curl wttr.in'
 alias dush='du -shc --apparent-size'
-alias jn='jupyter-notebook'
 
-
+# Visualise peano grid
 alias renderpeanogrid='pvpython ~/Codes/Peano/python/peano4/visualisation/render.py grid.peano-patch-file'
 
 # dotfiles git repo
 alias dotfiles="/usr/bin/git --git-dir=$HOME/.dotfiles/.git --work-tree=$HOME"
 
-# Remote jupyter notebooks
+# jupyter notebooks
+alias jn='jupyter-notebook'
+# Remote connection to jupyter
 alias jtunnel='ssh -N -L localhost:8444:localhost:8444 dc-barr3@cosma7c'
-alias jtunnelh='ssh -N -L localhost:8443:localhost:8443 hgcq36@hamilton'
-
-export VISUAL=vim
-export EDITOR="$VISUAL"
-
-# Auto ls after cd
-#function cd() {
-
 
 ###############################################
 
@@ -158,8 +143,7 @@ source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 # Fix history
 setopt nosharehistory
 
-# Git integration
-
+# Prompt Git integration
 autoload -Uz vcs_info
 precmd_vcs_info() { vcs_info }
 precmd_functions+=( precmd_vcs_info )
