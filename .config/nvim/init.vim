@@ -8,15 +8,21 @@ if ! filereadable(system('echo -n "${XDG_CONFIG_HOME:-$HOME/.config}/nvim/autolo
 endif
 
 call plug#begin(system('echo -n "${XDG_CONFIG_HOME:-$HOME/.config}/nvim/plugged"'))
+Plug 'crusoexia/vim-monokai'
 Plug 'tpope/vim-surround'
+Plug 'tpope/vim-commentary'
 Plug 'preservim/nerdtree'
 Plug 'junegunn/goyo.vim'
 Plug 'jreybert/vimagit'
 Plug 'lukesmithxyz/vimling'
 Plug 'vimwiki/vimwiki'
 Plug 'vim-airline/vim-airline'
-Plug 'tpope/vim-commentary'
+Plug 'edkolev/tmuxline.vim'
+Plug 'christoomey/vim-tmux-navigator'
 Plug 'ap/vim-css-color'
+Plug 'lervag/vimtex'
+Plug 'pietropate/vim-tex-conceal'
+Plug 'SirVer/ultisnips'
 call plug#end()
 
 set title
@@ -29,6 +35,8 @@ set noshowmode
 set noruler
 set laststatus=0
 set noshowcmd
+
+colorscheme monokai
 
 " Some basics:
 	nnoremap c "_c
@@ -149,4 +157,3 @@ function! ToggleHiddenAll()
     endif
 endfunction
 nnoremap <leader>h :call ToggleHiddenAll()<CR>
-
