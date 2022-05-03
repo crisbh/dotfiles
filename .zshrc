@@ -55,6 +55,7 @@ alias dotfiles="/usr/bin/git --git-dir=$HOME/.dotfiles/.git --work-tree=$HOME"
 alias jn='jupyter-notebook'
 # Remote connection to jupyter
 alias jtunnel='ssh -N -L localhost:8444:localhost:8444 dc-barr3@cosma7c'
+alias jnham8='ssh -N -L localhost:8555:localhost:8555 hgcq36@ham8'
 
 ###############################################
 
