@@ -22,8 +22,12 @@ Plug 'christoomey/vim-tmux-navigator'
 Plug 'ap/vim-css-color'
 Plug 'lervag/vimtex'
 Plug 'pietropate/vim-tex-conceal'
+Plug 'godlygeek/tabular'
+Plug 'preservim/vim-markdown'
 Plug 'SirVer/ultisnips'
 call plug#end()
+
+colorscheme monokai
 
 set title
 set bg=light
@@ -35,16 +39,21 @@ set noshowmode
 set noruler
 set laststatus=0
 set noshowcmd
-
-colorscheme monokai
+set cursorline
+hi CursorLine term=bold cterm=bold
 
 " Some basics:
 	nnoremap c "_c
+	nnoremap <leader>l :set cursorcolumn!<CR>
 	set nocompatible
 	filetype plugin on
 	syntax on
 	set encoding=utf-8
 	set number relativenumber
+	" Use sane regex's when searching
+	nnoremap / /\v
+	vnoremap / /\v
+
 " Enable autocompletion:
 	set wildmode=longest,list,full
 " Disables automatic commenting on newline:
@@ -99,13 +108,28 @@ colorscheme monokai
 " Open corresponding .pdf/.html or preview
 	map <leader>p :!opout <c-r>%<CR><CR>
 
+" create new vsplit, and switch to it.
+	noremap <leader>v <C-w>v
+
+" Quickly open projects note file
+"nmap <script>n<CR> <SID>:tabe tmp/notes.md<CR>
+"nmap <script>n<CR> <SID>:tab drop tmp/notes.md<CR>
+
+" Vimtex
+	let g:vimtex_fold_enabled = 1
+	let g:tex_flavor='latex'
+	let g:vimtex_view_method='zathura'
+	let g:vimtex_quickfix_mode=0
+	set conceallevel=2
+	let g:tex_conceal='abdgms'
+
 " Runs a script that cleans out tex build files whenever I close out of a .tex file.
 	autocmd VimLeave *.tex !texclear %
 
 " Ensure files are read as what I want:
+	let g:vimwiki_list = [{'path': '~/Dropbox/vimwiki', 'syntax': 'markdown', 'ext': '.md'}]
 	let g:vimwiki_ext2syntax = {'.Rmd': 'markdown', '.rmd': 'markdown','.md': 'markdown', '.markdown': 'markdown', '.mdown': 'markdown'}
-	map <leader>v :VimwikiIndex<CR>
-	let g:vimwiki_list = [{'path': '~/.local/share/nvim/vimwiki', 'syntax': 'markdown', 'ext': '.md'}]
+"	map <leader>v :VimwikiIndex<CR>
 	autocmd BufRead,BufNewFile /tmp/calcurse*,~/.calcurse/notes/* set filetype=markdown
 	autocmd BufRead,BufNewFile *.ms,*.me,*.mom,*.man set filetype=groff
 	autocmd BufRead,BufNewFile *.tex set filetype=tex
@@ -157,3 +181,32 @@ function! ToggleHiddenAll()
     endif
 endfunction
 nnoremap <leader>h :call ToggleHiddenAll()<CR>
+
+" Text-editing mode (wrapping lines correctly, etc)
+let s:wrapenabled = 0
+function! ToggleWrap()
+  set wrap nolist
+  if s:wrapenabled
+    set nolinebreak
+    unmap j
+    unmap k
+    unmap 0
+    unmap ^
+    unmap $
+    let s:wrapenabled = 0
+  else
+    set linebreak
+    nnoremap j gj
+    nnoremap k gk
+    nnoremap 0 g0
+    nnoremap ^ g^
+    nnoremap $ g$
+    vnoremap j gj
+    vnoremap k gk
+    vnoremap 0 g0
+    vnoremap ^ g^
+    vnoremap $ g$
+    let s:wrapenabled = 1
+  endif
+endfunction
+map <leader>w :call ToggleWrap()<CR> " use: , w

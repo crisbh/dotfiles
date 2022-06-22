@@ -1,4 +1,6 @@
+colorscheme monokai
 set nocompatible
+set number relativenumber
 set number ruler laststatus=2 title hlsearch wildmenu
 "set term=tmux-256color
 set term=screen-256color
@@ -33,6 +35,12 @@ Plug 'christoomey/vim-tmux-navigator'
 Plug 'crusoexia/vim-monokai'
 Plug 'valloric/youcompleteme'
 
+Plug 'vimwiki/vimwiki'
+"
+" Ensure files are read as what I want:
+	let g:vimwiki_list = [{'path': '~/Dropbox/vimwiki', 'syntax': 'markdown', 'ext': '.md'}]
+	let g:vimwiki_ext2syntax = {'.Rmd': 'markdown', '.rmd': 'markdown','.md': 'markdown', '.markdown': 'markdown', '.mdown': 'markdown'}
+
 " Vimtex
 Plug 'lervag/vimtex'
 let g:vimtex_fold_enabled = 1
@@ -57,18 +65,17 @@ let g:SuperTabDefaultCompletionType = '<C-n>'
 let g:UltiSnipsExpandTrigger = '<tab>'
 let g:UltiSnipsJumpForwardTrigger = '<tab>'
 let g:UltiSnipsJumpBackwardTrigger = '<s-tab>'
-let g:UltiSnipsSnippetDirectories=["UltiSnips", "my_snippets"] 
+let g:UltiSnipsSnippetDirectories=["UltiSnips", "my_snippets"]
 "Plug 'vim-latex/vim-latex'
 "Plug 'nathanaelkane/vim-indent-guides'
 call plug#end()
 
 " Proper indentation of new lines
 filetype indent plugin on
-syntax on " Syntax highlighting
-colorscheme monokai
+syntax on                           " Syntax highlighting
 
 " Show white spaces everywhere
-"set listchars=eol:¬,tab:>·,trail:~,extends:>,precedes:<,space:· 
+"set listchars=eol:¬,tab:>·,trail:~,extends:>,precedes:<,space:·
 "set list
 
 set expandtab
@@ -99,7 +106,7 @@ nnoremap ; :
 vnoremap ; :
 
 " create new vsplit, and switch to it.
-noremap <leader>v <C-w>v 
+noremap <leader>v <C-w>v
 
 " Use sane regex's when searching
 nnoremap / /\v
@@ -118,10 +125,8 @@ nnoremap <leader><leader> <c-^>
 " Improve multiple buffers navigation
 let g:airline#extensions#tabline#enabled = 1
 
-nnoremap <buffer> <F5> :!python3.7 %<cr>   " Run python script 
-
-
-
+nnoremap <buffer> <F5> :!python3.7 %<cr>   " Run python script
+"
 " Quickly open projects note file
 "nmap <script>n<CR> <SID>:tabe tmp/notes.md<CR>
 nmap <script>n<CR> <SID>:tab drop tmp/notes.md<CR>
