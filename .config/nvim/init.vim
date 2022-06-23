@@ -11,6 +11,7 @@ call plug#begin(system('echo -n "${XDG_CONFIG_HOME:-$HOME/.config}/nvim/plugged"
 Plug 'crusoexia/vim-monokai'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-commentary'
+Plug 'tpope/vim-fugitive'
 Plug 'preservim/nerdtree'
 Plug 'junegunn/goyo.vim'
 Plug 'jreybert/vimagit'
@@ -23,7 +24,8 @@ Plug 'ap/vim-css-color'
 Plug 'lervag/vimtex'
 Plug 'pietropate/vim-tex-conceal'
 Plug 'godlygeek/tabular'
-Plug 'preservim/vim-markdown'
+"Plug 'preservim/vim-markdown'
+Plug 'vim-pandoc/vim-pandoc-syntax'
 Plug 'SirVer/ultisnips'
 call plug#end()
 
@@ -33,14 +35,14 @@ set title
 set bg=light
 set go=a
 set mouse=a
-set nohlsearch
+"set nohlsearch
 set clipboard+=unnamedplus
 set noshowmode
 set noruler
 set laststatus=0
 set noshowcmd
 set cursorline
-hi CursorLine term=bold cterm=bold
+"hi CursorLine term=bold cterm=bold
 
 " Some basics:
 	nnoremap c "_c
@@ -53,6 +55,20 @@ hi CursorLine term=bold cterm=bold
 	" Use sane regex's when searching
 	nnoremap / /\v
 	vnoremap / /\v
+	" When a file has changed on disk, just load it. Don't ask.
+	set autoread
+
+" Format text
+	set textwidth=80
+	set wrapmargin=2
+
+" Make search more sane
+	set ignorecase " case insensitive search
+	set smartcase " If there are uppercase letters, become case-sensitive.
+	set incsearch " live incremental searching
+	set showmatch " live match highlighting
+	set hlsearch " highlight matches
+	set gdefault " use the `g` flag by default.
 
 " Enable autocompletion:
 	set wildmode=longest,list,full
@@ -103,7 +119,8 @@ hi CursorLine term=bold cterm=bold
 	nnoremap S :%s//g<Left><Left>
 
 " Compile document, be it groff/LaTeX/markdown/etc.
-	map <leader>c :w! \| !compiler "<c-r>%"<CR>
+"	map <leader>c :w! \| !compiler "<c-r>%"<CR>
+	autocmd FileType tex nmap <buffer> <C-M> :!latexmk -pdf %<CR>
 
 " Open corresponding .pdf/.html or preview
 	map <leader>p :!opout <c-r>%<CR><CR>
@@ -125,6 +142,11 @@ hi CursorLine term=bold cterm=bold
 
 " Runs a script that cleans out tex build files whenever I close out of a .tex file.
 	autocmd VimLeave *.tex !texclear %
+
+" vimwiki syntax highlighting via pandoc
+augroup pandoc_syntax
+  autocmd! FileType vimwiki set syntax=markdown.pandoc
+augroup END
 
 " Ensure files are read as what I want:
 	let g:vimwiki_list = [{'path': '~/Dropbox/vimwiki', 'syntax': 'markdown', 'ext': '.md'}]

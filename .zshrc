@@ -4,8 +4,8 @@ export EDITOR="$VISUAL"
 export PATH=$PATH:/usr/lib64/openmpi/bin
 #stty -ixon
 
-# Use neovim for vim if present.
-[ -x "$(command -v nvim)" ] && alias vim="nvim" vimdiff="nvim -d"
+# Use neovim for vim and vi if present.
+[ -x "$(command -v nvim)" ] && alias "vi=nvim" vim="nvim" vimdiff="nvim -d"
 
 # Set case-Insensitive completion
 #bind 'set completion-ignore-case on'
@@ -36,11 +36,11 @@ alias \
 alias \
 	ls="ls -hN --color=auto --group-directories-first" \
 	ltr="ls -ltr -hN --color=auto --group-directories-first" \
-    sl="ls" \
+        sl="ls" \
 	grep="grep --color=auto" \
 	diff="diff --color=auto" \
 	ccat="highlight --out-format=ansi"
-    
+
 # Weather in terminal
 alias weather='curl wttr.in'
 alias dush='du -shc --apparent-size'
@@ -55,7 +55,6 @@ alias dotfiles="/usr/bin/git --git-dir=$HOME/.dotfiles/.git --work-tree=$HOME"
 alias jn='jupyter-notebook'
 # Remote connection to jupyter
 alias jtunnel='ssh -N -L localhost:8444:localhost:8444 dc-barr3@cosma7c'
-alias jnham8='ssh -N -L localhost:8555:localhost:8555 hgcq36@ham8'
 
 ###############################################
 
@@ -152,4 +151,3 @@ setopt prompt_subst
 RPROMPT=\$vcs_info_msg_0_
 zstyle ':vcs_info:git:*' formats '%F{240}(%b)%r%f'
 zstyle ':vcs_info:*' enable git
-

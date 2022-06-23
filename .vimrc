@@ -78,6 +78,10 @@ syntax on                           " Syntax highlighting
 "set listchars=eol:¬,tab:>·,trail:~,extends:>,precedes:<,space:·
 "set list
 
+" Format text
+	set textwidth=80
+	set wrapmargin=2
+
 set expandtab
 set tabstop=4
 set shiftwidth=4
