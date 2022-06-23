@@ -18,6 +18,8 @@ Plug 'jreybert/vimagit'
 Plug 'lukesmithxyz/vimling'
 Plug 'vimwiki/vimwiki'
 Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
+Plug 'fladson/vim-kitty'
 Plug 'edkolev/tmuxline.vim'
 Plug 'christoomey/vim-tmux-navigator'
 Plug 'ap/vim-css-color'
@@ -69,6 +71,7 @@ set cursorline
 	set showmatch " live match highlighting
 	set hlsearch " highlight matches
 	set gdefault " use the `g` flag by default.
+
 
 " Enable autocompletion:
 	set wildmode=longest,list,full
@@ -203,6 +206,24 @@ function! ToggleHiddenAll()
     endif
 endfunction
 nnoremap <leader>h :call ToggleHiddenAll()<CR>
+
+" vim-airline setup
+	highlight LineNr ctermbg=none
+	highlight Normal ctermbg=none
+	highlight NonText ctermbg=none
+	highlight SignColumn ctermbg=none
+	highlight VertSplit ctermbg=none ctermfg=98 cterm=none
+"	set colorcolumn=100
+"	highlight ColorColumn ctermbg=93
+
+let g:airline_theme='selenized_bw'
+
+" Show git branch
+let g:airline#extensions#branch#enabled=1
+let g:airline#extensions#hunks#enabled=0
+let g:airline_powerline_fonts=1
+let g:airline_detect_spell=0
+
 
 " Text-editing mode (wrapping lines correctly, etc)
 let s:wrapenabled = 0
