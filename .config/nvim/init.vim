@@ -144,6 +144,9 @@ set cursorline
 	set conceallevel=2
 	let g:tex_conceal='abdgms'
 	hi Conceal ctermbg=none
+	" Fix autocompletion suggestions what contain -
+	set lisp
+
 " Runs a script that cleans out tex build files whenever I close out of a .tex file.
 	autocmd VimLeave *.tex !texclear %
 
@@ -224,7 +227,7 @@ nnoremap <leader>h :call ToggleHiddenAll()<CR>
 "	set colorcolumn=100
 "	highlight ColorColumn ctermbg=93
 
-let g:airline_theme='selenized_bw'
+let g:airline_theme='luna'
 
 " Show git branch
 let g:airline#extensions#branch#enabled=1
@@ -233,7 +236,6 @@ let g:airline_powerline_fonts=1
 let g:airline_detect_spell=0
 
 " Latex snippets
-"""LATEX SNIPPETS"""
 autocmd FileType tex inoremap ,alpha 	\alpha
 autocmd FileType tex inoremap ,beta  	\beta
 autocmd FileType tex inoremap ,gamma 	\gamma
