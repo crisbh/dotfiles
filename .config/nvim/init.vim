@@ -28,6 +28,7 @@ Plug 'pietropate/vim-tex-conceal'
 Plug 'godlygeek/tabular'
 "Plug 'preservim/vim-markdown'
 Plug 'vim-pandoc/vim-pandoc-syntax'
+Plug 'valloric/youcompleteme'
 Plug 'SirVer/ultisnips'
 Plug 'honza/vim-snippets'
 call plug#end()
@@ -212,11 +213,15 @@ endfunction
 nnoremap <leader>h :call ToggleHiddenAll()<CR>
 
 " Ultisnips config
+    " make YCM compatible with UltiSnips (using supertab)
+    let g:ycm_key_list_select_completion = ['<C-n>', '<Down>']
+    let g:ycm_key_list_previous_completion = ['<C-p>', '<Up>']
+    let g:SuperTabDefaultCompletionType = '<C-n>'
+
 	let g:UltiSnipsExpandTrigger = '<tab>'
 	let g:UltiSnipsJumpForwardTrigger = '<tab>'
 	let g:UltiSnipsJumpBackwardTrigger = '<s-tab>'
-	let g:UltiSnipsSnippetDirectories=["UltiSnips", "UltiSnips/tex.snippets"]
-
+	let g:UltiSnipsSnippetDirectories=[$HOME.'/.config/nvim/UltiSnips']
 
 " vim-airline setup
 	highlight LineNr ctermbg=none
