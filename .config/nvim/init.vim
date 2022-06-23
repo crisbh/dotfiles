@@ -123,7 +123,7 @@ set cursorline
 	nnoremap S :%s//g<Left><Left>
 
 " Compile document, be it groff/LaTeX/markdown/etc.
-"	map <leader>c :w! \| !compiler "<c-r>%"<CR>
+	map <leader>c :w! \| !compiler "<c-r>%"<CR>
 	autocmd FileType tex nmap <buffer> <C-M> :!latexmk -pdf %<CR>
 
 " Open corresponding .pdf/.html or preview
@@ -141,7 +141,7 @@ set cursorline
 	let g:tex_flavor='latex'
 	let g:vimtex_view_method='zathura'
 	let g:vimtex_quickfix_mode=0
-	set conceallevel=1
+	set conceallevel=2
 	let g:tex_conceal='abdgms'
 	hi Conceal ctermbg=none
 " Runs a script that cleans out tex build files whenever I close out of a .tex file.
@@ -209,9 +209,11 @@ endfunction
 nnoremap <leader>h :call ToggleHiddenAll()<CR>
 
 " Ultisnips config
-let g:UltiSnipsExpandTrigger = '<tab>'
-let g:UltiSnipsJumpForwardTrigger = '<tab>'
-let g:UltiSnipsJumpBackwardTrigger = '<s-tab>'
+	let g:UltiSnipsExpandTrigger = '<tab>'
+	let g:UltiSnipsJumpForwardTrigger = '<tab>'
+	let g:UltiSnipsJumpBackwardTrigger = '<s-tab>'
+	let g:UltiSnipsSnippetDirectories=["UltiSnips", "UltiSnips/tex.snippets"]
+
 
 " vim-airline setup
 	highlight LineNr ctermbg=none
@@ -229,6 +231,31 @@ let g:airline#extensions#branch#enabled=1
 let g:airline#extensions#hunks#enabled=0
 let g:airline_powerline_fonts=1
 let g:airline_detect_spell=0
+
+" Latex snippets
+"""LATEX SNIPPETS"""
+autocmd FileType tex inoremap ,alpha 	\alpha
+autocmd FileType tex inoremap ,beta  	\beta
+autocmd FileType tex inoremap ,gamma 	\gamma
+autocmd FileType tex inoremap ,delta 	\delta
+autocmd FileType tex inoremap ,del 	\Delta
+autocmd FileType tex inoremap ,epsilon	\epsilon
+autocmd FileType tex inoremap ,zeta	\zeta
+autocmd FileType tex inoremap ,eta	\eta
+autocmd FileType tex inoremap ,theta	\theta
+autocmd FileType tex inoremap ,kappa	\kappa
+autocmd FileType tex inoremap ,lambda	\lambda
+autocmd FileType tex inoremap ,mu	\mu
+autocmd FileType tex inoremap ,nu	\nu
+autocmd FileType tex inoremap ,pi	\pi
+autocmd FileType tex inoremap ,rho	\rho
+autocmd FileType tex inoremap ,sigma	\sigma
+autocmd FileType tex inoremap ,tau	\tau
+autocmd FileType tex inoremap ,phi	\phi
+autocmd FileType tex inoremap ,Phi	\Phi
+autocmd FileType tex inoremap ,psi	\psi
+autocmd FileType tex inoremap ,omega	\omega
+
 
 
 " Text-editing mode (wrapping lines correctly, etc)
