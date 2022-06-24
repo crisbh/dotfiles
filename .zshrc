@@ -21,6 +21,10 @@ export PYTHONPATH=/usr/lib64/python3.10/site-packages:$PYTHONPATH           # Ji
 export JUPYTER_PATH=$HOME/Codes/Peano/python
 
 # Define Aliases
+
+alias zshrc="vim ~/.zshrc && source ~/.zshrc"
+alias nvimrc="vim ~/.config/nvim/init.vim"
+
 # Verbosity and settings that you pretty much just always are going to want.
 alias \
 	cp="cp -iv" \
@@ -35,7 +39,9 @@ alias \
 # Colorize commands when possible.
 alias \
 	ls="ls -hN --color=auto --group-directories-first" \
+	ll="ls -la" \
 	ltr="ls -ltr -hN --color=auto --group-directories-first" \
+	l.="ls -d .* --color=auto" \
         sl="ls" \
 	grep="grep --color=auto" \
 	diff="diff --color=auto" \
@@ -50,6 +56,7 @@ alias renderpeanogrid='pvpython ~/Codes/Peano/python/peano4/visualisation/render
 
 # dotfiles git repo
 alias dotfiles="/usr/bin/git --git-dir=$HOME/.dotfiles/.git --work-tree=$HOME"
+alias doftiles="dotfiles"
 
 # jupyter notebooks
 alias jn='jupyter-notebook'
