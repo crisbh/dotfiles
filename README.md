@@ -12,4 +12,4 @@ My current setup includes:
 - `tmux`
 
 At the moment, I have moved to a lua-based neovim configuration based on my fork
-of [AstroNvim][https://github.com/crisbh/AstroNvim.git].
+of [AstroNvim](https://github.com/crisbh/AstroNvim.git).
