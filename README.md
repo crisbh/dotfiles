@@ -1,11 +1,15 @@
 # dotfiles
 
-My current setup is based on
+Repo with the dotfiles I use in my own machine. These try to provide a good
+experience for day to day work.
 
-- `OS`: Linux Fedora
-- `shell`: zsh
-- `terminal`: kitty
-- `editor`: nvim
-- tmux
+My current setup includes:
 
-At the moment, I have moved to a lua-based neovim configuration based on AstroNvim.
+- OS: `Linux Fedora`
+- shell: `zsh`
+- terminal: `kitty`
+- editor: `nvim`
+- `tmux`
+
+At the moment, I have moved to a lua-based neovim configuration based on my fork
+of [AstroNvim][https://github.com/crisbh/AstroNvim.git].
