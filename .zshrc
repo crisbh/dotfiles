@@ -24,6 +24,7 @@ export JUPYTER_PATH=$HOME/Codes/Peano/python
 
 alias zshrc="vim ~/.zshrc && source ~/.zshrc"
 alias nvimrc="vim ~/.config/nvim/init.vim"
+alias vimrc="vim ~/.vimrc"
 
 # Verbosity and settings that you pretty much just always are going to want.
 alias \
