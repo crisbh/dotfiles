@@ -1,4 +1,3 @@
-
 export VISUAL=vim
 export EDITOR="$VISUAL"
 export PATH=$PATH:/usr/lib64/openmpi/bin
@@ -148,10 +147,11 @@ bindkey '^ ' autosuggest-accept
 source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh 2>/dev/null
 source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 
+
 # Fix history
 setopt nosharehistory
 
-# Prompt Git integration
+# Git integration with terminal prompt
 autoload -Uz vcs_info
 precmd_vcs_info() { vcs_info }
 precmd_functions+=( precmd_vcs_info )
@@ -159,3 +159,7 @@ setopt prompt_subst
 RPROMPT=\$vcs_info_msg_0_
 zstyle ':vcs_info:git:*' formats '%F{240}(%b)%r%f'
 zstyle ':vcs_info:*' enable git
+
+
+# Add clock to terminal prompt
+PROMPT='%{$fg[yellow]%}[%*] '$PROMPT
