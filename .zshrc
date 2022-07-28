@@ -1,23 +1,24 @@
 export VISUAL=vim
 export EDITOR="$VISUAL"
-export PATH=$PATH:/usr/lib64/openmpi/bin
 #stty -ixon
 
 # Use neovim for vim and vi if present.
 [ -x "$(command -v nvim)" ] && alias "vi=nvim" vim="nvim" vimdiff="nvim -d"
 
+# Shortcut alias for vi/vim/nvim
+alias v="vi"
+
 # Set case-Insensitive completion
 #bind 'set completion-ignore-case on'
 #bind "set show-all-if-ambiguous on"
 
-# PIP suggestion
-PATH=$PATH:$HOME/.local/bin
-
-# Peano/Exahype Python path
+# Path and Python path
+export PATH=$PATH:$HOME/.local/bin
 export PYTHONPATH=$HOME/Codes/Peano/python/
 export PYTHONPATH=/usr/lib64/paraview/python3.10/site-packages:$PYTHONPATH  # paraview libs location
 export PYTHONPATH=/usr/lib64/python3.10/site-packages:$PYTHONPATH           # Jinja2 location
 export JUPYTER_PATH=$HOME/Codes/Peano/python
+export PATH=$PATH:/usr/lib64/openmpi/bin
 
 # Define Aliases
 
