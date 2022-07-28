@@ -1,4 +1,4 @@
-<h1 align="center">Dotfiles repo</h1>
+<h1 align="center">dotfiles repo</h1>
 
 <div align="center"><p>
     <a href="https://github.com/crisbh/dotfiles/pulse">
