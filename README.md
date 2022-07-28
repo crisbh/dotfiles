@@ -1,6 +1,6 @@
+<h1 align="center">Dotfiles repo</h1>
 
 <div align="center"><p>
-    # dotfiles repo
     <a href="https://github.com/crisbh/dotfiles/pulse">
       <img src="https://img.shields.io/github/last-commit/crisbh/dotfiles?color=%4dc71f&label=Last%20Commit&logo=github&style=flat-square"/>
     </a>
