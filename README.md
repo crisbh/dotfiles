@@ -1,10 +1,8 @@
-# dotfiles
-
-https://github.com/crisbh/dotfiles/pulse
+# dotfiles repo
 
 <div align="center"><p>
     <a href="https://github.com/crisbh/dotfiles/pulse">
-      <img src="https://img.shields.io/github/last-commit/AstroNvim/AstroNvim?color=%4dc71f&label=Last%20Commit&logo=github&style=flat-square"/>
+      <img src="https://img.shields.io/github/last-commit/crisbh/dotfiles?color=%4dc71f&label=Last%20Commit&logo=github&style=flat-square"/>
     </a>
 </p>
 </div>
