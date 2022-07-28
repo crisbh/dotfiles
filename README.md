@@ -1,10 +1,4 @@
-<p style="text-align: center;"> dotfiles repo </p>
-
-Here's some regular text.
-
-<p style="text-align: center;">A piece of centered text</p>
-
-And some more regular text.
+# dotfiles repo
 
 <div align="center"><p>
     <a href="https://github.com/crisbh/dotfiles/pulse">
