@@ -16,7 +16,6 @@ My current setup includes:
 - terminal: `kitty`
 - editor: <a href="https://neovim.io/">
     <img src="https://img.shields.io/badge/Neovim-blueviolet.svg?style=flat-square&logo=Neovim&logoColor=white"/> 
-          </a>
-    
+          </a>  
   - I currently use a lua-based neovim configuration based on my fork of [AstroNvim](https://github.com/crisbh/AstroNvim.git). This comes with sensible defaults and option to easily get IDE-like features through `LSP`, `telescope`, etc.
 - `tmux`
