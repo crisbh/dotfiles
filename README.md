@@ -8,7 +8,7 @@ My current setup includes:
 - shell: `zsh`
 - terminal: `kitty`
 - editor: `nvim`
-  - I currently use a lua-based neovim configuration based on my fork of [AstroNvim](https://github.com/crisbh/AstroNvim.git). 
+  - I currently use a lua-based neovim configuration based on my fork of [AstroNvim](https://github.com/crisbh/AstroNvim.git). This comes with sensible defaults and option to easily get IDE-like features through `LSP`, `telescope`, etc.
 - `tmux`
 
 
