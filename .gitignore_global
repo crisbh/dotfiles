@@ -1,0 +1,5 @@
+# Compilation object files
+*.o
+
+# Python Cache
+*/__pycache__/*
