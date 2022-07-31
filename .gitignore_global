@@ -4,3 +4,9 @@
 # Python Cache
 /__pycache__/*
 /.ipynb_checkpoints/*
+
+# Latex compilation files
+*.aux
+*.log
+*.fls
+*.fdb_latexmk
