@@ -8,5 +8,7 @@
 # Latex compilation files
 *.aux
 *.log
+*.blg
+*.synctex.gz
 *.fls
 *.fdb_latexmk
