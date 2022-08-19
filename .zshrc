@@ -8,6 +8,9 @@ export EDITOR="$VISUAL"
 # Shortcut alias for vi/vim/nvim
 alias v="vi"
 
+# shortcut for zathura
+alias z="zathura"
+
 # Set case-Insensitive completion
 #bind 'set completion-ignore-case on'
 #bind "set show-all-if-ambiguous on"
