@@ -146,6 +146,7 @@ export PATH=$HOME/.config/statusbar/:$PATH
 
 # Auto accept key
 bindkey '^ ' autosuggest-accept
+#bindkey '\t' autosuggest-accept
 
 # Load zsh-syntax-highlighting; should be last.
 source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh 2>/dev/null
