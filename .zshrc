@@ -15,13 +15,17 @@ alias z="zathura"
 #bind 'set completion-ignore-case on'
 #bind "set show-all-if-ambiguous on"
 
+# Remember ssh login passwords for current session
+eval $(keychain --eval /home/cristianbarrahinojosa/.ssh/id_rsa 2> /dev/null)
+
 # Path and Python path
 export PATH=$PATH:$HOME/.local/bin
 export PYTHONPATH=$HOME/Codes/Peano/python/
 export PYTHONPATH=/usr/lib64/paraview/python3.10/site-packages:$PYTHONPATH  # paraview libs location
 export PYTHONPATH=/usr/lib64/python3.10/site-packages:$PYTHONPATH           # Jinja2 location
+export PYTHONPATH=/usr/lib/python3.10/site-packages:$PYTHONPATH           # Jinja2 location
 export JUPYTER_PATH=$HOME/Codes/Peano/python
-export PATH=$PATH:/usr/lib64/openmpi/bin
+#export PATH=$PATH:/usr/lib64/openmpi/bin
 
 # Define Aliases
 
@@ -66,6 +70,7 @@ alias doftiles="dotfiles"
 alias jn='jupyter-notebook'
 # Remote connection to jupyter
 alias jtunnel='ssh -N -L localhost:8444:localhost:8444 dc-barr3@cosma7c'
+
 
 ###############################################
 
