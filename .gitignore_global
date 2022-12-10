@@ -6,6 +6,10 @@ __pycache__/
 .ipynb_checkpoints/*
 
 # Latex compilation files
+*-main.pdf
+paper.pdf
+*.out
+*.bbl
 *.aux
 *.log
 *.blg
@@ -16,3 +20,4 @@ __pycache__/
 # Peano
 *.peano-patch-file
 *.vtu
+*.pvd
