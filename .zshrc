@@ -25,6 +25,7 @@ export PYTHONPATH=/usr/lib64/paraview/python3.10/site-packages:$PYTHONPATH  # pa
 export PYTHONPATH=/usr/lib64/python3.10/site-packages:$PYTHONPATH           # Jinja2 location
 export PYTHONPATH=/usr/lib/python3.10/site-packages:$PYTHONPATH           # Jinja2 location
 export JUPYTER_PATH=$HOME/Codes/Peano/python
+export PATH=$PATH:$HOME/.cargo/bin
 #export PATH=$PATH:/usr/lib64/openmpi/bin
 
 # Define Aliases

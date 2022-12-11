@@ -38,8 +38,8 @@ Plug 'valloric/youcompleteme'
 Plug 'vimwiki/vimwiki'
 "
 " Ensure files are read as what I want:
-	let g:vimwiki_list = [{'path': '~/Dropbox/vimwiki', 'syntax': 'markdown', 'ext': '.md'}]
-	let g:vimwiki_ext2syntax = {'.Rmd': 'markdown', '.rmd': 'markdown','.md': 'markdown', '.markdown': 'markdown', '.mdown': 'markdown'}
+let g:vimwiki_list = [{'path': '~/Dropbox/vimwiki', 'syntax': 'markdown', 'ext': '.md'}]
+let g:vimwiki_ext2syntax = {'.Rmd': 'markdown', '.rmd': 'markdown','.md': 'markdown', '.markdown': 'markdown', '.mdown': 'markdown'}
 
 " Vimtex
 Plug 'lervag/vimtex'
@@ -79,8 +79,8 @@ syntax on                           " Syntax highlighting
 "set list
 
 " Format text
-	set textwidth=80
-	set wrapmargin=2
+set textwidth=80
+set wrapmargin=2
 
 set expandtab
 set tabstop=4
