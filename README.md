@@ -14,6 +14,6 @@ My setup includes:
 - shell: `zsh`
 - terminal: `kitty`
 - editor: `neovim`
-  - I currently use a [lua-based neovim configuration](https://github.com/crisbh/astronvim_config.git) based on [AstroNvim](https://github.com/AstroNvim/AstroNvim.git) which provides IDE-like features through `LSP`, the `telescope` fuzzy finder, etc.
+  - I currently use a [lua neovim configuration](https://github.com/crisbh/astronvim_config.git) based on [AstroNvim](https://github.com/AstroNvim/AstroNvim.git) which provides IDE-like features through `LSP`, the `telescope` fuzzy finder, etc.
 - PDF reader: `zathura`
 - terminal session manager: `tmux`
