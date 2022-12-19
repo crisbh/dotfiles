@@ -9,11 +9,11 @@
 
 Repo with the dotfiles I use in my own machine. These aim at setting up a smooth workflow for daily work.
 
-My current setup includes:
+My setup includes:
 
-- OS: `Linux Fedora`
 - shell: `zsh`
 - terminal: `kitty`
 - editor: `neovim`
-  - I currently use a lua-based neovim configuration based on my fork of [AstroNvim](https://github.com/crisbh/AstroNvim.git). This comes with sensible defaults and option to easily get IDE-like features through `LSP`, `telescope`, etc.
-- `tmux`
+  - I currently use a [lua-based neovim configuration](https://github.com/crisbh/astronvim_config.git) based on [AstroNvim](https://github.com/AstroNvim/AstroNvim.git) which provides IDE-like features through `LSP`, the `telescope` fuzzy finder, etc.
+- PDF reader: `zathura`
+- terminal session manager: `tmux`
