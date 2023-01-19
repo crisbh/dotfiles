@@ -16,7 +16,7 @@ alias z="zathura"
 #bind "set show-all-if-ambiguous on"
 
 # Remember ssh login passwords for current session
-eval $(keychain --eval /home/cristianbarrahinojosa/.ssh/id_rsa 2> /dev/null)
+eval $(keychain --eval /home/$USER/.ssh/id_rsa 2> /dev/null)
 
 # Path and Python path
 export PATH=$PATH:$HOME/.local/bin
