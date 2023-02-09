@@ -1,38 +1,122 @@
+# ==============================================================================
+# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
+# Initialization code that may require console input (password prompts, [y/n]
+# confirmations, etc.) must go above this block; everything else may go below.
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+# ==============================================================================
+
+
+# ==============================================================================
+# ======================   General zsh config   ================================
+# ==============================================================================
+
+# Path to your oh-my-zsh installation.
+export ZSH="$HOME/.oh-my-zsh"
+
+# See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
+ZSH_THEME="powerlevel10k/powerlevel10k"
+
+# CASE_SENSITIVE="true"
+# HYPHEN_INSENSITIVE="true"
+# DISABLE_LS_COLORS="true"
+# DISABLE_AUTO_TITLE="true"
+# ENABLE_CORRECTION="true"
+
+# Uncomment the following line if pasting URLs and other text is messed up.
+# DISABLE_MAGIC_FUNCTIONS="true"
+
+# Caution: this setting can cause issues with multiline prompts in zsh < 5.7.1 (see #5765)
+# COMPLETION_WAITING_DOTS="true"
+
+# Uncomment the following line if you want to disable marking untracked files
+# under VCS as dirty. This makes repository status check for large repositories
+# much, much faster.
+# DISABLE_UNTRACKED_FILES_DIRTY="true"
+
+# Uncomment the following line if you want to change the command execution time
+# stamp shown in the history command output.
+# You can set one of the optional three formats:
+# "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
+# or set a custom format using the strftime function format specifications,
+# see 'man strftime' for details.
+# HIST_STAMPS="mm/dd/yyyy"
+
+# Would you like to use another custom folder than $ZSH/custom?
+# ZSH_CUSTOM=/path/to/new-custom-folder
+
+# Which plugins would you like to load?
+# Standard plugins can be found in $ZSH/plugins/
+# Custom plugins may be added to $ZSH_CUSTOM/plugins/
+# Example format: plugins=(rails git textmate ruby lighthouse)
+# Add wisely, as too many plugins slow down shell startup.
+plugins=(git)
+
+source $ZSH/oh-my-zsh.sh
+
+
+# ==============================================================================
+# ======================   User zsh config   ===================================
+# ==============================================================================
+
+# History in cache directory:
+HISTSIZE=10000
+SAVEHIST=10000
+HISTFILE=~/.cache/zsh/history   # Note: this file has to be manually created
+setopt nosharehistory
+
 export VISUAL=vim
 export EDITOR="$VISUAL"
-#stty -ixon
 
 # Use neovim for vim and vi if present.
 [ -x "$(command -v nvim)" ] && alias "vi=nvim" vim="nvim" vimdiff="nvim -d"
 
-# Shortcut alias for vi/vim/nvim
-alias v="vi"
-
-# shortcut for zathura
-alias z="zathura"
-
-# Set case-Insensitive completion
+# Completion
 #bind 'set completion-ignore-case on'
 #bind "set show-all-if-ambiguous on"
+autoload -U compinit
+zstyle ':completion:*' menu select
+zmodload zsh/complist
+compinit
+_comp_options+=(globdots)		# Include hidden files.
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
+
+# Auto accept key
+bindkey '^ ' autosuggest-accept
 
 # Remember ssh login passwords for current session
 eval $(keychain --eval /home/$USER/.ssh/id_rsa 2> /dev/null)
 
-# Path and Python path
+# Paths
 export PATH=$PATH:$HOME/.local/bin
+export PATH=$PATH:$HOME/.cargo/bin
 export PYTHONPATH=$HOME/Codes/Peano/python/
 export PYTHONPATH=/usr/lib64/paraview/python3.10/site-packages:$PYTHONPATH  # paraview libs location
 export PYTHONPATH=/usr/lib64/python3.10/site-packages:$PYTHONPATH           # Jinja2 location
 export PYTHONPATH=/usr/lib/python3.10/site-packages:$PYTHONPATH           # Jinja2 location
 export JUPYTER_PATH=$HOME/Codes/Peano/python
-export PATH=$PATH:$HOME/.cargo/bin
-#export PATH=$PATH:/usr/lib64/openmpi/bin
 
-# Define Aliases
+
+# --------------------------------------------
+# Aliases
+# --------------------------------------------
+
+# Load aliases and shortcuts if existent.
+[ -f "$HOME/.config/shortcutrc" ] && source "$HOME/.config/shortcutrc"
+[ -f "$HOME/.config/aliasrc" ] && source "$HOME/.config/aliasrc"
+
+# dotfiles git repo
+alias dotfiles="/usr/bin/git --git-dir=$HOME/.dotfiles/.git --work-tree=$HOME"
+alias doftiles="dotfiles"
+
+alias v="vi"
+alias z="zathura"
 
 alias zshrc="vim ~/.zshrc && source ~/.zshrc"
 alias nvimrc="vim ~/.config/nvim/init.vim"
 alias vimrc="vim ~/.vimrc"
+alias vsplit="vim -O"
 
 # Verbosity and settings that you pretty much just always are going to want.
 alias \
@@ -56,44 +140,29 @@ alias \
 	diff="diff --color=auto" \
 	ccat="highlight --out-format=ansi"
 
-# Weather in terminal
+# Replace ls with exa if available
+if [ -x "$(command -v exa)" ]; then
+    alias ls="exa"
+    alias la="exa --long --all --group"
+	  alias ltr="ls -l -snew --group-directories-first"
+fi
+
+# Utilities
 alias weather='curl wttr.in'
 alias dush='du -shc --apparent-size'
 
-# Visualise peano grid
+# Peano grid visualisation script
 alias renderpeanogrid='pvpython ~/Codes/Peano/python/peano4/visualisation/render.py grid.peano-patch-file'
-
-# dotfiles git repo
-alias dotfiles="/usr/bin/git --git-dir=$HOME/.dotfiles/.git --work-tree=$HOME"
-alias doftiles="dotfiles"
 
 # jupyter notebooks
 alias jn='jupyter-notebook'
-# Remote connection to jupyter
+alias jlab='jupyter-lab'
 alias jtunnel='ssh -N -L localhost:8444:localhost:8444 dc-barr3@cosma7c'
 
 
-###############################################
-
-# Luke's config for the Zoomer Shell
-
-# Enable colors and change prompt:
-autoload -U colors && colors
-#PS1="%B%{$fg[red]%}[%{$fg[yellow]%}%n%{$fg[green]%}@%{$fg[blue]%}%M %{$fg[magenta]%}%~%{$fg[red]%}]%{$reset_color%}$%b "
-PS1="%B%{$fg[red]%}[%{$fg[green]%}@%{$fg[blue]%}%M %{$fg[magenta]%}%~%{$fg[red]%}]%{$reset_color%}$%b "
-
-# History in cache directory:
-HISTSIZE=10000
-SAVEHIST=10000
-HISTFILE=~/.cache/zsh/history   # Note: this file has to be manually created
-
-# Basic auto/tab complete:
-autoload -U compinit
-zstyle ':completion:*' menu select
-zmodload zsh/complist
-compinit
-_comp_options+=(globdots)		# Include hidden files.
-zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
+# --------------------------------------------
+# Key bindings
+# --------------------------------------------
 
 # vi mode
 bindkey -v
@@ -120,62 +189,17 @@ function zle-keymap-select {
 }
 zle -N zle-keymap-select
 zle-line-init() {
-    zle -K viins # initiate `vi insert` as keymap (can be removed if `bindkey -V` has been set elsewhere)
+    zle -K viins                 # initiate `vi insert` as keymap (can be removed if `bindkey -V` has been set elsewhere)
     echo -ne "\e[5 q"
 }
 zle -N zle-line-init
-echo -ne '\e[5 q' # Use beam shape cursor on startup.
+echo -ne '\e[5 q'                # Use beam shape cursor on startup.
 preexec() { echo -ne '\e[5 q' ;} # Use beam shape cursor for each new prompt.
 
-# Use lf to switch directories and bind it to ctrl-o
-lfcd () {
-    tmp="$(mktemp)"
-    lf -last-dir-path="$tmp" "$@"
-    if [ -f "$tmp" ]; then
-        dir="$(cat "$tmp")"
-        rm -f "$tmp"
-        [ -d "$dir" ] && [ "$dir" != "$(pwd)" ] && cd "$dir"
-    fi
-}
-bindkey -s '^o' 'lfcd\n'
 
-# Edit line in vim with ctrl-e:
-autoload edit-command-line; zle -N edit-command-line
-bindkey '^e' edit-command-line
-
-# Load aliases and shortcuts if existent.
-[ -f "$HOME/.config/shortcutrc" ] && source "$HOME/.config/shortcutrc"
-[ -f "$HOME/.config/aliasrc" ] && source "$HOME/.config/aliasrc"
-
-# dwm status bar config files
-export PATH=$HOME/.config/statusbar/:$PATH
-
-# Auto accept key
-bindkey '^ ' autosuggest-accept
-#bindkey '\t' autosuggest-accept
-
-# Load zsh-syntax-highlighting; should be last.
-source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh 2>/dev/null
-source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-
-
-# Fix history
-setopt nosharehistory
-
-# Git integration with terminal prompt
-autoload -Uz vcs_info
-precmd_vcs_info() { vcs_info }
-precmd_functions+=( precmd_vcs_info )
-setopt prompt_subst
-RPROMPT=\$vcs_info_msg_0_
-zstyle ':vcs_info:git:*' formats '%F{240}(%b)%r%f'
-zstyle ':vcs_info:*' enable git
-
-
-# Add clock to terminal prompt
-PROMPT='%{$fg[yellow]%}[%*] '$PROMPT
-
+# --------------------------------------------
 # >>> conda initialize >>>
+# --------------------------------------------
 # !! Contents within this block are managed by 'conda init' !!
 __conda_setup="$('/usr/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
 if [ $? -eq 0 ]; then
@@ -190,3 +214,13 @@ fi
 unset __conda_setup
 # <<< conda initialize <<<
 
+# ==============================================================================
+# Load zsh-syntax-highlighting; should be last.
+source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh 2>/dev/null
+source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+# ==============================================================================
+
+# ==============================================================================
+# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+# ==============================================================================
