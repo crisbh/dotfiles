@@ -82,9 +82,6 @@ compinit
 _comp_options+=(globdots)		# Include hidden files.
 zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
 
-# Auto accept key
-bindkey '^ ' autosuggest-accept
-
 # Remember ssh login passwords for current session
 eval $(keychain --eval /home/$USER/.ssh/id_rsa 2> /dev/null)
 
@@ -96,6 +93,16 @@ export PYTHONPATH=/usr/lib64/paraview/python3.10/site-packages:$PYTHONPATH  # pa
 export PYTHONPATH=/usr/lib64/python3.10/site-packages:$PYTHONPATH           # Jinja2 location
 export PYTHONPATH=/usr/lib/python3.10/site-packages:$PYTHONPATH           # Jinja2 location
 export JUPYTER_PATH=$HOME/Codes/Peano/python
+
+
+# ==============================================================================
+# Load zsh-syntax-highlighting
+# ==============================================================================
+source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh 2>/dev/null
+source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+
+# Auto accept key
+bindkey '^ ' autosuggest-accept
 
 
 # --------------------------------------------
@@ -214,11 +221,6 @@ fi
 unset __conda_setup
 # <<< conda initialize <<<
 
-# ==============================================================================
-# Load zsh-syntax-highlighting; should be last.
-source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh 2>/dev/null
-source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-# ==============================================================================
 
 # ==============================================================================
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
