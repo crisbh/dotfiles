@@ -95,16 +95,6 @@ export PYTHONPATH=/usr/lib/python3.10/site-packages:$PYTHONPATH           # Jinj
 export JUPYTER_PATH=$HOME/Codes/Peano/python
 
 
-# ==============================================================================
-# Load zsh-syntax-highlighting
-# ==============================================================================
-source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh 2>/dev/null
-source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-
-# Auto accept key
-bindkey '^ ' autosuggest-accept
-
-
 # --------------------------------------------
 # Aliases
 # --------------------------------------------
@@ -221,6 +211,15 @@ fi
 unset __conda_setup
 # <<< conda initialize <<<
 
+# ==============================================================================
+# Load zsh-syntax-highlighting; should be last.
+source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh 2>/dev/null
+source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+
+# Auto accept key
+bindkey '^ ' autosuggest-accept
+
+# ==============================================================================
 
 # ==============================================================================
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
