@@ -16,7 +16,7 @@ fi
 export ZSH="$HOME/.oh-my-zsh"
 
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-ZSH_THEME="powerlevel10k/powerlevel10k"
+#ZSH_THEME="powerlevel10k/powerlevel10k"
 
 # CASE_SENSITIVE="true"
 # HYPHEN_INSENSITIVE="true"
@@ -81,6 +81,7 @@ zmodload zsh/complist
 compinit
 _comp_options+=(globdots)		# Include hidden files.
 zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
+
 
 # Remember ssh login passwords for current session
 eval $(keychain --eval /home/$USER/.ssh/id_rsa 2> /dev/null)
@@ -211,15 +212,19 @@ fi
 unset __conda_setup
 # <<< conda initialize <<<
 
+source /opt/homebrew/opt/powerlevel10k/powerlevel10k.zsh-theme
 # ==============================================================================
 # Load zsh-syntax-highlighting; should be last.
-source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh 2>/dev/null
-source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+# Linux
+#source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh 2>/dev/null
+#source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 
+# macos brew installations
+source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+# ==============================================================================
 # Auto accept key
 bindkey '^ ' autosuggest-accept
-
-# ==============================================================================
 
 # ==============================================================================
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
