@@ -16,7 +16,7 @@ fi
 export ZSH="$HOME/.oh-my-zsh"
 
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-#ZSH_THEME="powerlevel10k/powerlevel10k"
+ZSH_THEME="powerlevel10k/powerlevel10k"
 
 # CASE_SENSITIVE="true"
 # HYPHEN_INSENSITIVE="true"
@@ -89,6 +89,10 @@ eval $(keychain --eval /home/$USER/.ssh/id_rsa 2> /dev/null)
 # Paths
 export PATH=$PATH:$HOME/.local/bin
 export PATH=$PATH:$HOME/.cargo/bin
+# Include macos stuff
+if [[ $OSTYPE == "darwin"* ]]; then
+    export PATH=$PATH:$HOME/Library/Python/3.9/bin
+fi
 export PYTHONPATH=$HOME/Codes/Peano/python/
 export PYTHONPATH=/usr/lib64/paraview/python3.10/site-packages:$PYTHONPATH  # paraview libs location
 export PYTHONPATH=/usr/lib64/python3.10/site-packages:$PYTHONPATH           # Jinja2 location
@@ -212,7 +216,7 @@ fi
 unset __conda_setup
 # <<< conda initialize <<<
 
-source /opt/homebrew/opt/powerlevel10k/powerlevel10k.zsh-theme
+#source /opt/homebrew/opt/powerlevel10k/powerlevel10k.zsh-theme
 # ==============================================================================
 # Load zsh-syntax-highlighting; should be last.
 # Linux
@@ -230,3 +234,8 @@ bindkey '^ ' autosuggest-accept
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 # ==============================================================================
+
+# Terminal fuzzy finder auto-completion and useful key-bindings
+# default shortcut is CTRL + t
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
