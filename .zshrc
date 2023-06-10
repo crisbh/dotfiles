@@ -216,16 +216,18 @@ fi
 unset __conda_setup
 # <<< conda initialize <<<
 
-#source /opt/homebrew/opt/powerlevel10k/powerlevel10k.zsh-theme
 # ==============================================================================
 # Load zsh-syntax-highlighting; should be last.
-# Linux
-#source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh 2>/dev/null
-#source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+if [[ $OSTYPE == "darwin"* ]]; then
+    # macos brew installations
+    #source /opt/homebrew/opt/powerlevel10k/powerlevel10k.zsh-theme
+    source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+    source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+else
+    source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh 2>/dev/null
+    source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+fi
 
-# macos brew installations
-source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 # ==============================================================================
 # Auto accept key
 bindkey '^ ' autosuggest-accept
