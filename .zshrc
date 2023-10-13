@@ -63,7 +63,8 @@ source $ZSH/oh-my-zsh.sh
 # History in cache directory:
 HISTSIZE=10000
 SAVEHIST=10000
-HISTFILE=~/.cache/zsh/history   # Note: this file has to be manually created
+HISTFILE=~/.cache/zsh/history
+[[ ! -f $HISTFILE ]] && echo "HISTFILE does not exist. Creating one..." && touch $HISTFILE
 setopt nosharehistory
 
 export VISUAL=vim
@@ -84,16 +85,18 @@ zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
 
 
 # Remember ssh login passwords for current session
-eval $(keychain --eval /home/$USER/.ssh/id_rsa 2> /dev/null)
+#eval $(keychain --eval /home/$USER/.ssh/id_rsa 2> /dev/null)
+ssh-add -K ~/.ssh/id\_ed25519 2>/dev/null
 
-# Paths
+
+# Custom Paths
 export PATH=$PATH:$HOME/.local/bin
 export PATH=$PATH:$HOME/.cargo/bin
 # Include macos stuff
 if [[ $OSTYPE == "darwin"* ]]; then
     export PATH=$PATH:$HOME/Library/Python/3.9/bin
 fi
-export PYTHONPATH=$HOME/Codes/Peano/python/
+export PYTHONPATH=$HOME/Projects/GR-effects-clusters/
 export PYTHONPATH=/usr/lib64/paraview/python3.10/site-packages:$PYTHONPATH  # paraview libs location
 export PYTHONPATH=/usr/lib64/python3.10/site-packages:$PYTHONPATH           # Jinja2 location
 export PYTHONPATH=/usr/lib/python3.10/site-packages:$PYTHONPATH           # Jinja2 location
@@ -104,7 +107,7 @@ export JUPYTER_PATH=$HOME/Codes/Peano/python
 # Aliases
 # --------------------------------------------
 
-# Load aliases and shortcuts if existent.
+# Load aliases and shortcuts, if existent.
 [ -f "$HOME/.config/shortcutrc" ] && source "$HOME/.config/shortcutrc"
 [ -f "$HOME/.config/aliasrc" ] && source "$HOME/.config/aliasrc"
 
@@ -162,6 +165,23 @@ alias jlab='jupyter-lab'
 alias jtunnel='ssh -N -L localhost:8444:localhost:8444 dc-barr3@cosma7c'
 
 
+# cleanup temp files
+cleanuptmp() {
+    local tmp_extensions=("aux" "blg" "bbl" "fls" "fdb_latexmk" "synctex.gz" "log" "tmp") 
+    local directory="$1"
+
+    if [[ -z $directory ]]; then
+        directory="."
+    fi
+
+    for ext in "${tmp_extensions[@]}"; do
+        find "$directory" -type f -name "*.$ext" -exec rm {} \;
+    done
+
+    return 0
+}
+
+
 # --------------------------------------------
 # Key bindings
 # --------------------------------------------
@@ -217,6 +237,7 @@ unset __conda_setup
 # <<< conda initialize <<<
 
 # ==============================================================================
+<<<<<<< HEAD
 # Load zsh-syntax-highlighting; should be last.
 if [[ $OSTYPE == "darwin"* ]]; then
     # macos brew installations
@@ -228,6 +249,19 @@ else
     source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 fi
 
+=======
+
+# Load zsh-syntax-highlighting and zsh-autosuggestions; should be last.
+# zsh macos brew installations
+if [[ $OSTYPE == "darwin"* ]]; then
+    source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+    source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+else # Linux
+    source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+    source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh 2>/dev/null
+fi
+
+>>>>>>> 6b63844 (cleanup and updates to zshrc)
 # ==============================================================================
 # Auto accept key
 bindkey '^ ' autosuggest-accept
@@ -239,5 +273,5 @@ bindkey '^ ' autosuggest-accept
 
 # Terminal fuzzy finder auto-completion and useful key-bindings
 # default shortcut is CTRL + t
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+[[ -f ~/.fzf.zsh ]] && source ~/.fzf.zsh
 
