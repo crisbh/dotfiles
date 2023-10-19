@@ -6,7 +6,7 @@
 
 # Python Cache
 __pycache__/
-.ipynb_checkpoints/*
+.ipynb_checkpoints
 
 # Latex compilation files
 *-main.pdf
