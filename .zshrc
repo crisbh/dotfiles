@@ -63,7 +63,10 @@ source $ZSH/oh-my-zsh.sh
 # History in cache directory:
 HISTSIZE=10000
 SAVEHIST=10000
-HISTFILE=~/.cache/zsh/history   # Note: this file has to be manually created
+[ ! -f "$HOME/.cache/zsh/history" ] && touch "$HOME/.cache/zsh/history" \
+    && echo "History file not found. Creating one..."
+HISTFILE=~/.cache/zsh/history
+export HISTCONTROL=ignoredups
 setopt nosharehistory
 
 export VISUAL=vim
@@ -95,6 +98,8 @@ export PYTHONPATH=/usr/lib64/python3.10/site-packages:$PYTHONPATH           # Ji
 export PYTHONPATH=/usr/lib/python3.10/site-packages:$PYTHONPATH           # Jinja2 location
 export JUPYTER_PATH=$HOME/Codes/Peano/python
 
+# Colouring man
+export MANPAGER="less -R --use-color -Dd+g -Du+b"
 
 # --------------------------------------------
 # Aliases
@@ -107,14 +112,22 @@ export JUPYTER_PATH=$HOME/Codes/Peano/python
 # dotfiles git repo
 alias dotfiles="/usr/bin/git --git-dir=$HOME/.dotfiles/.git --work-tree=$HOME"
 alias doftiles="dotfiles"
+alias dot="ls ~/dotfiles -la"
 
+# Shortcuts
 alias v="vi"
 alias z="zathura"
+alias c="clear"
+alias q="exit"
 
 alias zshrc="vim ~/.zshrc && source ~/.zshrc"
 alias nvimrc="vim ~/.config/nvim/init.vim"
 alias vimrc="vim ~/.vimrc"
 alias vsplit="vim -O"
+alias tma="tmux a"
+
+# List the most used commands in zsh history
+alias freq='cut -f2 -d";" $HISTFILE | sort | uniq -c | sort -nr | head -n 30'
 
 # Verbosity and settings that you pretty much just always are going to want.
 alias \
@@ -135,19 +148,21 @@ alias \
 	l.="ls -d .* --color=auto" \
         sl="ls" \
 	grep="grep --color=auto" \
-	diff="diff --color=auto" \
+#	diff="diff --color=auto" \
 	ccat="highlight --out-format=ansi"
 
 # Replace ls with exa if available
 if [ -x "$(command -v exa)" ]; then
     alias ls="exa"
     alias la="exa --long --all --group"
-	  alias ltr="ls -l -snew --group-directories-first"
+    alias ltr="ls -l -snew --group-directories-first"
 fi
 
 # Utilities
 alias weather='curl wttr.in'
 alias dush='du -shc --apparent-size'
+alias greph='history | grep'
+alias fzfh='history | fzf'
 
 # Peano grid visualisation script
 alias renderpeanogrid='pvpython ~/Codes/Peano/python/peano4/visualisation/render.py grid.peano-patch-file'
@@ -155,8 +170,13 @@ alias renderpeanogrid='pvpython ~/Codes/Peano/python/peano4/visualisation/render
 # jupyter notebooks
 alias jn='jupyter-notebook'
 alias jlab='jupyter-lab'
-alias jtunnel='ssh -N -L localhost:8444:localhost:8444 dc-barr3@cosma7c'
+alias jtunnel='ssh -N -L localhost:8444:localhost:8444 dc-barr3@cosma8a'
+#
+# --------------------------------------------
+# Load functions
+# --------------------------------------------
 
+[ -f "$HOME/.bash_functions" ] && source "$HOME/.bash_functions"
 
 # --------------------------------------------
 # Key bindings
@@ -212,7 +232,8 @@ fi
 unset __conda_setup
 # <<< conda initialize <<<
 
-source /opt/homebrew/opt/powerlevel10k/powerlevel10k.zsh-theme
+#source /opt/homebrew/opt/powerlevel10k/powerlevel10k.zsh-theme
+source /opt/homebrew/opt/powerlevel10k/share/powerlevel10k/powerlevel10k.zsh-theme
 # ==============================================================================
 # Load zsh-syntax-highlighting; should be last.
 # Linux
