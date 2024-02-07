@@ -111,9 +111,9 @@ export MANPAGER="less -R --use-color -Dd+g -Du+b"
 [ -f "$HOME/.config/aliasrc" ] && source "$HOME/.config/aliasrc"
 
 # dotfiles git repo
-alias dotfiles="/usr/bin/git --git-dir=$HOME/.dotfiles/.git --work-tree=$HOME"
+alias dotfiles="/usr/bin/git --git-dir=$HOME/.dotfiles/.git --work-tree=$HOME/.dotfiles"
 alias doftiles="dotfiles"
-alias dot="ls ~/dotfiles -la"
+alias dot="ls ~/.dotfiles -la"
 
 # Shortcuts
 alias v="vi"
