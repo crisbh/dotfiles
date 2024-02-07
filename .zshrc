@@ -95,7 +95,8 @@ export PATH=$PATH:$HOME/.cargo/bin
 export PYTHONPATH=$HOME/Codes/Peano/python/
 export PYTHONPATH=/usr/lib64/paraview/python3.10/site-packages:$PYTHONPATH  # paraview libs location
 export PYTHONPATH=/usr/lib64/python3.10/site-packages:$PYTHONPATH           # Jinja2 location
-export PYTHONPATH=/usr/lib/python3.10/site-packages:$PYTHONPATH           # Jinja2 location
+export PYTHONPATH=/usr/lib/python3.10/site-packages:$PYTHONPATH             # Jinja2 location
+export PYTHONPATH=$HOME/Projects/GR-effects-clusters:$PYTHONPATH            # Custom project folder
 export JUPYTER_PATH=$HOME/Codes/Peano/python
 
 # Colouring man
