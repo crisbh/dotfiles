@@ -152,10 +152,10 @@ alias \
 #	diff="diff --color=auto" \
 	ccat="highlight --out-format=ansi"
 
-# Replace ls with exa if available
-if [ -x "$(command -v exa)" ]; then
-    alias ls="exa"
-    alias la="exa --long --all --group"
+# Replace ls with eza if available
+if [ -x "$(command -v eza)" ]; then
+    alias ls="eza"
+    alias la="eza --long --all --group"
     alias ltr="ls -l -snew --group-directories-first"
 fi
 
