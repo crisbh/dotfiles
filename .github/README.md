@@ -18,3 +18,15 @@ My setup includes:
 - PDF reader: `zathura`
 - terminal session manager: `tmux`
 
+## Installation
+
+I use `GNU stow` to deploy the various dotfiles from this repo in the form of
+symlinks. For this, go into the repo's directory and run
+
+```shell
+stow -t $HOME
+```
+
+Notice that this method requires that the file structure in this repo mimicks the one in
+the user's home directory.
+
