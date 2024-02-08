@@ -26,7 +26,7 @@ I use [`GNU stow`](https://www.gnu.org/software/stow/) to deploy the various dot
 symlinks. For this, go into the repo's directory and run
 
 ```shell
-stow -t $HOME
+stow -t $HOME .
 ```
 
 Notice that this method requires that the file structure in this repo mimicks the one in
