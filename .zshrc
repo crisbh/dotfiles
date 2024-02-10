@@ -126,6 +126,7 @@ alias nvimrc="vim ~/.config/nvim/init.vim"
 alias vimrc="vim ~/.vimrc"
 alias vsplit="vim -O"
 alias tma="tmux a"
+alias tms="tmux ls"
 
 # List the most used commands in zsh history
 alias freq='cut -f2 -d";" $HISTFILE | sort | uniq -c | sort -nr | head -n 30'
