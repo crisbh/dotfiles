@@ -126,6 +126,7 @@ alias zshrc="vim ~/.zshrc && source ~/.zshrc"
 alias nvimrc="vim ~/.config/nvim/init.vim"
 alias vimrc="vim ~/.vimrc"
 alias vsplit="vim -O"
+alias tm="tmux"
 alias tma="tmux a"
 alias tms="tmux ls"
 
