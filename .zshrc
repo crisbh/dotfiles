@@ -71,6 +71,7 @@ setopt nosharehistory
 
 export VISUAL=vim
 export EDITOR="$VISUAL"
+export VAULT="$HOME/Dropbox/vimwiki"
 
 # Use neovim for vim and vi if present.
 [ -x "$(command -v nvim)" ] && alias "vi=nvim" vim="nvim" vimdiff="nvim -d"
@@ -129,6 +130,8 @@ alias vsplit="vim -O"
 alias tm="tmux"
 alias tma="tmux a"
 alias tms="tmux ls"
+
+alias vimwiki="cd $VAULT && nvim -c ':VimwikiIndex'"
 
 # List the most used commands in zsh history
 alias freq='cut -f2 -d";" $HISTFILE | sort | uniq -c | sort -nr | head -n 30'
