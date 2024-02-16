@@ -71,7 +71,7 @@ setopt nosharehistory
 
 export VISUAL=vim
 export EDITOR="$VISUAL"
-export VAULT="$HOME/Dropbox/vimwiki"
+export VAULT="$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/kosmos"
 
 # Use neovim for vim and vi if present.
 [ -x "$(command -v nvim)" ] && alias "vi=nvim" vim="nvim" vimdiff="nvim -d"
