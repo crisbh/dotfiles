@@ -125,7 +125,7 @@ alias dot="ls ~/.dotfiles -la && git status ~/.dotfiles"
 
 # Shortcuts
 alias v="vi"
-alias z="zathura"
+alias za="zathura"
 alias c="clear"
 alias q="exit"
 
