@@ -101,6 +101,12 @@ export PYTHONPATH=/usr/lib/python3.10/site-packages:$PYTHONPATH             # Ji
 export PYTHONPATH=$HOME/Projects/GR-effects-clusters:$PYTHONPATH            # Custom project folder
 export JUPYTER_PATH=$HOME/Codes/Peano/python
 
+# Path to cd quicker between frequent directories
+export CDPATH=$HOME
+export CDPATH=$CDPATH:$HOME/.config/
+export CDPATH=$CDPATH:$HOME/Dropbox
+export CDPATH=$CDPATH:$HOME/Projects
+
 # Colouring man
 export MANPAGER="less -R --use-color -Dd+g -Du+b"
 
