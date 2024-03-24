@@ -1,0 +1,16 @@
+#!/bin/bash
+# ~~~~~~~~~~~~~~~ Welcome Screen :) ~~~~~~~~~~~~~~~~~~~~~~~~
+# from TJDevries's config repo
+clear
+cyan='\033[1;36m'
+
+echo -ne "${cyan}Hello, $USER. Today is: "
+date
+echo -ne "${NC}"
+echo -e "${cyan}"
+cal
+echo -ne "${NC}"
+echo
+echo -ne "${cyan}Sysinfo: "
+uptime
+echo -e "${NC}"
