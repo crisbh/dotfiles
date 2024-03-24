@@ -88,7 +88,8 @@ zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
 
 
 # Remember ssh login passwords for current session
-eval $(keychain --eval /home/$USER/.ssh/id_rsa 2> /dev/null)
+#eval $(keychain --eval /home/$USER/.ssh/id_rsa 2> /dev/null)
+eval $(ssh-add --apple-use-keychain $HOME/.ssh/id_ed25519)
 
 # Paths
 export PATH=$PATH:$HOME/.local/bin
