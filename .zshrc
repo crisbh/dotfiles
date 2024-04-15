@@ -94,8 +94,9 @@ eval $(ssh-add --apple-use-keychain $HOME/.ssh/id_ed25519 2> /dev/null)
 # Paths
 export PATH=$PATH:$HOME/.local/bin
 export PATH=$PATH:$HOME/.cargo/bin
+export PATH=$PATH:$HOME/Library/Python/3.9/bin
 export PATH=$PATH:$HOME/.dotfiles/scripts
-export PYTHONPATH=$HOME/Codes/Peano/python/
+export PYTHONPATH=$HOME/Projects/Peano/code/python
 export PYTHONPATH=/usr/lib64/paraview/python3.10/site-packages:$PYTHONPATH  # paraview libs location
 export PYTHONPATH=/usr/lib64/python3.10/site-packages:$PYTHONPATH           # Jinja2 location
 export PYTHONPATH=/usr/lib/python3.10/site-packages:$PYTHONPATH             # Jinja2 location
