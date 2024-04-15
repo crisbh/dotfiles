@@ -1,9 +1,15 @@
-
 # IMPORTANT: scripts invoked via crontab CANNOT HAVE .* EXTENSIONS!
 # Otherwise, they will fail to execute.
 # e.g., any bash script should not contain the .sh in its name.
 #
 # Run the APOD script to fetch a daily wallpaper
 0 10 * * * ~/.APOD_Mac_Daily/apod_daily
+
+# Set moar SPEEED for keyboard on startup
+@reboot defaults write -g InitialKeyRepeat -int 25 # normal minimum is 15 (225 ms)
+@reboot defaults write -g KeyRepeat -int 1 # normal minimum is 2 (30 ms)
+
+# Back up the current status of the cron daemon
 0 10 * * * crontab -l > ~/.dotfiles/crontab.backup
+
 
