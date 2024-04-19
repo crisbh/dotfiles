@@ -10,17 +10,17 @@ vim.opt.number = true
 vim.opt.relativenumber = true
 
 -- Enable mouse mode, can be useful for resizing splits for example!
-vim.opt.mouse = 'a'
+vim.opt.mouse = "a"
 
 -- Don't show the mode, since it's already in the status line
 vim.opt.showmode = false
 
-vim.opt.fillchars = { eob = ' ' } -- disable `~` on nonexistent lines
+vim.opt.fillchars = { eob = " " } -- disable `~` on nonexistent lines
 
 -- Sync clipboard between OS and Neovim.
 --  Remove this option if you want your OS clipboard to remain independent.
 --  See `:help 'clipboard'`
-vim.opt.clipboard = 'unnamedplus'
+vim.opt.clipboard = "unnamedplus"
 vim.opt.cmdheight = 0 -- hide command line unless needed
 
 -- Enable break indent
@@ -30,7 +30,7 @@ vim.opt.textwidth = 80
 vim.opt.tabstop = 2 -- number of space in a tab
 vim.opt.shiftwidth = 2 -- number of space inserted for indentation
 vim.opt.wrap = false -- disable wrapping of lines longer than the width of window
-vim.opt.whichwrap = 'b,s,<,>,[,]' -- Motions that will wrap to prev/next line
+vim.opt.whichwrap = "b,s,<,>,[,]" -- Motions that will wrap to prev/next line
 
 -- Save undo history
 vim.opt.undofile = true
@@ -46,7 +46,7 @@ vim.opt.ignorecase = true
 vim.opt.smartcase = true
 
 -- Keep signcolumn on by default
-vim.opt.signcolumn = 'yes'
+vim.opt.signcolumn = "yes"
 
 -- Decrease update time
 vim.opt.updatetime = 50
@@ -63,10 +63,10 @@ vim.opt.splitbelow = true
 --  See `:help 'list'`
 --  and `:help 'listchars'`
 vim.opt.list = true
-vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
+vim.opt.listchars = { tab = "» ", trail = "·", nbsp = "␣" }
 
 -- Preview substitutions live, as you type!
-vim.opt.inccommand = 'split'
+vim.opt.inccommand = "split"
 
 -- Show which line your cursor is on
 vim.opt.cursorline = true
