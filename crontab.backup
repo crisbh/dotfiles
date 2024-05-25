@@ -9,6 +9,9 @@
 @reboot defaults write -g InitialKeyRepeat -int 25 # normal minimum is 15 (225 ms)
 @reboot defaults write -g KeyRepeat -int 1 # normal minimum is 2 (30 ms)
 
+# Back up homebrew packages list
+0 10 * * 1 brew leaves > ~/.dotfiles/.config/homebrew/leaves.txt
+
 # Back up the current status of the cron daemon
 0 10 * * * crontab -l > ~/.dotfiles/crontab.backup
 
