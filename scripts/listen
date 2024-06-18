@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Get job number in the list of jobs
+jobnumber=$(($1 + 1))
+
+dir=logs/
+# Execute the squeue command and pipe it to awk, capturing the output
+jobid=$(squeue -u "$USER" | awk "NR==$jobnumber {print \$1}")
+
+echo "Listening to running job ${jobid}..."
+tail -f $dir${jobid}.log
