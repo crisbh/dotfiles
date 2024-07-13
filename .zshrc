@@ -74,7 +74,10 @@ export EDITOR="$VISUAL"
 export VAULT="$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/kosmos"
 
 # Use neovim for vim and vi if present.
-[ -x "$(command -v nvim)" ] && alias "vi=nvim" vim="nvim" vimdiff="nvim -d"
+if [[ -x "$(command -v nvim)" ]]; then
+  alias "vi=nvim" vim="nvim" vimdiff="nvim -d"
+  export EDITOR="nvim"
+fi
 
 # Completion
 #bind 'set completion-ignore-case on'
