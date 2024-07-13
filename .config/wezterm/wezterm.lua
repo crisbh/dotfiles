@@ -19,6 +19,12 @@ return {
 			action = wezterm.action.ToggleFullScreen,
 		},
 	},
+	window_padding = {
+		left = 5,
+		right = 2,
+		top = 0,
+		bottom = 0,
+	},
 	mouse_bindings = {
 		-- Ctrl-click will open the link under the mouse cursor
 		{
