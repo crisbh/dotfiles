@@ -1,0 +1,68 @@
+# dotfiles git repo
+alias dotfiles="cd $HOME/.dotfiles && ls -la && git status"
+alias doftiles="dotfiles"
+alias dot="ls ~/.dotfiles -la && git status ~/.dotfiles"
+
+# Shortcuts
+alias v="vi"
+alias za="zathura"
+alias c="clear"
+alias q="exit"
+
+alias zshrc="vim ~/.zshrc && source ~/.zshrc"
+alias nvimrc="vim ~/.config/nvim/init.vim"
+alias vimrc="vim ~/.vimrc"
+alias vsplit="vim -O"
+alias tm="tmux"
+alias tma="tmux a"
+alias tms="tmux ls"
+
+alias vimwiki="cd $VAULT && nvim -c ':VimwikiIndex'"
+alias wiki="vimwiki"
+
+# List the most used commands in zsh history
+alias freq='cut -f2 -d";" $HISTFILE | sort | uniq -c | sort -nr | head -n 30'
+
+# Verbosity and settings that you pretty much just always are going to want.
+alias \
+	cp="cp -iv" \
+	mv="mv -iv" \
+	rm="rm -vI" \
+	bc="bc -ql" \
+	mkd="mkdir -pv" \
+	yt="youtube-dl --add-metadata -i" \
+	yta="yt -x -f bestaudio/best" \
+	ffmpeg="ffmpeg -hide_banner"
+
+# Colorize commands when possible.
+alias \
+	ls="ls -hN --color=auto --group-directories-first" \
+	ll="ls -la" \
+	ltr="ls -ltr -hN --color=auto --group-directories-first" \
+	l.="ls -d .* --color=auto" \
+        sl="ls" \
+	grep="grep --color=auto" \
+#	diff="diff --color=auto" \
+	ccat="highlight --out-format=ansi"
+
+# Replace ls with eza if available
+if [ -x "$(command -v eza)" ]; then
+    alias ls="eza"
+    alias la="eza --long --all --group"
+    alias ltr="ls -l -snew --group-directories-first"
+fi
+
+# Utilities
+alias weather='curl wttr.in'
+alias dush='du -shc --apparent-size'
+alias greph='history | grep'
+alias fzfh='history | fzf'
+
+# Peano grid visualisation script
+alias renderpeanogrid='pvpython ~/Codes/Peano/python/peano4/visualisation/render.py grid.peano-patch-file'
+
+# jupyter notebooks
+alias jn='jupyter-notebook'
+alias jlab='jupyter-lab'
+alias jtunnel='ssh -N -L localhost:8444:localhost:8444 dc-barr3@cosma8a'
+
