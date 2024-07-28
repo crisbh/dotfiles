@@ -10,9 +10,8 @@
 @reboot defaults write -g KeyRepeat -int 1 # normal minimum is 2 (30 ms)
 
 # Back up homebrew packages list
-0 10 * * * brew leaves > ~/.dotfiles/.config/homebrew/leaves.txt
+0 10 * * * /bin/bash -c '/opt/homebrew/bin/brew leaves > ~/.dotfiles/.config/homebrew/leaves.txt 2> ~/.dotfiles/.config/homebrew/error.log'
 
 # Back up the current status of the cron daemon
 0 10 * * * crontab -l > ~/.dotfiles/crontab.backup
-
 

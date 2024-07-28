@@ -120,8 +120,8 @@ export MANPAGER="less -R --use-color -Dd+g -Du+b"
 # --------------------------------------------
 
 # Load aliases and shortcuts if existent.
-[ -f "$HOME/.config/shortcutrc" ] && source "$HOME/.config/shortcutrc"
-[ -f "$HOME/.config/aliasrc" ] && source "$HOME/.config/.aliasrc"
+[ -f "$HOME/.config/.shortcutrc" ] && source "$HOME/.config/shortcutrc"
+[ -f "$HOME/.config/.aliasrc" ] && source "$HOME/.config/.aliasrc"
 
 #
 # --------------------------------------------
