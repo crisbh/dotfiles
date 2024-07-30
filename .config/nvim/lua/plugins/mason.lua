@@ -30,4 +30,5 @@ return {
 			},
 		},
 	},
+	{ "mfussenegger/nvim-dap" },
 }
