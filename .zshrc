@@ -5,70 +5,63 @@
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
-# ==============================================================================
 
+# Integrate brew and shell in macOS
+if [[ -f "/opt/homebrew/bin/brew" ]] then
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+fi
 
-# ==============================================================================
-# ======================   General zsh config   ================================
-# ==============================================================================
+# Set the directory we want to store zinit and plugins
+ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
 
-# Path to your oh-my-zsh installation.
-export ZSH="$HOME/.oh-my-zsh"
+# Download Zinit if not present
+if [ ! -d "$ZINIT_HOME" ]; then
+   mkdir -p "$(dirname $ZINIT_HOME)"
+   git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
+fi
 
-# See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-#ZSH_THEME="powerlevel10k/powerlevel10k"
+# Source/Load zinit
+source "${ZINIT_HOME}/zinit.zsh"
 
-# CASE_SENSITIVE="true"
-# HYPHEN_INSENSITIVE="true"
-# DISABLE_LS_COLORS="true"
-# DISABLE_AUTO_TITLE="true"
-# ENABLE_CORRECTION="true"
+# Add in Powerlevel10k
+zinit ice depth=1; zinit light romkatv/powerlevel10k
 
-# Uncomment the following line if pasting URLs and other text is messed up.
-# DISABLE_MAGIC_FUNCTIONS="true"
+# Add in zsh plugins
+zinit light zsh-users/zsh-syntax-highlighting
+zinit light zsh-users/zsh-completions
+zinit light zsh-users/zsh-autosuggestions
+zinit light Aloxaf/fzf-tab
 
-# Caution: this setting can cause issues with multiline prompts in zsh < 5.7.1 (see #5765)
-# COMPLETION_WAITING_DOTS="true"
+# Add in snippets
+zinit snippet OMZP::git
+zinit snippet OMZP::sudo
+#zinit snippet OMZP::archlinux
+#zinit snippet OMZP::aws
+#zinit snippet OMZP::kubectl
+#zinit snippet OMZP::kubectx
+zinit snippet OMZP::command-not-found
 
-# Uncomment the following line if you want to disable marking untracked files
-# under VCS as dirty. This makes repository status check for large repositories
-# much, much faster.
-# DISABLE_UNTRACKED_FILES_DIRTY="true"
+# Completion
+#bind 'set completion-ignore-case on'
+#bind "set show-all-if-ambiguous on"
+autoload -Uz compinit && compinit
+#autoload -U compinit
+#zstyle ':completion:*' menu select
+#zmodload zsh/complist
+#compinit
+#_comp_options+=(globdots)		# Include hidden files.
 
-# Uncomment the following line if you want to change the command execution time
-# stamp shown in the history command output.
-# You can set one of the optional three formats:
-# "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
-# or set a custom format using the strftime function format specifications,
-# see 'man strftime' for details.
-# HIST_STAMPS="mm/dd/yyyy"
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+zstyle ':completion:*' menu no
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color $realpath'
+zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'ls --color $realpath'
 
-# Would you like to use another custom folder than $ZSH/custom?
-# ZSH_CUSTOM=/path/to/new-custom-folder
-
-# Which plugins would you like to load?
-# Standard plugins can be found in $ZSH/plugins/
-# Custom plugins may be added to $ZSH_CUSTOM/plugins/
-# Example format: plugins=(rails git textmate ruby lighthouse)
-# Add wisely, as too many plugins slow down shell startup.
-plugins=(git)
-
-source $ZSH/oh-my-zsh.sh
-
+zinit cdreplay -q
 
 # ==============================================================================
 # ======================   User zsh config   ===================================
 # ==============================================================================
-
-# History in cache directory:
-HISTSIZE=10000
-SAVEHIST=10000
-[ ! -f "$HOME/.cache/zsh/history" ] && touch "$HOME/.cache/zsh/history" \
-    && echo "History file not found. Creating one..."
-HISTFILE=~/.cache/zsh/history
-export HISTCONTROL=ignoredups
-setopt nosharehistory
-
 export VISUAL=vim
 export EDITOR="$VISUAL"
 export VAULT="$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/kosmos"
@@ -79,22 +72,34 @@ if [[ -x "$(command -v nvim)" ]]; then
   export EDITOR="nvim"
 fi
 
-# Completion
-#bind 'set completion-ignore-case on'
-#bind "set show-all-if-ambiguous on"
-autoload -U compinit
-zstyle ':completion:*' menu select
-zmodload zsh/complist
-compinit
-_comp_options+=(globdots)		# Include hidden files.
-zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
+# History in cache directory:
+HISTSIZE=10000
+SAVEHIST=$HISTSIZE
+[ ! -f "$HOME/.cache/zsh/history" ] && touch "$HOME/.cache/zsh/history" \
+    && echo "History file not found. Creating one..."
+HISTFILE=~/.cache/zsh/history
+HISTDUP=erase
+export HISTCONTROL=ignoredups
+#setopt nosharehistory
+setopt appendhistory
+setopt sharehistory
+setopt hist_ignore_space
+setopt hist_ignore_all_dups
+setopt hist_save_no_dups
+setopt hist_ignore_dups
+setopt hist_find_no_dups
+
+# Keybindings
+#bindkey -e  # emacs keybiding, if desired
+bindkey '^p' history-search-backward
+bindkey '^n' history-search-forward
+bindkey '^[w' kill-region
 
 
 # Remember ssh login passwords for current session
-#eval $(keychain --eval /home/$USER/.ssh/id_rsa 2> /dev/null)
 eval $(ssh-add --apple-use-keychain $HOME/.ssh/id_ed25519 2> /dev/null)
 
-# Paths
+# Paths for software projects
 export PATH=$PATH:$HOME/.local/bin
 export PATH=$PATH:$HOME/.cargo/bin
 export PATH=$PATH:$HOME/Library/Python/3.9/bin
@@ -123,11 +128,9 @@ export MANPAGER="less -R --use-color -Dd+g -Du+b"
 [ -f "$HOME/.config/.shortcutrc" ] && source "$HOME/.config/shortcutrc"
 [ -f "$HOME/.config/.aliasrc" ] && source "$HOME/.config/.aliasrc"
 
-#
 # --------------------------------------------
-# Load functions
+# Load custom functions
 # --------------------------------------------
-
 [ -f "$HOME/.bash_functions" ] && source "$HOME/.bash_functions"
 
 # --------------------------------------------
@@ -139,11 +142,14 @@ bindkey -v
 export KEYTIMEOUT=1
 
 # Use vim keys in tab complete menu:
-bindkey -M menuselect 'h' vi-backward-char
-bindkey -M menuselect 'k' vi-up-line-or-history
-bindkey -M menuselect 'l' vi-forward-char
-bindkey -M menuselect 'j' vi-down-line-or-history
+#bindkey -M menuselect 'h' vi-backward-char
+#bindkey -M menuselect 'k' vi-up-line-or-history
+#bindkey -M menuselect 'l' vi-forward-char
+#bindkey -M menuselect 'j' vi-down-line-or-history
 bindkey -v '^?' backward-delete-char
+
+# Auto accept key
+bindkey '^ ' autosuggest-accept
 
 # Change cursor shape for different vi modes.
 function zle-keymap-select {
@@ -166,7 +172,6 @@ zle -N zle-line-init
 echo -ne '\e[5 q'                # Use beam shape cursor on startup.
 preexec() { echo -ne '\e[5 q' ;} # Use beam shape cursor for each new prompt.
 
-
 # --------------------------------------------
 # >>> conda initialize >>>
 # --------------------------------------------
@@ -184,27 +189,15 @@ fi
 unset __conda_setup
 # <<< conda initialize <<<
 
-#source /opt/homebrew/opt/powerlevel10k/powerlevel10k.zsh-theme
-source /opt/homebrew/opt/powerlevel10k/share/powerlevel10k/powerlevel10k.zsh-theme
-# ==============================================================================
-# Load zsh-syntax-highlighting; should be last.
-# Linux
-#source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh 2>/dev/null
-#source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-
-# macos brew installations
-source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-# ==============================================================================
-# Auto accept key
-bindkey '^ ' autosuggest-accept
-
 # ==============================================================================
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 # ==============================================================================
 
 # ==============================================================================
+## Shell integrations
+# ==============================================================================
+eval "$(fzf --zsh)"
 # Enable zoxide for zshell and alias to cd
 eval "$(zoxide init --cmd cd zsh)"
 # ==============================================================================
