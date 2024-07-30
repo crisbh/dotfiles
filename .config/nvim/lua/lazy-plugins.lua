@@ -16,9 +16,6 @@ return {
     --    For additional information, see `:help lazy.nvim-lazy.nvim-structuring-your-plugins`
     { import = 'plugins' },
 
-    -- Load colorscheme (in case import above is not used)
-    require 'colorscheme',
-
     'akinsho/toggleterm.nvim',
     opts = {
       terminal_mappings = true,
