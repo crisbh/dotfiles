@@ -6,7 +6,6 @@ convertlit
 coreutils
 doxygen
 entr
-exa
 eza
 fd
 fzf
@@ -24,10 +23,6 @@ neovim
 node
 pandoc
 powerlevel10k
-python-jinja
-python-packaging
-python-requests
-python-tabulate
 qca
 ranger
 ripgrep
