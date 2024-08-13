@@ -50,8 +50,15 @@ vim.api.nvim_create_autocmd("FileType", {
 -- Bash scripts
 vim.api.nvim_create_autocmd("BufNewFile", {
 	pattern = "*.sh",
-	group = vim.api.nvim_create_augroup("create_skeletons_sh", { clear = true }),
-	command = "0r ~/.skeletons/skeleton.sh",
+	group = vim.api.nvim_create_augroup("create_skeletons_bash", { clear = true }),
+	command = "0r ~/.skeletons/skeleton-bash.sh",
+})
+
+-- make file
+vim.api.nvim_create_autocmd("BufNewFile", {
+	pattern = "*Makefile*",
+	group = vim.api.nvim_create_augroup("create_skeletons_makefile", { clear = true }),
+	command = "0r ~/.skeletons/skeleton-workflow-makefile",
 })
 
 -- Exam class
