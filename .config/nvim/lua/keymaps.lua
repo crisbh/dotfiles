@@ -46,5 +46,8 @@ vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right win
 vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
+-- Run make
+vim.keymap.set('n', '<leader>cc', ":make <CR>", {desc = 'Run make'})
+
 -- Create Obsidian Daily Note
 vim.keymap.set('n', '<leader>w<leader>w', '<cmd>ObsidianToday<cr> Go', { desc = 'New Obsidian diary note' })
