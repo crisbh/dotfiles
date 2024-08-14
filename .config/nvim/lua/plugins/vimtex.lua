@@ -1,7 +1,8 @@
 return {
   {
     "lervag/vimtex",
-    event = "BufEnter *.tex",
+    lazy=false,
+    --event = "BufEnter *.tex",
     init = function()
       vim.g.vimtex_fold_enabled = true
       vim.g.tex_flavor = "latex"
