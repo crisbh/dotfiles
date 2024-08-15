@@ -61,6 +61,20 @@ vim.api.nvim_create_autocmd("BufNewFile", {
 	command = "0r ~/.skeletons/skeleton-workflow-makefile",
 })
 
+-- python
+vim.api.nvim_create_autocmd("BufNewFile", {
+	pattern = "*.py",
+	group = vim.api.nvim_create_augroup("create_skeletons_python", { clear = true }),
+	command = "0r ~/.skeletons/skeleton-python.py",
+})
+
+-- c main
+vim.api.nvim_create_autocmd("BufNewFile", {
+	pattern = "*main.c",
+	group = vim.api.nvim_create_augroup("create_skeletons_c_main", { clear = true }),
+	command = "0r ~/.skeletons/skeleton-c-main.c",
+})
+
 -- Exam class
 vim.api.nvim_create_autocmd("BufNewFile", {
 	pattern = "pregunta-*.tex",
