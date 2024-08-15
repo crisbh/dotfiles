@@ -6,6 +6,7 @@ alias dot="ls ~/.dotfiles -la && git status ~/.dotfiles"
 # Shortcuts
 alias v="vi"
 alias za="zathura"
+alias zat="zathura"
 alias c="clear"
 alias q="exit"
 
@@ -40,6 +41,7 @@ alias \
 alias \
 	ls="ls -hN --color=auto --group-directories-first" \
 	ll="ls -la" \
+	l="ll" \
 	ltr="ls -ltr -hN --color=auto --group-directories-first" \
 	l.="ls -d .* --color=auto" \
         sl="ls" \
