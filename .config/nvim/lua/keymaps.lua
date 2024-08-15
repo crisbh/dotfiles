@@ -8,6 +8,7 @@ vim.g.maplocalleader = ' '
 
 vim.keymap.set('n', '<leader>q', ':q<CR>', { desc = '[Q]uit Neovim' })
 vim.keymap.set('n', '<leader>w', ':w<CR>', { desc = '[W]rite current buffer' })
+vim.keymap.set('n', '<leader>bw', ':bw<CR>', { desc = '[W]ipe current [B]uffer' })
 
 -- File navigation
 vim.keymap.set('n', '<C-d>', '<C-d>zz', { desc = 'Jump down and center' })
