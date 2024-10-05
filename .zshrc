@@ -99,7 +99,7 @@ bindkey '^[w' kill-region
 # Remember ssh login passwords for current session
 eval $(ssh-add --apple-use-keychain $HOME/.ssh/id_ed25519 2> /dev/null)
 
-# Paths for software projects
+# Set various PATHs
 export PATH=$PATH:$HOME/.local/bin
 export PATH=$PATH:$HOME/.cargo/bin
 export PATH=$PATH:$HOME/Library/Python/3.9/bin
@@ -110,6 +110,12 @@ export PYTHONPATH=/usr/lib64/python3.10/site-packages:$PYTHONPATH           # Ji
 export PYTHONPATH=/usr/lib/python3.10/site-packages:$PYTHONPATH             # Jinja2 location
 export PYTHONPATH=$HOME/Projects/GR-effects-clusters:$PYTHONPATH            # Custom project folder
 export JUPYTER_PATH=$HOME/Codes/Peano/python
+
+# Hide the default go folder in home
+export GOPATH=$HOME/.go
+
+export LDFLAGS="-L/opt/homebrew/opt/libomp/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/libomp/include"
 
 # Path to cd quicker between frequent directories
 export CDPATH=$HOME

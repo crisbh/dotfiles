@@ -68,5 +68,6 @@ alias renderpeanogrid='pvpython ~/Codes/Peano/python/peano4/visualisation/render
 # jupyter notebooks
 alias jn='jupyter-notebook'
 alias jlab='jupyter-lab'
-alias jtunnel='ssh -N -L localhost:8444:localhost:8444 dc-barr3@cosma8a'
+alias jtunnel='ssh -N -L 8443:login8b.cosma.dur.ac.uk:443 dc-barr3@login8b.cosma.dur.ac.uk'
+
 

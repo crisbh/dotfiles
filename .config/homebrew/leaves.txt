@@ -15,12 +15,15 @@ isort
 julia
 lapack
 lazygit
+libomp
+libopenmpt
 lima
 luarocks
 meson
 neomutt
 neovim
 node
+open-mpi
 pandoc
 powerlevel10k
 qca
