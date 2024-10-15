@@ -102,7 +102,9 @@ eval $(ssh-add --apple-use-keychain $HOME/.ssh/id_ed25519 2> /dev/null)
 # Set various PATHs
 export PATH=$PATH:$HOME/.local/bin
 export PATH=$PATH:$HOME/.cargo/bin
-export PATH=$PATH:$HOME/Library/Python/3.9/bin
+export PATH=$PATH:/opt/homebrew/bin
+export PATH=$PATH:/opt/anaconda3/bin
+#export PATH=$PATH:$HOME/Library/Python/3.9/bin
 export PATH=$PATH:$HOME/.dotfiles/scripts
 export PYTHONPATH=$HOME/Projects/Peano/code/python
 export PYTHONPATH=/usr/lib64/paraview/python3.10/site-packages:$PYTHONPATH  # paraview libs location
@@ -177,23 +179,6 @@ zle-line-init() {
 zle -N zle-line-init
 echo -ne '\e[5 q'                # Use beam shape cursor on startup.
 preexec() { echo -ne '\e[5 q' ;} # Use beam shape cursor for each new prompt.
-
-# --------------------------------------------
-# >>> conda initialize >>>
-# --------------------------------------------
-# !! Contents within this block are managed by 'conda init' !!
-__conda_setup="$('/usr/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
-if [ $? -eq 0 ]; then
-    eval "$__conda_setup"
-else
-    if [ -f "/usr/etc/profile.d/conda.sh" ]; then
-        . "/usr/etc/profile.d/conda.sh"
-    else
-        export PATH="/usr/bin:$PATH"
-    fi
-fi
-unset __conda_setup
-# <<< conda initialize <<<
 
 # ==============================================================================
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
