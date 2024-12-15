@@ -1,1 +1,6 @@
 crontab.backup
+\.git
+
+^/README.*
+^/LICENSE.*
+^/COPYING
