@@ -1,5 +1,6 @@
 aerc
 ascii
+automake
 bat
 bear
 convertlit
@@ -8,8 +9,10 @@ doxygen
 entr
 eza
 fd
+fftw
 fzf
 graphviz
+gsl
 htop
 isort
 julia
@@ -23,9 +26,10 @@ meson
 neomutt
 neovim
 node
-open-mpi
+numpy
 pandoc
 powerlevel10k
+python@3.13
 qca
 ranger
 ripgrep

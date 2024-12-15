@@ -15,7 +15,7 @@ return {
 				"lua_ls",
 				"bashls",
 				"texlab",
-				"tsserver",
+--				"tsserver",
 				"yamlls",
 			},
 		},
