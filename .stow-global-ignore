@@ -1,5 +1,9 @@
 crontab.backup
+
 \.git
+\.github
+
+\.DS_Store
 
 ^/README.*
 ^/LICENSE.*
