@@ -31,7 +31,7 @@ stow -t $HOME .
 Notice that this method requires that the file structure in this repo mimicks the one in
 the user's home directory.
 
-Alternatively, run the `install` bash script provided, as
+Alternatively, just run the provided `install` bash script as
 ```shell
 bash install.sh
 ```
