@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# The base script was taken from rwxrob
+
+R="\033[31m"
+G="\033[32m"
+Y="\033[33m"
+RESET="\033[m"
+
+# Currently sorted alphabetically
+# Could be sorted otherwise, e.g. by most forgotten commands
+
+printf "${Y}---------------------------------------------------------\n"
+printf "${Y}caw${R}  - ${G}change around current word${R}\n"
+printf "${Y}ciw${R}  - ${G}change current word${R}\n"
+printf "${Y}cw ${R}  - ${G}change to end of current word${R}\n"
+printf "${Y}daW${R}  - ${G}delete around current larger word${R}\n"
+printf "${Y}daf${R}  - ${G}delete current function${R}\n"
+printf "${Y}dap${R}  - ${G}delete around current paragraph${R}\n"
+printf "${Y}daw${R}  - ${G}delete around current word${R}\n"
+printf "${Y}dd${R}   - ${G}delete the current line${R}\n"
+printf "${Y}diW${R}  - ${G}delete current larger word (ex: --foo-bar)${R}\n"
+printf "${Y}dif${R}  - ${G}delete current inner function${R}\n"
+printf "${Y}dip${R}  - ${G}delete current paragraph${R}\n"
+printf "${Y}diw${R}  - ${G}delete current word${R}\n"
+printf "${Y}dw ${R}  - ${G}delete to beginning of next word${R}\n"
+printf "${Y}ea ${R}  - ${G}append to current word${R}\n"
+printf "${Y}gqap${R} - ${G}wrap around the current paragraph${R}\n"
+printf "${Y}gqip${R} - ${G}wrap the current paragraph${R}\n"
+printf "${Y}yaf${R}  - ${G}yank current function${R}\n"
+printf "${Y}yap${R}  - ${G}yank around current paragraph${R}\n"
+printf "${Y}yif${R}  - ${G}yank current inner function${R}\n"
+printf "${Y}yip${R}  - ${G}yank current paragraph${R}\n"
+printf "${Y}>ip${R}  - ${G}indent the current paragraph${R}\n"
+printf "${Y}<ip${R}  - ${G}dedent the current paragraph${R}\n"
+printf "${Y}!ip${R}  - ${G}send the current paragraph to shell command${R}\n"
+printf "${Y}---------------------------------------------------------\n"
