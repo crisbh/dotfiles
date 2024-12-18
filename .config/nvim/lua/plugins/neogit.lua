@@ -1,6 +1,8 @@
 return {
 	"NeogitOrg/neogit",
-	lazy = false,
+	-- lazy = true,
+	-- event = "BufEnter *",
+	event = "VeryLazy",
 	dependencies = {
 		"nvim-lua/plenary.nvim", -- required
 		"sindrets/diffview.nvim", -- optional - Diff integration

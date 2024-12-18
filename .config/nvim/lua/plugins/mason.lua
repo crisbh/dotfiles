@@ -2,6 +2,7 @@ return {
 	{ "williamboman/mason.nvim", opts = { PATH = "append" } },
 	{
 		"williamboman/mason-lspconfig.nvim",
+		event = "VeryLazy",
 		opts = {
 			ensure_installed = {
 				"clangd",
@@ -15,13 +16,14 @@ return {
 				"lua_ls",
 				"bashls",
 				"texlab",
---				"tsserver",
+				--				"tsserver",
 				"yamlls",
 			},
 		},
 	},
 	{
 		"jay-babu/mason-nvim-dap.nvim",
+		event = "VeryLazy",
 		opts = {
 			ensure_installed = {
 				"bash",
@@ -30,5 +32,5 @@ return {
 			},
 		},
 	},
-	{ "mfussenegger/nvim-dap" },
+	{ "mfussenegger/nvim-dap", event = "VeryLazy" },
 }

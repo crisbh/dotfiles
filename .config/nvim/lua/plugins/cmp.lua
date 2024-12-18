@@ -6,6 +6,7 @@ return {
 			-- Snippet Engine & its associated nvim-cmp source
 			{
 				"L3MON4D3/LuaSnip",
+				lazy = true,
 				build = (function()
 					-- Build Step is needed for regex support in snippets.
 					-- This step is not supported in many windows environments.
@@ -29,6 +30,7 @@ return {
 					--    https://github.com/rafamadriz/friendly-snippets
 					{
 						"rafamadriz/friendly-snippets",
+						lazy = true,
 						config = function()
 							require("luasnip.loaders.from_vscode").lazy_load()
 						end,
