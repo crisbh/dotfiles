@@ -64,7 +64,15 @@ zinit cdreplay -q
 # ==============================================================================
 export VISUAL=vim
 export EDITOR="$VISUAL"
-export VAULT="$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/kosmos"
+
+# Set location of Vault with notes
+if [[ $OSTYPE == *"darwin"* ]]; then
+    export VAULT="$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/kosmos"
+else
+    VAULT="$HOME/notes"
+    [[ ! -d $VAULT ]] && mkdir "$VAULT"
+    export VAULT
+fi
 
 # Use neovim for vim and vi if present.
 if [[ -x "$(command -v nvim)" ]]; then
@@ -80,7 +88,6 @@ SAVEHIST=$HISTSIZE
 HISTFILE=~/.cache/zsh/history
 HISTDUP=erase
 export HISTCONTROL=ignoredups
-#setopt nosharehistory
 setopt appendhistory
 setopt sharehistory
 setopt hist_ignore_space
