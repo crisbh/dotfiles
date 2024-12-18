@@ -7,5 +7,5 @@ vim.api.nvim_set_keymap(
 	"n",
 	"<leader>cc",
 	":w <bar> exec '!python3 '.shellescape('%')<CR>",
-	{ noremap = true, silent = true }
+	{ desc = 'Run Python', noremap = true, silent = true }
 )

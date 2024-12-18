@@ -7,5 +7,5 @@ vim.api.nvim_set_keymap(
 	"n",
 	"<leader>cc",
 	":VimtexCompile <CR>",
-	{ noremap = true, silent = true }
+	{ desc = 'Compile TeX', noremap = true, silent = true }
 )
