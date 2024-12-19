@@ -51,9 +51,6 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 -- Run make
 vim.keymap.set('n', '<leader>cc', ":make <CR>", {desc = 'Run make'})
 
--- Create Obsidian Daily Note
-vim.keymap.set('n', '<leader>w<leader>w', '<cmd>ObsidianToday<cr> Go', { desc = 'New Obsidian diary note' })
-
 -- Terminal mode
 -- Easily hit escape in terminal mode.
 vim.keymap.set("t", "<esc><esc>", "<c-\\><c-n>")
