@@ -5,7 +5,7 @@ SOURCE_DIR="."
 
 # First do dry run
 echo "Starting dry run of GNU stow..."
-DRY_RUN_OUTPUT=$(stow --simulate --target $TARGET_DIR $SOURCE_DIR 2>&1)
+DRY_RUN_OUTPUT=$(stow --simulate --target $TARGET_DIR $SOURCE_DIR | tee /dev/tty)
 echo
 
 if echo $DRY_RUN_OUTPUT | head -n2 | tail -n1 | grep -qE "^(WARNING|LINK)"; then
