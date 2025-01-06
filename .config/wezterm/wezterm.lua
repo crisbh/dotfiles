@@ -1,19 +1,19 @@
 local wezterm = require("wezterm")
 return {
 	color_scheme = "Dracula",
+	-- color_scheme = "Tokyo Night",
 	--color_scheme = "Catppuccin Mocha",
-	enable_tab_bar = false,
-	font_size = 16.0,
+	font_size = 18.0,
 	font = wezterm.font("JetBrains Mono"),
+	enable_tab_bar = false,
+	default_cursor_style = 'BlinkingBar',
 	macos_window_background_blur = 5,
-	-- macos_window_background_blur = 30,
-
 	-- window_background_opacity = 1.0,
-	window_background_opacity = 0.78,
-	-- window_background_opacity = 0.20,
+	window_background_opacity = 0.90,
 	window_decorations = "RESIZE",
 	keys = {
 		{
+		-- Ctrl-f will toggle the terminal full screen
 			key = "f",
 			mods = "CTRL",
 			action = wezterm.action.ToggleFullScreen,
