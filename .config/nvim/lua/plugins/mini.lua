@@ -32,6 +32,18 @@ return {
         return '%2l:%-2v'
       end
 
+      -- File browser in a buffer
+      local files = require('mini.files')
+      files.setup({
+        mappings = {
+          synchronize = 'w',
+        },
+        windows = {
+          preview = false,
+        }
+      })
+      vim.keymap.set('n', '<leader>cd', files.open, {desc = 'Browse [C]urrent [D]irectory'})
+
       -- ... and there is more!
       --  Check out: https://github.com/echasnovski/mini.nvim
     end,
