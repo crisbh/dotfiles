@@ -64,6 +64,10 @@ alias dush='du -shc --apparent-size'
 alias greph='history | grep'
 alias fzfh='history | fzf'
 
+if [ -x "$(command -v htop)" ]; then
+    alias top="htop"
+fi
+
 # Peano grid visualisation script
 alias renderpeanogrid='pvpython ~/Codes/Peano/python/peano4/visualisation/render.py grid.peano-patch-file'
 

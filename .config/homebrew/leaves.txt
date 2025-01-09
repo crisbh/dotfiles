@@ -24,6 +24,7 @@ libopenmpt
 lima
 luarocks
 meson
+neofetch
 neomutt
 neovim
 node
