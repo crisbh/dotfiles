@@ -21,7 +21,7 @@ return {
 				},
 				config = function()
 					-- TODO: This line to load custom snippets does not work anymore
-					require("luasnip.loaders.from_lua").lazy_load({ paths = { "../snippets" } }) -- load snippets paths
+					require("luasnip.loaders.from_lua").lazy_load({ paths = { "./lua/snippets/" } }) -- load snippets paths
 				end,
 
 				dependencies = {
