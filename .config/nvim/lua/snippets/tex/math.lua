@@ -1,15 +1,52 @@
+local ls = require("luasnip")
+-- some shorthands...
+local s = ls.snippet
+local sn = ls.snippet_node
+local t = ls.text_node
+local i = ls.insert_node
+local f = ls.function_node
+local c = ls.choice_node
+local d = ls.dynamic_node
+local r = ls.restore_node
+local l = require("luasnip.extras").lambda
+local rep = require("luasnip.extras").rep
+local p = require("luasnip.extras").partial
+local m = require("luasnip.extras").match
+local n = require("luasnip.extras").nonempty
+local dl = require("luasnip.extras").dynamic_lambda
+local fmt = require("luasnip.extras.fmt").fmt
+local fmta = require("luasnip.extras.fmt").fmta
+local types = require("luasnip.util.types")
+local conds = require("luasnip.extras.conditions")
+-- local conds_expand = require("luasnip.extras.conditions.expand")
+local conds_expand = require("luasnip.extras.expand_conditions")
+
+-- Environment detection:
+--
+
+-- Include this `in_mathzone` function at the start of a snippets file...
+local in_mathzone = function()
+  -- The `in_mathzone` function requires the VimTeX plugin
+  return vim.fn['vimtex#syntax#in_mathzone']() == 1
+end
+-- Then pass the table `{condition = in_mathzone}` to any snippet you want to
+-- expand only in math contexts.
+
+
+-- the `get_visual` function
+-- ----------------------------------------------------------------------------
+-- Summary: When `LS_SELECT_RAW` is populated with a visual selection, the function
+-- returns an insert node whose initial text is set to the visual selection.
+-- When `LS_SELECT_RAW` is empty, the function simply returns an empty insert node.
 local get_visual = function(args, parent)
-  if (#parent.snippet.env.SELECT_RAW > 0) then
-    return sn(nil, i(1, parent.snippet.env.SELECT_RAW))
-  else
-    return sn(nil, i(1, ''))
+  if (#parent.snippet.env.LS_SELECT_RAW > 0) then
+    return sn(nil, i(1, parent.snippet.env.LS_SELECT_RAW))
+  else  -- If LS_SELECT_RAW is empty, return a blank insert node
+    return sn(nil, i(1))
   end
 end
 
--- Math context detection 
-local tex = {}
-tex.in_mathzone = function() return vim.fn['vimtex#syntax#in_mathzone']() == 1 end
-tex.in_text = function() return not tex.in_mathzone() end
+
 
 -- Return snippet tables
 return
@@ -23,7 +60,7 @@ return
         d(1, get_visual),
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- SUBSCRIPT
   s({trig = "([%w%)%]%}]);", wordTrig=false, regTrig = true, snippetType="autosnippet"},
@@ -34,7 +71,7 @@ return
         d(1, get_visual),
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- SUBSCRIPT AND SUPERSCRIPT
   s({trig = "([%w%)%]%}])__", wordTrig=false, regTrig = true, snippetType="autosnippet"},
@@ -46,14 +83,14 @@ return
         i(2),
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- TEXT SUBSCRIPT
   s({trig = 'sd', snippetType="autosnippet", wordTrig=false},
     fmta("_{\\mathrm{<>}}",
       { d(1, get_visual) }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- SUPERSCRIPT SHORTCUT
   -- Places the first alphanumeric character after the trigger into a superscript.
@@ -65,7 +102,7 @@ return
         f( function(_, snip) return snip.captures[2] end ),
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- SUBSCRIPT SHORTCUT
   -- Places the first alphanumeric character after the trigger into a subscript.
@@ -77,7 +114,7 @@ return
         f( function(_, snip) return snip.captures[2] end ),
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- EULER'S NUMBER SUPERSCRIPT SHORTCUT
   s({trig = '([^%a])ee', regTrig = true, wordTrig = false, snippetType="autosnippet"},
@@ -88,7 +125,7 @@ return
         d(1, get_visual)
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- ZERO SUBSCRIPT SHORTCUT
   s({trig = '([%a%)%]%}])00', regTrig = true, wordTrig = false, snippetType="autosnippet"},
@@ -99,7 +136,7 @@ return
         t("0")
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- MINUS ONE SUPERSCRIPT SHORTCUT
   s({trig = '([%a%)%]%}])11', regTrig = true, wordTrig = false, snippetType="autosnippet"},
@@ -110,7 +147,7 @@ return
         t("-1")
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- i SUBSCRIPT SHORTCUT (since jk triggers snippet jump forward)
   s({trig = '([%a%)%]%}])II', wordTrig = false, regTrig = true, snippetType="autosnippet"},
@@ -121,7 +158,7 @@ return
         t("i")
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- j SUBSCRIPT SHORTCUT (since jk triggers snippet jump forward)
   s({trig = '([%a%)%]%}])JJ', wordTrig = false, regTrig = true, snippetType="autosnippet"},
@@ -132,7 +169,7 @@ return
         t("j")
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- ij SUBSCRIPT SHORTCUT (since jk triggers snippet jump forward)
   s({trig = '([%a%)%]%}])IJ', wordTrig = false, regTrig = true, snippetType="autosnippet"},
@@ -143,7 +180,7 @@ return
         t("ij")
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- ji SUBSCRIPT SHORTCUT (since jk triggers snippet jump forward)
   s({trig = '([%a%)%]%}])JI', wordTrig = false, regTrig = true, snippetType="autosnippet"},
@@ -154,7 +191,7 @@ return
         t("ji")
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- PLUS SUPERSCRIPT SHORTCUT
   s({trig = '([%a%)%]%}])%+%+', regTrig = true, wordTrig = false, snippetType="autosnippet"},
@@ -165,7 +202,7 @@ return
         t("+")
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- COMPLEMENT SUPERSCRIPT
   s({trig = '([%a%)%]%}])CC', regTrig = true, wordTrig = false, snippetType="autosnippet"},
@@ -176,7 +213,7 @@ return
         t("\\complement")
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- CONJUGATE (STAR) SUPERSCRIPT SHORTCUT
   s({trig = '([%a%)%]%}])%*%*', regTrig = true, wordTrig = false, snippetType="autosnippet"},
@@ -187,7 +224,7 @@ return
         t("*")
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- VECTOR, i.e. \vec
   s({trig = "([^%a])vv", wordTrig = false, regTrig = true, snippetType="autosnippet"},
@@ -198,7 +235,7 @@ return
         d(1, get_visual),
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- DEFAULT UNIT VECTOR WITH SUBSCRIPT, i.e. \unitvector_{}
   s({trig = "([^%a])ue", wordTrig = false, regTrig = true, snippetType="autosnippet"},
@@ -209,7 +246,7 @@ return
         d(1, get_visual),
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- UNIT VECTOR WITH HAT, i.e. \uvec{}
   s({trig = "([^%a])uv", wordTrig = false, regTrig = true, snippetType="autosnippet"},
@@ -220,7 +257,7 @@ return
         d(1, get_visual),
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- MATRIX, i.e. \vec
   s({trig = "([^%a])mt", wordTrig = false, regTrig = true, snippetType="autosnippet"},
@@ -231,7 +268,7 @@ return
         d(1, get_visual),
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- FRACTION
   s({trig = "([^%a])ff", wordTrig = false, regTrig = true, snippetType="autosnippet"},
@@ -243,7 +280,7 @@ return
         i(2),
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- ANGLE
   s({trig = "([^%a])gg", regTrig = true, wordTrig = false, snippetType="autosnippet"},
@@ -254,7 +291,7 @@ return
         d(1, get_visual),
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- ABSOLUTE VALUE
   s({trig = "([^%a])aa", regTrig = true, wordTrig = false, snippetType="autosnippet"},
@@ -265,7 +302,7 @@ return
         d(1, get_visual),
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- SQUARE ROOT
   s({trig = "([^%\\])sq", wordTrig = false, regTrig = true, snippetType="autosnippet"},
@@ -276,7 +313,7 @@ return
         d(1, get_visual),
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- BINOMIAL SYMBOL
   s({trig = "([^%\\])bnn", wordTrig = false, regTrig = true, snippetType="autosnippet"},
@@ -288,7 +325,7 @@ return
         i(2),
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- LOGARITHM WITH BASE SUBSCRIPT
   s({trig = "([^%a%\\])ll", wordTrig = false, regTrig = true, snippetType="autosnippet"},
@@ -299,7 +336,7 @@ return
         i(1),
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- DERIVATIVE with denominator only
   s({trig = "([^%a])dV", wordTrig = false, regTrig = true, snippetType="autosnippet"},
@@ -310,7 +347,7 @@ return
         d(1, get_visual),
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- DERIVATIVE with numerator and denominator
   s({trig = "([^%a])dvv", wordTrig = false, regTrig = true, snippetType="autosnippet"},
@@ -322,7 +359,7 @@ return
         i(2)
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- Derivative d/dx
   s({trig = "([^%a])ddx", wordTrig = false, regTrig = true, snippetType="autosnippet"},
@@ -332,7 +369,7 @@ return
         i(1),
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- Derivative d/dt
   s({trig = "([^%a])ddt", wordTrig = false, regTrig = true, snippetType="autosnippet"},
@@ -342,7 +379,7 @@ return
         i(1),
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- DERIVATIVE with numerator, denominator, and higher-order argument
   s({trig = "([^%a])ddv", wordTrig = false, regTrig = true, snippetType="autosnippet"},
@@ -355,7 +392,7 @@ return
         i(3),
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- PARTIAL DERIVATIVE with denominator only
   s({trig = "([^%a])pV", wordTrig = false, regTrig = true, snippetType="autosnippet"},
@@ -366,7 +403,7 @@ return
         d(1, get_visual),
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- PARTIAL DERIVATIVE with numerator and denominator
   s({trig = "([^%a])pvv", wordTrig = false, regTrig = true, snippetType="autosnippet"},
@@ -378,7 +415,7 @@ return
         i(2)
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- Derivative d/dx
   s({trig = "([^%a])pdx", wordTrig = false, regTrig = true, snippetType="autosnippet"},
@@ -388,7 +425,7 @@ return
         i(1),
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- Derivative d/dt
   s({trig = "([^%a])pdt", wordTrig = false, regTrig = true, snippetType="autosnippet"},
@@ -398,7 +435,7 @@ return
         i(1),
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- PARTIAL DERIVATIVE with numerator, denominator, and higher-order argument
   s({trig = "([^%a])ppv", wordTrig = false, regTrig = true, snippetType="autosnippet"},
@@ -411,7 +448,7 @@ return
         i(3),
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- SUM with lower limit
   s({trig = "([^%a])sM", wordTrig = false, regTrig = true, snippetType="autosnippet"},
@@ -422,7 +459,7 @@ return
         i(1),
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- SUM with upper and lower limit
   s({trig = "([^%a])smm", wordTrig = false, regTrig = true, snippetType="autosnippet"},
@@ -434,7 +471,7 @@ return
         i(2),
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- INTEGRAL with upper and lower limit
   s({trig = "([^%a])intt", wordTrig = false, regTrig = true, snippetType="autosnippet"},
@@ -446,7 +483,7 @@ return
         i(2),
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- BOXED command
   s({trig = "([^%a])bb", wordTrig = false, regTrig = true, snippetType="autosnippet"},
@@ -457,7 +494,7 @@ return
         d(1, get_visual)
       }
     ),
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   --
   -- BEGIN STATIC SNIPPETS
@@ -468,70 +505,70 @@ return
     {
       t("\\diff"),
     },
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- BASIC INTEGRAL SYMBOL, i.e. \int
   s({trig = "in1", snippetType="autosnippet"},
     {
       t("\\int"),
     },
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- DOUBLE INTEGRAL, i.e. \iint
   s({trig = "in2", snippetType="autosnippet"},
     {
       t("\\iint"),
     },
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- TRIPLE INTEGRAL, i.e. \iiint
   s({trig = "in3", snippetType="autosnippet"},
     {
       t("\\iiint"),
     },
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- CLOSED SINGLE INTEGRAL, i.e. \oint
   s({trig = "oi1", snippetType="autosnippet"},
     {
       t("\\oint"),
     },
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- CLOSED DOUBLE INTEGRAL, i.e. \oiint
   s({trig = "oi2", snippetType="autosnippet"},
     {
       t("\\oiint"),
     },
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- GRADIENT OPERATOR, i.e. \grad
   s({trig = "gdd", snippetType="autosnippet"},
     {
       t("\\grad "),
     },
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- CURL OPERATOR, i.e. \curl
   s({trig = "cll", snippetType="autosnippet"},
     {
       t("\\curl "),
     },
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- DIVERGENCE OPERATOR, i.e. \divergence
   s({trig = "DI", snippetType="autosnippet"},
     {
       t("\\div "),
     },
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- LAPLACIAN OPERATOR, i.e. \laplacian
   s({trig = "laa", snippetType="autosnippet"},
     {
       t("\\laplacian "),
     },
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- PARALLEL SYMBOL, i.e. \parallel
   s({trig = "||", snippetType="autosnippet"},
@@ -574,14 +611,14 @@ return
     {
       t("\\approx "),
     },
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- PROPTO, i.e. \propto
   s({trig = "pt", snippetType="autosnippet"},
     {
       t("\\propto "),
     },
-    {condition = tex.in_mathzone}
+    {condition = in_mathzone}
   ),
   -- COLON, i.e. \colon
   s({trig = "::", snippetType="autosnippet"},

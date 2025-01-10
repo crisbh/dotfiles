@@ -16,13 +16,17 @@ return {
 					end
 					return "make install_jsregexp"
 				end)(),
-				opts = {
-					enable_autosnippets = true,
-				},
 				config = function()
-					-- TODO: This line to load custom snippets does not work anymore
-					require("luasnip.loaders.from_lua").lazy_load({ paths = { "./lua/snippets/" } }) -- load snippets paths
-				end,
+					require("luasnip.loaders.from_lua").lazy_load({ paths = { "./lua/snippets/" } })
+
+        	-- local ls = require("luasnip")
+        	-- ls.setup({
+   		-- require("luasnip").config.set_config({ -- Setting LuaSnip config
+     --        	enable_autosnippets = true,
+     --        	update_events = {"TextChanged", "TextChangedI"},
+     --        	store_selection_keys = "<Tab>",
+     --    	})
+					end,
 
 				dependencies = {
 					-- `friendly-snippets` contains a variety of premade snippets.
@@ -49,7 +53,8 @@ return {
 			-- See `:help cmp`
 			local cmp = require("cmp")
 			local luasnip = require("luasnip")
-			luasnip.config.setup({})
+			-- luasnip.config.setup({}) -- ISSUE: will conflict with
+			-- custom luasnip.lua config, so better comment this out
 
 			cmp.setup({
 				snippet = {
