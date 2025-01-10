@@ -50,7 +50,7 @@ return
 
       ]],
         {
-          i(1),
+          i(1, "language"),
           d(2, get_visual),
         }
       ),
@@ -65,10 +65,12 @@ return
     -- LINK
     s({trig="ln", wordTrig=true, snippetType="autosnippet"},
       fmta(
-        [[[<>](<>) ]],
+        [[
+        [<>](<>) 
+        ]],
         {
           d(1, get_visual),
-          i(2),
+          i(2, "display name"),
         }
       )
     ),

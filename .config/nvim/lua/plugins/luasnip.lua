@@ -21,6 +21,8 @@ return {
 
 			-- Update repeated nodes while typing
 			update_events = "TextChanged,TextChangedI",
+
+			history = true,
 		}),
 		require("luasnip").setup({
 			ft_func = require("luasnip.extras.filetype_functions").from_pos_or_filetype,
@@ -31,10 +33,11 @@ return {
 		require("luasnip").config.setup({ enable_autosnippets = true }),
 		vim.cmd([[
             " Expand or jump in insert mode
-            imap <silent><expr> <Tab> luasnip#expand_or_jumpable() ? '<Plug>luasnip-expand-or-jump' : '<Tab>'
+            " imap <silent><expr> <Tab> luasnip#expand_or_jumpable() ? '<Plug>luasnip-expand-or-jump' : '<Tab>'
+            " smap <silent><expr> <Tab> luasnip#jumpable(1) ? '<Plug>luasnip-jump-next' : '<Tab>'
+		imap <silent><expr> jk luasnip#jumpable(1) ? '<Plug>luasnip-jump-next' : 'jk'
+		smap <silent><expr> jk luasnip#jumpable(1) ? '<Plug>luasnip-jump-next' : 'jk'
 
-            " Jump forward throug tabstops in visual mode
-            smap <silent><expr> <Tab> luasnip#jumpable(1) ? '<Plug>luasnip-jump-next' : '<Tab>'
 
             " Jump backward through snippet tabstops with Shift-Tab
             imap <silent><expr> <S-Tab> luasnip#jumpable(-1) ? '<Plug>luasnip-jump-prev' : '<S-Tab>'

@@ -121,6 +121,11 @@ return {
         }
       )
     ),
+  -- BOLD MATH
+  postfix({trig="bm", match_pattern = [[[\\%w%.%_%-%"%']+$]] ,snippetType="autosnippet",dscr="postfix vec when in math mode"},
+      {l("\\bm{" .. l.POSTFIX_MATCH .. "}")}, 
+      { condition=in_mathzone }
+  ),
     -- REGULAR TEXT i.e. \text (in math environments)
     s({trig = "([^%a])tee", regTrig = true, wordTrig = false, snippetType="autosnippet"},
       fmta(

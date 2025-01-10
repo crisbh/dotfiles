@@ -58,6 +58,7 @@ return{
         \begin{<>}
             <>
         \end{<>}
+
       ]],
         {
           i(1),
@@ -84,30 +85,35 @@ return{
       { condition = conds_expand.line_begin }
     ),
 -- ITEMIZE
-    s({trig="itt", snippetType="autosnippet"},
+    s({trig="ite", snippetType="autosnippet"},
       fmta(
         [[
         \begin{itemize}
+            \item <>
             \item <>
         \end{itemize}
 
         ]],
         {
-          i(0),
+          i(1),
+          i(2),
         }
       ),
       {condition = conds_expand.line_begin}
     ),
     -- ENUMERATE
-    s({trig="enn", snippetType="autosnippet"},
+    s({trig="enu", snippetType="autosnippet"},
       fmta(
         [[
         \begin{enumerate}
             \item <>
+            \item <>
         \end{enumerate}
-      ]],
+
+        ]],
         {
-          i(0),
+          i(1),
+          i(2),
         }
       ),
       {condition = conds_expand.line_begin}
@@ -115,7 +121,7 @@ return{
 -- INLINE MATH
     s({trig = "([^%l])mm", regTrig = true, wordTrig = false, snippetType="autosnippet"},
       fmta(
-        "<>$<>$",
+        "<>$<>$ ",
         {
           f( function(_, snip) return snip.captures[1] end ),
           d(1, get_visual),
@@ -150,27 +156,33 @@ return{
         \begin{frame}
             <>
         \end{frame}
-        
+
         ]],
         {
           i(1),
         }
       ),
       { condition = conds_expand.line_begin }
-    ),-- ITEMIZE
-    s({trig="itt", snippetType="autosnippet"},
+    ),
+-- Equation reference
+    s({trig = "eqr", regTrig = true, wordTrig = false, snippetType="autosnippet"},
       fmta(
-        [[
-        \begin{itemize}
-            \item <>
-        \end{itemize}
-
-        ]],
+        "<>\\eqref{eq:<>}",
         {
-          i(0),
+          f( function(_, snip) return snip.captures[1] end ),
+          d(1, get_visual),
         }
-      ),
-      {condition = conds_expand.line_begin}
+      )
+    ),
+-- General reference
+    s({trig = "ref", regTrig = true, wordTrig = false, snippetType="autosnippet"},
+      fmta(
+        "<>\\ref{<>}",
+        {
+          f( function(_, snip) return snip.captures[1] end ),
+          d(1, get_visual),
+        }
+      )
     ),
 
 }

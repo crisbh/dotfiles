@@ -51,6 +51,9 @@ end
 -- Return snippet tables
 return
 {
+----------------
+-- INDICES --
+----------------
   -- SUPERSCRIPT
   s({trig = "([%w%)%]%}])'", wordTrig=false, regTrig = true, snippetType="autosnippet"},
     fmta(
@@ -161,7 +164,7 @@ return
     {condition = in_mathzone}
   ),
   -- j SUBSCRIPT SHORTCUT (since jk triggers snippet jump forward)
-  s({trig = '([%a%)%]%}])JJ', wordTrig = false, regTrig = true, snippetType="autosnippet"},
+  s({trig = '([%a%)%]%}])jj', wordTrig = false, regTrig = true, snippetType="autosnippet"},
     fmta(
       "<>_{<>}",
       {
@@ -171,8 +174,8 @@ return
     ),
     {condition = in_mathzone}
   ),
-  -- ij SUBSCRIPT SHORTCUT (since jk triggers snippet jump forward)
-  s({trig = '([%a%)%]%}])IJ', wordTrig = false, regTrig = true, snippetType="autosnippet"},
+  -- ij SUBSCRIPT SHORTCUT (recall that jk triggers snippet jump forward)
+  s({trig = '([%a%)%]%}])ij', wordTrig = false, regTrig = true, snippetType="autosnippet"},
     fmta(
       "<>_{<>}",
       {
@@ -182,13 +185,34 @@ return
     ),
     {condition = in_mathzone}
   ),
-  -- ji SUBSCRIPT SHORTCUT (since jk triggers snippet jump forward)
-  s({trig = '([%a%)%]%}])JI', wordTrig = false, regTrig = true, snippetType="autosnippet"},
+  s({trig = '([%a%)%]%}])IJ', wordTrig = false, regTrig = true, snippetType="autosnippet"},
+    fmta(
+      "<>^{<>}",
+      {
+        f( function(_, snip) return snip.captures[1] end ),
+        t("ij")
+      }
+    ),
+    {condition = in_mathzone}
+  ),
+  -- ab SUBSCRIPT SHORTCUT 
+  s({trig = '([%a%)%]%}])ab', wordTrig = false, regTrig = true, snippetType="autosnippet"},
     fmta(
       "<>_{<>}",
       {
         f( function(_, snip) return snip.captures[1] end ),
-        t("ji")
+        t("ab")
+      }
+    ),
+    {condition = in_mathzone}
+  ),
+  -- ab SUPERSCRIPT
+  s({trig = '([%a%)%]%}])AB', wordTrig = false, regTrig = true, snippetType="autosnippet"},
+    fmta(
+      "<>^{<>}",
+      {
+        f( function(_, snip) return snip.captures[1] end ),
+        t("ab")
       }
     ),
     {condition = in_mathzone}
@@ -226,6 +250,9 @@ return
     ),
     {condition = in_mathzone}
   ),
+----------------
+-- INDICES --
+----------------
   -- VECTOR, i.e. \vec
   s({trig = "([^%a])vv", wordTrig = false, regTrig = true, snippetType="autosnippet"},
     fmta(
@@ -236,6 +263,34 @@ return
       }
     ),
     {condition = in_mathzone}
+  ),
+----------------
+-- ACCENTS & SIMILAR SYMBOL MODIFICATIONS --
+----------------
+  --postfixes for vectors, hats, etc. The match pattern is '\\' plus the default (so that hats get put on greek letters,e.g.)
+  postfix({trig="vec", match_pattern = [[[\\%w%.%_%-%"%']+$]] ,snippetType="autosnippet",dscr="postfix vec when in math mode"},
+      {l("\\vec{" .. l.POSTFIX_MATCH .. "}")}, 
+      { condition=in_mathzone }
+  ),
+  postfix({trig="hat", match_pattern = [[[\\%w%.%_%-%"%']+$]], snippetType="autosnippet",dscr="postfix hat when in math mode"},
+      {l("\\hat{" .. l.POSTFIX_MATCH .. "}")}, 
+      { condition=in_mathzone }
+  ) ,
+  postfix({trig="dot", match_pattern = [[[\\%w%.%_%-%"%']+$]], snippetType="autosnippet",dscr="postfix hat when in math mode"},
+      {l("\\dot{" .. l.POSTFIX_MATCH .. "}")}, 
+      { condition=in_mathzone }
+  ) ,
+  postfix({trig="doot", match_pattern = [[[\\%w%.%_%-%"%']+$]], snippetType="autosnippet",dscr="postfix hat when in math mode"},
+      {l("\\ddot{" .. l.POSTFIX_MATCH .. "}")}, 
+      { condition=in_mathzone }
+  ) ,
+  postfix({trig="bar", match_pattern = [[[\\%w%.%_%-%"%']+$]] ,snippetType="autosnippet",dscr="postfix vec when in math mode"},
+      {l("\\bar{" .. l.POSTFIX_MATCH .. "}")}, 
+      { condition=in_mathzone }
+  ),
+  postfix({trig="til", match_pattern = [[[\\%w%.%_%-%"%']+$]] ,snippetType="autosnippet",dscr="postfix vec when in math mode"},
+      {l("\\tilde{" .. l.POSTFIX_MATCH .. "}")}, 
+      { condition=in_mathzone }
   ),
   -- DEFAULT UNIT VECTOR WITH SUBSCRIPT, i.e. \unitvector_{}
   s({trig = "([^%a])ue", wordTrig = false, regTrig = true, snippetType="autosnippet"},
@@ -328,6 +383,7 @@ return
     {condition = in_mathzone}
   ),
   -- LOGARITHM WITH BASE SUBSCRIPT
+  -- TODO: Has to be defined somewhere in the TeX project
   s({trig = "([^%a%\\])ll", wordTrig = false, regTrig = true, snippetType="autosnippet"},
     fmta(
       "<>\\log_{<>}",
@@ -338,6 +394,9 @@ return
     ),
     {condition = in_mathzone}
   ),
+----------------
+-- DERIVATIVES --
+----------------
   -- DERIVATIVE with denominator only
   s({trig = "([^%a])dV", wordTrig = false, regTrig = true, snippetType="autosnippet"},
     fmta(
@@ -350,6 +409,7 @@ return
     {condition = in_mathzone}
   ),
   -- DERIVATIVE with numerator and denominator
+  -- TODO: Has to be defined somewhere in the TeX project
   s({trig = "([^%a])dvv", wordTrig = false, regTrig = true, snippetType="autosnippet"},
     fmta(
       "<>\\dv{<>}{<>}",
@@ -364,7 +424,7 @@ return
   -- Derivative d/dx
   s({trig = "([^%a])ddx", wordTrig = false, regTrig = true, snippetType="autosnippet"},
     fmta(
-      "\\frac{d<>}{dx}",
+      "\\frac{d <>}{dx}",
       {
         i(1),
       }
@@ -382,6 +442,7 @@ return
     {condition = in_mathzone}
   ),
   -- DERIVATIVE with numerator, denominator, and higher-order argument
+  -- TODO: Has to be defined somewhere in the TeX project
   s({trig = "([^%a])ddv", wordTrig = false, regTrig = true, snippetType="autosnippet"},
     fmta(
       "<>\\dvN{<>}{<>}{<>}",
@@ -395,6 +456,7 @@ return
     {condition = in_mathzone}
   ),
   -- PARTIAL DERIVATIVE with denominator only
+  -- TODO: Has to be defined somewhere in the TeX project
   s({trig = "([^%a])pV", wordTrig = false, regTrig = true, snippetType="autosnippet"},
     fmta(
       "<>\\pdvOne{<>}",
@@ -406,6 +468,7 @@ return
     {condition = in_mathzone}
   ),
   -- PARTIAL DERIVATIVE with numerator and denominator
+  -- TODO: Has to be defined somewhere in the TeX project
   s({trig = "([^%a])pvv", wordTrig = false, regTrig = true, snippetType="autosnippet"},
     fmta(
       "<>\\pdv{<>}{<>}",
@@ -438,6 +501,7 @@ return
     {condition = in_mathzone}
   ),
   -- PARTIAL DERIVATIVE with numerator, denominator, and higher-order argument
+  -- TODO: Has to be defined somewhere in the TeX project
   s({trig = "([^%a])ppv", wordTrig = false, regTrig = true, snippetType="autosnippet"},
     fmta(
       "<>\\pdvN{<>}{<>}{<>}",
@@ -485,6 +549,19 @@ return
     ),
     {condition = in_mathzone}
   ),
+  s({trig=";I",snippetType="autosnippet",desc="integral with infinite or inserted limits",wordTrig=false},
+      fmta([[
+          <>
+          ]],
+          {
+          c(1,{
+              t("\\int_{-\\infty}^\\infty"),
+              sn(nil,fmta([[ \int_{<>}^{<>} ]],{i(1),i(2)})),
+              })
+          }
+      ),
+    {condition = in_mathzone}
+  ),
   -- BOXED command
   s({trig = "([^%a])bb", wordTrig = false, regTrig = true, snippetType="autosnippet"},
     fmta(
@@ -501,6 +578,7 @@ return
   --
 
   -- DIFFERENTIAL, i.e. \diff
+  -- NOTE: Has to be defined somewhere in the TeX project
   s({trig = "df", snippetType="autosnippet", snippetType="autosnippet"},
     {
       t("\\diff"),
@@ -543,6 +621,7 @@ return
     {condition = in_mathzone}
   ),
   -- GRADIENT OPERATOR, i.e. \grad
+  -- NOTE: Has to be defined somewhere in the TeX project
   s({trig = "gdd", snippetType="autosnippet"},
     {
       t("\\grad "),
@@ -550,13 +629,15 @@ return
     {condition = in_mathzone}
   ),
   -- CURL OPERATOR, i.e. \curl
-  s({trig = "cll", snippetType="autosnippet"},
+  -- TODO: Has to be defined somewhere in the TeX project
+  s({trig = "rot", snippetType="autosnippet"},
     {
       t("\\curl "),
     },
     {condition = in_mathzone}
   ),
   -- DIVERGENCE OPERATOR, i.e. \divergence
+  -- TODO: Has to be defined somewhere in the TeX project
   s({trig = "DI", snippetType="autosnippet"},
     {
       t("\\div "),
@@ -564,12 +645,15 @@ return
     {condition = in_mathzone}
   ),
   -- LAPLACIAN OPERATOR, i.e. \laplacian
-  s({trig = "laa", snippetType="autosnippet"},
+  s({trig = "la", snippetType="autosnippet"},
     {
-      t("\\laplacian "),
+      t("\\nabla^2 "),
     },
     {condition = in_mathzone}
   ),
+----------------
+-- RELATIONS AND OPERATIONS --
+----------------
   -- PARALLEL SYMBOL, i.e. \parallel
   s({trig = "||", snippetType="autosnippet"},
     {
@@ -621,6 +705,7 @@ return
     {condition = in_mathzone}
   ),
   -- COLON, i.e. \colon
+  -- TODO: Has to be defined somewhere in the TeX project
   s({trig = "::", snippetType="autosnippet"},
     {
       t("\\colon "),
@@ -633,7 +718,7 @@ return
     }
   ),
   -- DOT PRODUCT, i.e. \cdot
-  s({trig = ",.", snippetType="autosnippet"},
+  s({trig = "..", snippetType="autosnippet"},
     {
       t("\\cdot "),
     }
