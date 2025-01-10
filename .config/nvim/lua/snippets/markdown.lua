@@ -139,27 +139,11 @@ return
       ),
       {condition = line_begin}
     ),
-    -- BASH CODE BLOCK V2
+    -- Sh CODE BLOCK 
     s({trig="sh", snippetType="autosnippet"},
       fmt(
         [[
         ```bash
-        {}
-        ```
-
-        ]],
-        {
-          d(1, get_visual)
-        }
-      ),
-      {condition = line_begin}
-    ),
-    -- PHP CODE BLOCK
-    s({trig="php", snippetType="autosnippet"},
-      fmt(
-        [[
-        ```php
-        <?php
         {}
         ```
 
@@ -185,7 +169,36 @@ return
       ),
       {condition = line_begin}
     ),
+    -- C CODE BLOCK
+    s({trig="CC", snippetType="autosnippet"},
+      fmt(
+        [[
+        ```C
+        {}
+        ```
+
+        ]],
+        {
+          d(1, get_visual)
+        }
+      ),
+      {condition = line_begin}
+    ),
+    -- TEX/LATEX CODE BLOCK
+    s({trig="tex", snippetType="autosnippet"},
+      fmt(
+        [[
+        ```tex
+        {}
+        ```
+
+        ]],
+        {
+          d(1, get_visual)
+        }
+      ),
+      {condition = line_begin}
+    ),
   }
 
 
--- TODO: add other blocks, e.g. C, latex, ...
