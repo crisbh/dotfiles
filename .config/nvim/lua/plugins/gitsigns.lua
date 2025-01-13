@@ -7,7 +7,7 @@ return {
 		"lewis6991/gitsigns.nvim",
 		-- lazy = true,
     -- event = "BufEnter *",
-		even = "VeryLazy",
+		event = "VeryLazy",
 		opts = {
 			signcolumn = true,
 			numhl = true,

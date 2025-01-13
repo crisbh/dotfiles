@@ -1,7 +1,8 @@
 return {
 	{
 		"windwp/nvim-autopairs",
-		event = { "VeryLazy", "InsertEnter" },
+		-- event = { "VeryLazy", "InsertEnter" },
+		event = { "InsertEnter" },
 		config = function()
 			require("nvim-autopairs").setup({
 				check_ts = true, -- Use treesitter to check for pair context
