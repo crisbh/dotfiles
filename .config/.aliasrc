@@ -64,6 +64,7 @@ alias dush='du -shc --apparent-size'
 alias greph='history | grep'
 alias fzfh='history | fzf'
 
+# Replace top by htop if available
 if [ -x "$(command -v htop)" ]; then
     alias top="htop"
 fi
@@ -74,6 +75,10 @@ alias renderpeanogrid='pvpython ~/Codes/Peano/python/peano4/visualisation/render
 # jupyter notebooks
 alias jn='jupyter-notebook'
 alias jlab='jupyter-lab'
+
+# remote work
+alias c8='ssh cosma8a'
+alias c8b='ssh cosma8b'
 alias jtunnel='ssh -N -L 8443:login8b.cosma.dur.ac.uk:443 dc-barr3@login8b.cosma.dur.ac.uk'
 
 
