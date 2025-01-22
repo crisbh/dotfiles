@@ -11,6 +11,7 @@ eza
 fd
 fftw
 fzf
+glow
 graphviz
 gsl
 htop
@@ -36,6 +37,7 @@ ranger
 ripgrep
 rust
 stow
+task
 tldr
 tmux
 tree
