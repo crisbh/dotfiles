@@ -1,0 +1,97 @@
+#!/bin/bash
+
+# NAME
+#       todofilter - This script collects TODO items from diary notes and
+#       compiles them into to a TODO list.
+#       Tasks marked as done are also marked as DONE back in the diary notes.
+#       It also sorts tasks based on priority ([!]).
+# 
+# SYNOPSIS
+#       todofilter usage
+#       Set the relevant paths and run the script.
+
+
+# Set paths
+NOTES_DIR="$VAULT/notes/diary"
+TODO_FILE="$VAULT/0-inbox/todo.md"
+DONE_FILE="$VAULT/0-inbox/done.md"
+TEMP_FILE=$(mktemp)
+
+# Ensure necessary files exist
+touch "$TODO_FILE" "$DONE_FILE"
+chmod +w "$TODO_FILE" "$DONE_FILE"
+
+echo "====================="
+echo "STARTING TODO SCRIPT"
+echo "====================="
+echo
+
+### Collect unchecked TODOs (skip already processed)
+grep -h '^- \[ \]' "$NOTES_DIR"/*.md | grep -v '^- \[>\]' | sort -u > "$TEMP_FILE"
+
+echo "Collected TODOs:"
+cat "$TEMP_FILE"
+
+# Extract inline 'TODO:' items and convert them to the standard [ ] format
+# ignore those marked as DONE
+grep -h -o 'TODO: .*' "$NOTES_DIR"/*.md | grep -v 'TODO: .*DONE$' | sed 's/TODO: /- [ ] /' > "$TEMP_FILE.todo"
+
+# Merge with regular '- [ ]' tasks
+cat "$TEMP_FILE.todo" >> "$TEMP_FILE"
+
+### Append unique tasks to TODO.md
+if [ -s "$TEMP_FILE" ]; then
+    # Extract everything above "# TODO list" (header & YAML)
+    awk '/^# TODO list/ {print; exit} {print}' "$TODO_FILE" > "$TEMP_FILE.new"
+
+    # Extract existing tasks (everything below "# TODO list")
+    awk 'f {print} /^# TODO list/ {f=1}' "$TODO_FILE" > "$TEMP_FILE.old"
+
+    # Merge new and old tasks, sort uniquely, and append
+    cat "$TEMP_FILE" "$TEMP_FILE.old" | sort -u >> "$TEMP_FILE.new"
+
+    # Move everything back into TODO.md
+    mv "$TEMP_FILE.new" "$TODO_FILE"
+fi
+
+
+### Mark collected tasks as processed in daily notes
+for file in "$NOTES_DIR"/*.md; do
+    sed -i '' 's/^- \[ \] \(.*\)$/- [>] \1/g' "$file"
+done
+
+### Sync completed tasks from TODO.md → daily notes
+grep '^- \[x\]' "$TODO_FILE" | while read -r task; do
+    task_text=$(echo "$task" | cut -c6- | sed 's/^ *//;s/ *$//')
+    escaped_task=$(printf '%s\n' "$task_text" | sed -e 's/[\/&]/\\&/g')
+    for file in "$NOTES_DIR"/*.md; do
+        sed -i '' "s|^- \[>\] \(.*$escaped_task.*\)$|- [x] \1 ✅ DONE|g" "$file"
+    done
+done
+
+### Sync completed tasks from daily notes → TODO.md
+grep -h '^- \[x\]' "$NOTES_DIR"/*.md | sort -u > "$TEMP_FILE"
+if [ -s "$TEMP_FILE" ]; then
+    while read -r task; do
+        sed -i '' "s|^- \[ \]$(echo "$task" | cut -c6-)|- [x]$(echo "$task" | cut -c6-)|" "$TODO_FILE"
+    done < "$TEMP_FILE"
+fi
+
+### Auto-archive completed tasks (move to DONE.md)
+grep '^- \[x\]' "$TODO_FILE" >> "$DONE_FILE"
+sed -i '' '/^- \[x\]/d' "$TODO_FILE"
+
+### Prioritise `[!]` tasks in TODO.md
+if grep -q '^- \[!\]' "$TODO_FILE" || grep -q '^- \[ \]' "$TODO_FILE"; then
+    (grep '^- \[!\]' "$TODO_FILE"; grep -v '^- \[!\]' "$TODO_FILE") > "$TEMP_FILE"
+    mv "$TEMP_FILE" "$TODO_FILE"
+fi
+
+# Cleanup
+rm -f "$TEMP_FILE"
+
+echo
+echo "====================="
+echo "SCRIPT COMPLETE!"
+echo "====================="
+
