@@ -3,6 +3,8 @@ alias dotfiles="cd $HOME/.dotfiles && ls -la && git status"
 alias doftiles="dotfiles"
 alias dot="ls ~/.dotfiles -la && git status ~/.dotfiles"
 
+alias lg="lazygit"
+
 # Shortcuts
 alias v="vi"
 alias za="zathura"
@@ -11,6 +13,7 @@ alias c="clear"
 alias q="exit"
 
 alias zshrc="vim ~/.zshrc && source ~/.zshrc"
+alias aliasrc="vim ~/.config/.aliasrc && source ~/.config/.aliasrc"
 alias nvimrc="vim ~/.config/nvim/init.vim"
 alias vimrc="vim ~/.vimrc"
 alias vsplit="vim -O"
