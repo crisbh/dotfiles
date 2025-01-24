@@ -12,6 +12,9 @@
 # Back up homebrew packages list
 0 10 * * * /bin/bash -c '/opt/homebrew/bin/brew leaves > ~/.dotfiles/.config/homebrew/leaves.txt 2> ~/.dotfiles/.config/homebrew/error.log'
 
+# Compile todo items into a list
+*/10 * * * * ~/.dotfiles/scripts/todofilter
+
 # Back up the current status of the cron daemon
 0 10 * * * crontab -l > ~/.dotfiles/crontab.backup
 

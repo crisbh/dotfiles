@@ -33,8 +33,8 @@ echo "Collected TODOs:"
 cat "$TEMP_FILE"
 
 # Extract inline 'TODO:' items and convert them to the standard [ ] format
-# ignore those marked as DONE
-grep -h -o 'TODO: .*' "$NOTES_DIR"/*.md | grep -v 'TODO: .*DONE$' | sed 's/TODO: /- [ ] /' > "$TEMP_FILE.todo"
+# ignore those marked as DONE or COLLECTED
+grep -h -o 'TODO: .*' "$NOTES_DIR"/*.md | grep -vE 'TODO: .*DONE$|TODO: \(COLLECTED\)' | sed 's/TODO: /- [ ] /' > "$TEMP_FILE.todo"
 
 # Merge with regular '- [ ]' tasks
 cat "$TEMP_FILE.todo" >> "$TEMP_FILE"
@@ -58,6 +58,7 @@ fi
 ### Mark collected tasks as processed in daily notes
 for file in "$NOTES_DIR"/*.md; do
     sed -i '' 's/^- \[ \] \(.*\)$/- [>] \1/g' "$file"
+    sed -i '' 's/TODO: /TODO: (COLLECTED) /g' "$file"  # Mark inline TODOs too
 done
 
 ### Sync completed tasks from TODO.md → daily notes
@@ -83,8 +84,14 @@ sed -i '' '/^- \[x\]/d' "$TODO_FILE"
 
 ### Prioritise `[!]` tasks in TODO.md
 if grep -q '^- \[!\]' "$TODO_FILE" || grep -q '^- \[ \]' "$TODO_FILE"; then
-    (grep '^- \[!\]' "$TODO_FILE"; grep -v '^- \[!\]' "$TODO_FILE") > "$TEMP_FILE"
-    mv "$TEMP_FILE" "$TODO_FILE"
+    # Extract everything above "# TODO list" (header & YAML)
+    awk '/^# TODO list/ {print; exit} {print}' "$TODO_FILE" > "$TEMP_FILE.new"
+
+    # Extract existing tasks (everything below "# TODO list")
+    awk 'f {print} /^# TODO list/ {f=1}' "$TODO_FILE" > "$TEMP_FILE.old"
+
+    (grep '^- \[!\]' "$TEMP_FILE.old"; grep -v '^- \[!\]' "$TEMP_FILE.old") >> "$TEMP_FILE.new"
+    mv "$TEMP_FILE.new" "$TODO_FILE"
 fi
 
 # Cleanup
