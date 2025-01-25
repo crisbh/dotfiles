@@ -17,6 +17,9 @@ vim.opt.showmode = false
 
 vim.opt.fillchars = { eob = " " } -- disable `~` on nonexistent lines
 
+-- ignore external modifications to files
+vim.opt.autoread = true
+
 -- Sync clipboard between OS and Neovim.
 --  Remove this option if you want your OS clipboard to remain independent.
 --  See `:help 'clipboard'`

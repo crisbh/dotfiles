@@ -12,6 +12,9 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 	end,
 })
 
+-- Ignore externally modified files
+vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter" }, { command = "checktime" })
+
 -- auto stop auto-compiler if its running
 -- vim.api.nvim_create_autocmd("VimLeave", {
 -- 	desc = "Stop running auto compiler",
