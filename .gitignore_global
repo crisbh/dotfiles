@@ -1,6 +1,9 @@
 # Macos files
 .DS_Store
 
+# Neovim's lazy file
+lazy-lock.json
+
 # Compilation object files
 *.o
 
