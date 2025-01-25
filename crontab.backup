@@ -2,6 +2,9 @@
 # Otherwise, they will fail to execute.
 # e.g., any bash script should not contain the .sh in its name.
 #
+
+VAULT="/Users/cristian/Library/Mobile Documents/iCloud~md~obsidian/Documents/kosmos"
+
 # Run the APOD script to fetch a daily wallpaper
 0 10 * * * ~/.APOD_Mac_Daily/apod_daily
 
@@ -13,7 +16,7 @@
 0 10 * * * /bin/bash -c '/opt/homebrew/bin/brew leaves > ~/.dotfiles/.config/homebrew/leaves.txt 2> ~/.dotfiles/.config/homebrew/error.log'
 
 # Compile todo items into a list
-*/10 * * * * ~/.dotfiles/scripts/todofilter
+*/10 * * * * /bin/bash ~/.dotfiles/scripts/todofilter >> ~/.dotfiles/todofilter.log 2>&1
 
 # Back up the current status of the cron daemon
 0 10 * * * crontab -l > ~/.dotfiles/crontab.backup

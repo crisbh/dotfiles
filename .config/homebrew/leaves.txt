@@ -38,6 +38,7 @@ ripgrep
 rust
 stow
 task
+timewarrior
 tldr
 tmux
 tree
