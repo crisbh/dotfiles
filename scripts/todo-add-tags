@@ -12,6 +12,8 @@ declare -A TAG_MAP
 TAG_MAP=( 
     ["code"]="@coding"
     ["develop"]="@coding"
+    ["implement"]="@coding"
+    ["optimise"]="@coding"
     ["debug"]="@coding"
     ["fix"]="@coding"
     ["kernel"]="@coding"

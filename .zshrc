@@ -74,6 +74,9 @@ else
     export VAULT
 fi
 
+# Run watch script for todo items system
+nohup ~/.dotfiles/scripts/watch-todos >/dev/null 2>&1 &
+
 # Use neovim for vim and vi if present.
 if [[ -x "$(command -v nvim)" ]]; then
   alias "vi=nvim" vim="nvim" vimdiff="nvim -d"

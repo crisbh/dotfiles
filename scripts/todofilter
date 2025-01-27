@@ -26,73 +26,66 @@ echo "STARTING TODO SCRIPT"
 echo "====================="
 echo
 
-### Collect unchecked TODOs (skip already processed)
-grep -h '^- \[ \]' "$NOTES_DIR"/*.md | grep -v '^- \[>\]' | sort -u > "$TEMP_FILE"
+TODAY=$(date +"%Y-%m-%d")
+YESTERDAY=$(date -v-1d +"%Y-%m-%d")
 
-echo "Collected TODOs:"
-cat "$TEMP_FILE"
+for file in "$NOTES_DIR/$TODAY.md" "$NOTES_DIR/$YESTDAY.md"; do
+    [ -f "$file" ] || continue  # Skip if file doesn't exist
 
-# Extract inline 'TODO:' items and convert them to the standard [ ] format
-# ignore those marked as DONE or COLLECTED
-grep -h -o 'TODO: .*' "$NOTES_DIR"/*.md | grep -vE 'TODO: .*DONE$|TODO: \(COLLECTED\)' | sed 's/TODO: /- [ ] /' > "$TEMP_FILE.todo"
+    ### Collect unchecked TODOs (skip already processed)
+    grep -h '^- \[ \]' "$file" | grep -v '^- \[>\]' > "$TEMP_FILE"
 
-# Merge with regular '- [ ]' tasks
-cat "$TEMP_FILE.todo" >> "$TEMP_FILE"
+    echo "Collected TODOs:"
+    cat "$TEMP_FILE"
 
-### Append unique tasks to TODO.md
-if [ -s "$TEMP_FILE" ]; then
-    # Extract everything above "# TODO list" (header & YAML)
-    awk '/^# TODO list/ {print; exit} {print}' "$TODO_FILE" > "$TEMP_FILE.new"
+    # Extract inline 'TODO:' items and convert them to standard [ ] format
+    # Ignore those marked as DONE or COLLECTED
+    grep -h -o 'TODO: .*' "$file" | grep -vE 'TODO: .*DONE$|TODO: \(COLLECTED\)' | sed 's/TODO: /- [ ] /' >> "$TEMP_FILE"
 
-    # Extract existing tasks (everything below "# TODO list")
-    awk 'f {print} /^# TODO list/ {f=1}' "$TODO_FILE" > "$TEMP_FILE.old"
+    ### Append unique tasks to TODO.md **while preserving order**
+    if [ -s "$TEMP_FILE" ]; then
+        # Extract header and existing tasks separately
+        awk '/^# TODO list/ {print; exit} {print}' "$TODO_FILE" > "$TEMP_FILE.new"
+        awk 'f {print} /^# TODO list/ {f=1}' "$TODO_FILE" > "$TEMP_FILE.old"
 
-    # Merge new and old tasks, sort uniquely, and append
-    cat "$TEMP_FILE" "$TEMP_FILE.old" | sort -u >> "$TEMP_FILE.new"
+        # Append only NEW tasks (preserve order by using grep)
+        cat "$TEMP_FILE" >> "$TEMP_FILE.old"
+        awk '!seen[$0]++' "$TEMP_FILE.old" >> "$TEMP_FILE.new"  # Ensures uniqueness without sorting
 
-    # Move everything back into TODO.md
-    mv "$TEMP_FILE.new" "$TODO_FILE"
-fi
+        # Move everything back into TODO.md
+        mv "$TEMP_FILE.new" "$TODO_FILE"
+    fi
 
-
-### Mark collected tasks as processed in daily notes
-for file in "$NOTES_DIR"/*.md; do
+    ### Mark collected tasks as processed in daily notes
     sed -i '' 's/^- \[ \] \(.*\)$/- [>] \1/g' "$file"
-    sed -i '' 's/TODO: /TODO: (COLLECTED) /g' "$file"  # Mark inline TODOs too
-done
+    sed -i '' '/TODO: (COLLECTED)/!s/TODO: /TODO: (COLLECTED) /' "$file"
 
-### Sync completed tasks from TODO.md → daily notes
-grep '^- \[x\]' "$TODO_FILE" | while read -r task; do
-    task_text=$(echo "$task" | cut -c6- | sed 's/^ *//;s/ *$//')
-    escaped_task=$(printf '%s\n' "$task_text" | sed -e 's/[\/&]/\\&/g')
-    for file in "$NOTES_DIR"/*.md; do
+    ### Sync completed tasks from TODO.md → daily notes
+    grep '^- \[x\]' "$TODO_FILE" | while read -r task; do
+        task_text=$(echo "$task" | cut -c6- | sed 's/^ *//;s/ *$//')
+        escaped_task=$(printf '%s\n' "$task_text" | sed -e 's/[\/&]/\\&/g')
         sed -i '' "s|^- \[>\] \(.*$escaped_task.*\)$|- [x] \1 ✅ DONE|g" "$file"
     done
-done
 
-### Sync completed tasks from daily notes → TODO.md
-grep -h '^- \[x\]' "$NOTES_DIR"/*.md | sort -u > "$TEMP_FILE"
-if [ -s "$TEMP_FILE" ]; then
-    while read -r task; do
+    ### Sync completed tasks from daily notes → TODO.md
+    grep -h '^- \[x\]' "$file" | while read -r task; do
         sed -i '' "s|^- \[ \]$(echo "$task" | cut -c6-)|- [x]$(echo "$task" | cut -c6-)|" "$TODO_FILE"
-    done < "$TEMP_FILE"
-fi
+    done
 
-### Auto-archive completed tasks (move to DONE.md)
-grep '^- \[x\]' "$TODO_FILE" >> "$DONE_FILE"
-sed -i '' '/^- \[x\]/d' "$TODO_FILE"
+    ### Auto-archive completed tasks (move to DONE.md)
+    grep '^- \[x\]' "$TODO_FILE" >> "$DONE_FILE"
+    sed -i '' '/^- \[x\]/d' "$TODO_FILE"
 
-### Prioritise `[!]` tasks in TODO.md
-if grep -q '^- \[!\]' "$TODO_FILE" || grep -q '^- \[ \]' "$TODO_FILE"; then
-    # Extract everything above "# TODO list" (header & YAML)
-    awk '/^# TODO list/ {print; exit} {print}' "$TODO_FILE" > "$TEMP_FILE.new"
+    ### Prioritize `[!]` tasks in TODO.md
+    if grep -q '^- \[!\]' "$TODO_FILE" || grep -q '^- \[ \]' "$TODO_FILE"; then
+        # Extract header and tasks separately
+        awk '/^# TODO list/ {print; exit} {print}' "$TODO_FILE" > "$TEMP_FILE.new"
+        awk 'f {print} /^# TODO list/ {f=1}' "$TODO_FILE" > "$TEMP_FILE.old"
 
-    # Extract existing tasks (everything below "# TODO list")
-    awk 'f {print} /^# TODO list/ {f=1}' "$TODO_FILE" > "$TEMP_FILE.old"
-
-    (grep '^- \[!\]' "$TEMP_FILE.old"; grep -v '^- \[!\]' "$TEMP_FILE.old") >> "$TEMP_FILE.new"
-    mv "$TEMP_FILE.new" "$TODO_FILE"
-fi
+        (grep '^- \[!\]' "$TEMP_FILE.old"; grep -v '^- \[!\]' "$TEMP_FILE.old") >> "$TEMP_FILE.new"
+        mv "$TEMP_FILE.new" "$TODO_FILE"
+    fi
+done
 
 # Cleanup
 rm -f "$TEMP_FILE"
@@ -101,4 +94,3 @@ echo
 echo "====================="
 echo "SCRIPT COMPLETE!"
 echo "====================="
-
