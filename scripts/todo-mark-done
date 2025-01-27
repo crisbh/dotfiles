@@ -1,0 +1,18 @@
+#!/opt/homebrew/bin/bash  # Apple Silicon (M1/M2)
+
+NOTES_DIR="$VAULT/notes/diary"
+TODO_FILE="$VAULT/0-inbox/todo.md"
+
+echo "✅ Running daily DONE sync..."
+
+# Loop through completed tasks in TODO.md
+grep '^- \[x\]' "$TODO_FILE" | while read -r task; do
+    task_text=$(echo "$task" | cut -c6- | sed 's/^ *//;s/ *$//')
+    escaped_task=$(printf '%s\n' "$task_text" | sed -e 's/[\/&]/\\&/g')
+
+    # Apply completion mark in daily notes
+    for file in "$NOTES_DIR"/*.md; do
+        sed -i '' "s|^- \[ \] \(.*$escaped_task.*\)$|- [x] \1 ✅ DONE|g" "$file"
+    done
+done
+
