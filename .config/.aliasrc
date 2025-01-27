@@ -25,6 +25,7 @@ alias vimwiki="cd $VAULT && nvim -c ':VimwikiIndex'"
 alias wiki="vimwiki"
 
 alias todo="zet todo"
+alias pomo="todo-pomodoro"
 
 alias rga="rg -."
 

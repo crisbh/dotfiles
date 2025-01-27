@@ -1,0 +1,68 @@
+#!/bin/bash
+
+# Required parameters:
+# @raycast.schemaVersion 1
+# @raycast.title Start Pomodoro
+# @raycast.packageName Pomodoro Timer
+# @raycast.mode compact
+# @raycast.refreshTime 10s
+
+# Optional parameters:
+# @raycast.icon ⏳
+
+TODO_FILE=$VAULT/0-inbox/todo.md
+TEMP_TASKS=/tmp/tasks.txt
+
+# Extract tasks into a selection list
+grep '^- \[!\]' "$TODO_FILE" | sed 's/- \[!\] /🔥 /' > "$TEMP_TASKS"
+grep '^- \[ \]' "$TODO_FILE" | sed 's/- \[ \] /📄 /' >> "$TEMP_TASKS"
+
+# If no tasks exist, exit
+if [ ! -s "$TEMP_TASKS" ]; then
+    echo "❌ No tasks found in TODO.md!"
+    exit 1
+fi
+
+# Let the user pick a task using fzf
+SELECTED_TASK=$(cat "$TEMP_TASKS" | fzf --prompt="Pick a task: ")
+
+if [ -z "$SELECTED_TASK" ]; then
+    echo "❌ No task selected!"
+    exit 1
+fi
+
+# Remove symbols from the selected task
+CLEAN_TASK=$(echo "$SELECTED_TASK" | sed 's/^🔥 //' | sed 's/^📄 //')
+
+# Extract tags directly from the task
+TAGS=$(echo "$CLEAN_TASK" | grep -o '@[a-zA-Z0-9_]\+' | tr -d '@' | tr '\n' ',')
+
+# If no tags are found, set a default tag
+if [[ -z "$TAGS" ]]; then
+    echo "❌ No tags found for this task!"
+    echo "Please give it a tag to enable time tracking."
+    exit 1
+fi
+
+# Remove tags from the task text for display
+CLEAN_TASK=$(echo "$CLEAN_TASK" | sed 's/@[a-zA-Z0-9_]\+//g' | xargs)
+
+# Set the duration for the pomodoro. Default is 25 mins
+DURATION=1500
+# If argument 2 is given, run double pomodoro (50 mins).
+if [[ $1 == "2" ]]; then
+    echo $1
+    DURATION=3000
+    POMO_TYPE="double "
+    echo $DURATION
+fi
+
+# Start tracking with Timewarrior
+echo "⏳ Starting ${POMO_TYPE}Pomodoro for: \"$CLEAN_TASK\""
+echo "📝 Timewarrior tags: $TAGS"
+timew start "$TAGS"
+
+# Run in the background and send notification when finished
+(sleep "$DURATION" && timew stop && osascript -e "display notification \"Pomodoro Finished!\" with title \"Focus Session\"") &
+
+echo "✅ ${POMO_TYPE}Pomodoro started!"

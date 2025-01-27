@@ -1,6 +1,7 @@
 aerc
 ascii
 automake
+bash
 bat
 bear
 convertlit

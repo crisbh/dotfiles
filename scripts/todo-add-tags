@@ -1,0 +1,103 @@
+#!/opt/homebrew/bin/bash  # Apple Silicon (M1/M2)
+
+# Important: This shell script requires Bash 4.0+
+
+# Set TODO File path
+TODO_FILE=$VAULT/0-inbox/todo.md
+
+TEMP_FILE=/tmp/tagged_tasks.txt
+
+# Define keyword → tag mappings
+declare -A TAG_MAP
+TAG_MAP=( 
+    ["code"]="@coding"
+    ["develop"]="@coding"
+    ["debug"]="@coding"
+    ["fix"]="@coding"
+    ["kernel"]="@coding"
+    ["unit test"]="@coding"
+    ["lecture"]="@teaching"
+    ["teach"]="@teaching"
+    ["class"]="@teaching"
+    ["research"]="@research"
+    ["paper"]="@research"
+    ["experiment"]="@research"
+)
+
+# Read and preserve the YAML header section (e.g. Obsidian)
+HEADER_LINES=()
+TASKS_FOUND=false
+while IFS= read -r LINE; do
+    if [[ "$LINE" == "---" && ${#HEADER_LINES[@]} -eq 0 ]]; then
+        # Start collecting header lines
+        HEADER_LINES+=("$LINE")
+    elif [[ ${#HEADER_LINES[@]} -gt 0 && "$LINE" != "---" ]]; then
+        # Collect header lines
+        HEADER_LINES+=("$LINE")
+    elif [[ "$LINE" == "---" && ${#HEADER_LINES[@]} -gt 0 ]]; then
+        # End of YAML header
+        HEADER_LINES+=("$LINE")
+        HEADER_LINES+=("")
+        break
+    else
+        break
+    fi
+done < "$TODO_FILE"
+
+# Write the preserved header to the temp file
+printf "%s\n" "${HEADER_LINES[@]}" > "$TEMP_FILE"
+
+# Now, find and keep the "# TODO list" title
+while IFS= read -r LINE; do
+    if [[ "$LINE" == "# TODO list" ]]; then
+        echo "$LINE" >> "$TEMP_FILE"
+        break
+    fi
+done < "$TODO_FILE"
+
+# Process each task and append the correct tags
+while IFS= read -r LINE; do
+    # Skip empty lines
+    if [[ -z "$LINE" ]]; then
+        echo "" >> "$TEMP_FILE"
+        continue
+    fi
+
+    # Check if line is a TODO item
+    if [[ "$LINE" =~ ^- ]]; then
+        TASKS_FOUND=true
+        TASK_TEXT=$(echo "$LINE" | sed -E 's/- \[[! ]\] //')  # Remove checkboxes
+        TAGS=""
+
+        # Auto-generate tags based on keywords
+        declare -A TAGS_ARRAY
+        for WORD in $TASK_TEXT; do
+            WORD=$(echo "$WORD" | tr '[:upper:]' '[:lower:]')  # Convert to lowercase
+            if [[ -n "${TAG_MAP[$WORD]}" ]]; then
+                TAGS_ARRAY["${TAG_MAP[$WORD]}"]=1  # Store in associative array (remove duplicates)
+            fi
+        done
+
+        # Convert array keys to a space-separated list
+        TAGS=$(echo "${!TAGS_ARRAY[@]}" | tr ' ' ' ')
+
+        # If tags exist and are not already present, append them
+        if [[ -n "$TAGS" && ! "$LINE" =~ @ ]]; then
+            echo "$LINE $TAGS" >> "$TEMP_FILE"
+        else
+            echo "$LINE" >> "$TEMP_FILE"
+        fi
+    else
+        echo "$LINE" >> "$TEMP_FILE"
+    fi
+# Start processing after the "# TODO list" header
+done < <(awk 'f;/^# TODO list/{f=1}' "$TODO_FILE")
+
+# Ensure we found tasks before replacing the original file
+if $TASKS_FOUND; then
+    mv "$TEMP_FILE" "$TODO_FILE"
+    echo "✅ Tasks updated with tags in $TODO_FILE"
+else
+    echo "❌ No tasks found to update!"
+fi
+
