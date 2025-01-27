@@ -11,15 +11,6 @@ while IFS=":" read -r tag pattern; do
     TAG_MAP["$tag"]="$pattern"
 done < "$TAG_CONFIG"
 
-
-# 🔥 Debugging: Print loaded patterns
-echo "=== Loaded Tag Patterns ==="
-for tag in "${!TAG_MAP[@]}"; do
-    echo "Tag: $tag → Pattern: ${TAG_MAP[$tag]}"
-done
-echo "=========================="
-
-
 # Read and preserve the YAML header of the TODO.md file
 HEADER_LINES=()
 TASKS_FOUND=false
@@ -55,21 +46,21 @@ while IFS= read -r LINE; do
     if [[ "$LINE" =~ ^- ]]; then
         TASKS_FOUND=true
         TASK_TEXT=$(echo "$LINE" | sed -E 's/- \[[! ]\] //')  # Remove checkboxes
+        TASK_TEXT_LOWER=$(echo "$TASK_TEXT" | tr '[:upper:]' '[:lower:]')  # Normalize to lowercase
         declare -A TAGS_ARRAY
 
-        # Debugging: Print the task being processed
         echo "🔍 Processing task: $TASK_TEXT"
 
+        # Check the task text against all regex patterns
         for tag in "${!TAG_MAP[@]}"; do
             pattern="${TAG_MAP[$tag]}"
+            pattern_lower=$(echo "$pattern" | tr '[:upper:]' '[:lower:]')  # Normalize pattern to lowercase
             
-            echo "🔍 Checking if task '$TASK_TEXT' matches pattern '$pattern' for tag '$tag'..."
-
-            if [[ "$TASK_TEXT" =~ $pattern ]]; then  
+            echo "🔍 Checking pattern '$pattern_lower' for tag '$tag'..."
+            
+            if [[ $TASK_TEXT_LOWER =~ $pattern_lower ]]; then  
                 echo "✅ Match found! Adding tag '$tag' to task '$TASK_TEXT'"
                 TAGS_ARRAY["$tag"]=1
-            else
-                echo "❌ No match for pattern '$pattern'"
             fi
         done
 
@@ -77,7 +68,7 @@ while IFS= read -r LINE; do
         TAGS=$(echo "${!TAGS_ARRAY[@]}" | tr ' ' ' ')
 
         # Append tags if they don't already exist
-        if [[ -n "$TAGS" && ! "$LINE" =~ @ ]]; then
+        if [[ -n "$TAGS" ]]; then
             echo "$LINE $TAGS" >> "$TEMP_FILE"
         else
             echo "$LINE" >> "$TEMP_FILE"
@@ -90,9 +81,8 @@ done < <(awk 'f;/^# TODO list/{f=1}' "$TODO_FILE")
 # Replace the original TODO file if tasks were found
 if $TASKS_FOUND; then
     mv "$TEMP_FILE" "$TODO_FILE"
-    echo "✅ Tasks updated with tags in $TODO_FILE"
+    echo "✅ Tasks updated with multiple tags in $TODO_FILE"
 else
     echo "❌ No tasks found to update!"
 fi
-
 
