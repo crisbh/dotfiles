@@ -1,0 +1,27 @@
+#!/opt/homebrew/bin/bash  # Apple Silicon (M1/M2)
+
+NOTES_DIR="$VAULT/notes/diary"
+TODO_FILE="$VAULT/0-inbox/todo.md"
+SCRIPT_COLLECT="$HOME/.dotfiles/scripts/todofilter"
+SCRIPT_TAG="$HOME/.dotfiles/scripts/todo-add-tags"
+LAST_RUN="/tmp/last_todo_run"  # Prevents rapid duplicate runs
+
+echo "🔍 Watching $NOTES_DIR for changes..."
+fswatch -o --event Updated "$NOTES_DIR" | while read -r changed_file; do
+    # Ignore updates to TODO.md to prevent looping
+    if [[ "$changed_file" == "$TODO_FILE" ]]; then
+        continue
+    fi
+
+    NOW=$(date +%s)
+    LAST=$(cat "$LAST_RUN" 2>/dev/null || echo 0)
+
+    # Prevents multiple runs in a short time window
+    if (( NOW - LAST > 5 )); then
+        echo "📄 Change detected in daily notes! Running TODO extraction..."
+        echo "$NOW" > "$LAST_RUN"
+        bash "$SCRIPT_COLLECT"
+        bash "$SCRIPT_TAG"
+    fi
+done
+
