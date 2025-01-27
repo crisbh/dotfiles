@@ -51,6 +51,9 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 -- Run make
 vim.keymap.set('n', '<leader>cc', ":make <CR>", {desc = 'Run make'})
 
+-- Open the global TODO.md file 
+vim.keymap.set("n", "<leader>tt", ":e $VAULT/0-inbox/todo.md<CR>", { desc = "Open [T]ODO list" , noremap = true, silent = true })
+
 -- Terminal mode
 -- Easily hit escape in terminal mode.
 vim.keymap.set("t", "<esc><esc>", "<c-\\><c-n>")

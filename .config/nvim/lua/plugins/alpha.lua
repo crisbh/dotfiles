@@ -63,6 +63,7 @@ return {
 		dashboard.section.buttons.val = {
 			dashboard.button("f f", " " .. "Find files", ":Telescope find_files <CR>"),
 			dashboard.button("f o", "󰚰 " .. "Find recent files", ":Telescope oldfiles <CR>"),
+			dashboard.button("LDR t t", " " .. "Check TODO list", ":e $VAULT/0-inbox/todo.md<CR>"),
 			dashboard.button("LDR f v", " " .. "Find vault files"),
 			dashboard.button("LDR f h", "󰮦 " .. "Find help"),
 			dashboard.button("l", "󰵆 " .. "Lazy", ":Lazy <CR>"),
