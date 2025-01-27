@@ -1,43 +1,34 @@
 #!/opt/homebrew/bin/bash  # Apple Silicon (M1/M2)
 
-# Important: This shell script requires Bash 4.0+
+TODO_FILE="$VAULT/0-inbox/todo.md"
+TAG_CONFIG="$HOME/.dotfiles/scripts/task-tags.conf"
+TEMP_FILE="/tmp/tagged_tasks.txt"
 
-# Set TODO File path
-TODO_FILE=$VAULT/0-inbox/todo.md
-
-TEMP_FILE=/tmp/tagged_tasks.txt
-
-# Define keyword → tag mappings
+# Load keyword → tag mappings from external file
 declare -A TAG_MAP
-TAG_MAP=( 
-    ["code"]="@coding"
-    ["develop"]="@coding"
-    ["implement"]="@coding"
-    ["optimise"]="@coding"
-    ["debug"]="@coding"
-    ["fix"]="@coding"
-    ["kernel"]="@coding"
-    ["unit test"]="@coding"
-    ["lecture"]="@teaching"
-    ["teach"]="@teaching"
-    ["class"]="@teaching"
-    ["research"]="@research"
-    ["paper"]="@research"
-    ["experiment"]="@research"
-)
+while IFS=":" read -r tag pattern; do
+    [[ -z "$tag" || "$tag" =~ ^# ]] && continue  # Skip empty lines & comments
+    TAG_MAP["$tag"]="$pattern"
+done < "$TAG_CONFIG"
 
-# Read and preserve the YAML header section (e.g. Obsidian)
+
+# 🔥 Debugging: Print loaded patterns
+echo "=== Loaded Tag Patterns ==="
+for tag in "${!TAG_MAP[@]}"; do
+    echo "Tag: $tag → Pattern: ${TAG_MAP[$tag]}"
+done
+echo "=========================="
+
+
+# Read and preserve the YAML header of the TODO.md file
 HEADER_LINES=()
 TASKS_FOUND=false
 while IFS= read -r LINE; do
     if [[ "$LINE" == "---" && ${#HEADER_LINES[@]} -eq 0 ]]; then
-        # Start collecting header lines
         HEADER_LINES+=("$LINE")
     elif [[ ${#HEADER_LINES[@]} -gt 0 && "$LINE" != "---" ]]; then
-        # Collect header lines
         HEADER_LINES+=("$LINE")
     elif [[ "$LINE" == "---" && ${#HEADER_LINES[@]} -gt 0 ]]; then
-        # End of YAML header
         HEADER_LINES+=("$LINE")
         HEADER_LINES+=("")
         break
@@ -49,7 +40,7 @@ done < "$TODO_FILE"
 # Write the preserved header to the temp file
 printf "%s\n" "${HEADER_LINES[@]}" > "$TEMP_FILE"
 
-# Now, find and keep the "# TODO list" title
+# Find and keep the "# TODO list" title
 while IFS= read -r LINE; do
     if [[ "$LINE" == "# TODO list" ]]; then
         echo "$LINE" >> "$TEMP_FILE"
@@ -59,31 +50,33 @@ done < "$TODO_FILE"
 
 # Process each task and append the correct tags
 while IFS= read -r LINE; do
-    # Skip empty lines
-    if [[ -z "$LINE" ]]; then
-        echo "" >> "$TEMP_FILE"
-        continue
-    fi
+    [[ -z "$LINE" ]] && echo "" >> "$TEMP_FILE" && continue
 
-    # Check if line is a TODO item
     if [[ "$LINE" =~ ^- ]]; then
         TASKS_FOUND=true
         TASK_TEXT=$(echo "$LINE" | sed -E 's/- \[[! ]\] //')  # Remove checkboxes
-        TAGS=""
-
-        # Auto-generate tags based on keywords
         declare -A TAGS_ARRAY
-        for WORD in $TASK_TEXT; do
-            WORD=$(echo "$WORD" | tr '[:upper:]' '[:lower:]')  # Convert to lowercase
-            if [[ -n "${TAG_MAP[$WORD]}" ]]; then
-                TAGS_ARRAY["${TAG_MAP[$WORD]}"]=1  # Store in associative array (remove duplicates)
+
+        # Debugging: Print the task being processed
+        echo "🔍 Processing task: $TASK_TEXT"
+
+        for tag in "${!TAG_MAP[@]}"; do
+            pattern="${TAG_MAP[$tag]}"
+            
+            echo "🔍 Checking if task '$TASK_TEXT' matches pattern '$pattern' for tag '$tag'..."
+
+            if [[ "$TASK_TEXT" =~ $pattern ]]; then  
+                echo "✅ Match found! Adding tag '$tag' to task '$TASK_TEXT'"
+                TAGS_ARRAY["$tag"]=1
+            else
+                echo "❌ No match for pattern '$pattern'"
             fi
         done
 
         # Convert array keys to a space-separated list
         TAGS=$(echo "${!TAGS_ARRAY[@]}" | tr ' ' ' ')
 
-        # If tags exist and are not already present, append them
+        # Append tags if they don't already exist
         if [[ -n "$TAGS" && ! "$LINE" =~ @ ]]; then
             echo "$LINE $TAGS" >> "$TEMP_FILE"
         else
@@ -92,14 +85,14 @@ while IFS= read -r LINE; do
     else
         echo "$LINE" >> "$TEMP_FILE"
     fi
-# Start processing after the "# TODO list" header
 done < <(awk 'f;/^# TODO list/{f=1}' "$TODO_FILE")
 
-# Ensure we found tasks before replacing the original file
+# Replace the original TODO file if tasks were found
 if $TASKS_FOUND; then
     mv "$TEMP_FILE" "$TODO_FILE"
     echo "✅ Tasks updated with tags in $TODO_FILE"
 else
     echo "❌ No tasks found to update!"
 fi
+
 
