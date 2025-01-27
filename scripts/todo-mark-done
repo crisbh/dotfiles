@@ -2,8 +2,11 @@
 
 NOTES_DIR="$VAULT/notes/diary"
 TODO_FILE="$VAULT/0-inbox/todo.md"
+DONE_FILE="$VAULT/0-inbox/done.md"
 
 echo "✅ Running daily DONE sync..."
+
+chmod +w "$TODO_FILE" "$DONE_FILE"
 
 # Loop through completed tasks in TODO.md
 grep '^- \[x\]' "$TODO_FILE" | while read -r task; do
@@ -14,5 +17,9 @@ grep '^- \[x\]' "$TODO_FILE" | while read -r task; do
     for file in "$NOTES_DIR"/*.md; do
         sed -i '' "s|^- \[ \] \(.*$escaped_task.*\)$|- [x] \1 ✅ DONE|g" "$file"
     done
+
+    ### Auto-archive completed tasks (move to DONE.md)
+    grep '^- \[x\]' "$TODO_FILE" >> "$DONE_FILE"
+    sed -i '' '/^- \[x\]/d' "$TODO_FILE"
 done
 
