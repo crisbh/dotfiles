@@ -1,15 +1,6 @@
 #!/bin/bash
 
-# Required parameters:
-# @raycast.schemaVersion 1
-# @raycast.title Start Pomodoro
-# @raycast.packageName Pomodoro Timer
-# @raycast.mode compact
-# @raycast.refreshTime 10s
-
-# Optional parameters:
-# @raycast.icon ⏳
-
+VAULT="/Users/cristian/Library/Mobile Documents/iCloud~md~obsidian/Documents/kosmos"
 TODO_FILE=$VAULT/0-inbox/todo.md
 TEMP_TASKS=/tmp/tasks.txt
 

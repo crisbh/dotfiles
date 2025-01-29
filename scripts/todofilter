@@ -10,7 +10,6 @@
 #       todofilter usage
 #       Set the relevant paths and run the script.
 
-
 # Set paths
 NOTES_DIR="$VAULT/notes/diary"
 TODO_FILE="$VAULT/0-inbox/todo.md"
@@ -29,7 +28,7 @@ echo
 TODAY=$(date +"%Y-%m-%d")
 YESTERDAY=$(date -v-1d +"%Y-%m-%d")
 
-for file in "$NOTES_DIR/$TODAY.md" "$NOTES_DIR/$YESTDAY.md"; do
+for file in "$NOTES_DIR/$TODAY.md" "$NOTES_DIR/$YESTERDAY.md"; do
     [ -f "$file" ] || continue  # Skip if file doesn't exist
 
     ### Collect unchecked TODOs (skip already processed)
@@ -42,15 +41,16 @@ for file in "$NOTES_DIR/$TODAY.md" "$NOTES_DIR/$YESTDAY.md"; do
     # Ignore those marked as DONE or COLLECTED
     grep -h -o 'TODO: .*' "$file" | grep -vE 'TODO: .*DONE$|TODO: \(COLLECTED\)' | sed 's/TODO: /- [ ] /' >> "$TEMP_FILE"
 
-    ### Append unique tasks to TODO.md **while preserving order**
+    ### Preserve existing tasks while appending new ones
     if [ -s "$TEMP_FILE" ]; then
-        # Extract header and existing tasks separately
+        # Extract everything above "# TODO list" (header & YAML)
         awk '/^# TODO list/ {print; exit} {print}' "$TODO_FILE" > "$TEMP_FILE.new"
-        awk 'f {print} /^# TODO list/ {f=1}' "$TODO_FILE" > "$TEMP_FILE.old"
 
-        # Append only NEW tasks (preserve order by using grep)
-        cat "$TEMP_FILE" >> "$TEMP_FILE.old"
-        awk '!seen[$0]++' "$TEMP_FILE.old" >> "$TEMP_FILE.new"  # Ensures uniqueness without sorting
+        # Extract tasks from TODO.md (below "# TODO list")
+        awk 'f;/^# TODO list/{f=1}' "$TODO_FILE" > "$TEMP_FILE.old"
+
+        # Append new tasks and preserve unique ones
+        cat "$TEMP_FILE" "$TEMP_FILE.old" | awk '!seen[$0]++' >> "$TEMP_FILE.new"
 
         # Move everything back into TODO.md
         mv "$TEMP_FILE.new" "$TODO_FILE"
@@ -80,7 +80,7 @@ for file in "$NOTES_DIR/$TODAY.md" "$NOTES_DIR/$YESTDAY.md"; do
     if grep -q '^- \[!\]' "$TODO_FILE" || grep -q '^- \[ \]' "$TODO_FILE"; then
         # Extract header and tasks separately
         awk '/^# TODO list/ {print; exit} {print}' "$TODO_FILE" > "$TEMP_FILE.new"
-        awk 'f {print} /^# TODO list/ {f=1}' "$TODO_FILE" > "$TEMP_FILE.old"
+        awk 'f;/^# TODO list/{f=1}' "$TODO_FILE" > "$TEMP_FILE.old"
 
         (grep '^- \[!\]' "$TEMP_FILE.old"; grep -v '^- \[!\]' "$TEMP_FILE.old") >> "$TEMP_FILE.new"
         mv "$TEMP_FILE.new" "$TODO_FILE"
@@ -94,3 +94,4 @@ echo
 echo "====================="
 echo "SCRIPT COMPLETE!"
 echo "====================="
+
