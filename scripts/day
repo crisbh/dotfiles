@@ -11,7 +11,16 @@ new_note() {
 	touch "$file"
 
 	# Format the file with the daily template
+	# TODO: make aliases field same as Obsidian notes. Same with first title
 	cat <<EOF >"$file"
+---
+id: "$today"
+aliases:
+  - "$today"
+tags:
+  - daily-notes
+---
+
 # $today
 
 [[$yesterday]] - [[$tomorrow]]
@@ -23,8 +32,8 @@ What do I want to achieve today and tomorrow?
 ## Tracking
 
 - [ ] Meditation
-- [ ] Yoga or strength training
-- [ ] Answer 1 question from steps
+- [ ] Yoga or stretching excercise
+- [ ] Answer 1 question
 - [ ] Skin routine
 - [ ] Oral routine
 

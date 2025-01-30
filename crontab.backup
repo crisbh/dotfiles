@@ -12,11 +12,12 @@ VAULT="/Users/cristian/Library/Mobile Documents/iCloud~md~obsidian/Documents/kos
 @reboot defaults write -g InitialKeyRepeat -int 25 # normal minimum is 15 (225 ms)
 @reboot defaults write -g KeyRepeat -int 1 # normal minimum is 2 (30 ms)
 
+# Script that handle DONE todo items.
+0 10 * * * /opt/homebrew/bin/bash ~/.dotfiles/scripts/todo-mark-done
+0 18 * * * /opt/homebrew/bin/bash ~/.dotfiles/scripts/todo-mark-done
+
 # Back up homebrew packages list
 0 10 * * * /bin/bash -c '/opt/homebrew/bin/brew leaves > ~/.dotfiles/.config/homebrew/leaves.txt 2> ~/.dotfiles/.config/homebrew/error.log'
-
-# Compile todo items into a list
-*/10 * * * * /bin/bash ~/.dotfiles/scripts/todofilter >> ~/.dotfiles/todofilter.log 2>&1
 
 # Back up the current status of the cron daemon
 0 10 * * * crontab -l > ~/.dotfiles/crontab.backup
