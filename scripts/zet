@@ -1,64 +1,77 @@
 #!/bin/bash
 
-# A bash script that helps the creation of notes
-# Taken from mischavandenburg (and added minor modifications)
+# A bash script to create or search notes in 0-inbox
 
-# function to prompt the user for a filename
+VAULT_DIR="$VAULT/0-inbox"
+
+# Function to prompt the user for a filename
 get_filename() {
-	read -r -p "Enter a filename: " filename
-	echo "$filename"
+    read -r -p "Enter a filename: " filename
+    if [[ -z "$filename" ]]; then
+        echo "❌ No filename entered. Exiting..."
+        exit 1
+    fi
+    echo "$filename"
 }
 
-# function to create and open a file in the specified directory
+# Function to create and open a file in the specified directory
 open_file() {
+    local file_path="$VAULT_DIR/$filename.md"
 
-	# Cd into the directory
-	cd "$1" || exit
+    # If file exists, open it
+    if [[ -f "$file_path" ]]; then
+        echo "Opening existing note: $filename.md"
+        nvim "$file_path"
+        exit 0
+    fi
 
-	# Check if file already exists
-	if [[ -f "$1/$filename.md" ]]; then
-		#echo "A file with the entered filename already exists. Try a different name."
-		echo "A file with the entered filename already exists. Opening it..."
-		nvim "$1/$filename.md"
-		exit 55
-	fi
+    # Create the new file
+    touch "$file_path"
 
-	# Create the file in the specified directory
-	touch "$1/$filename.md"
+    # Add metadata
+    timestamp="$(date +"%Y%m%d%H%M")"
+    {
+        echo "# $filename"
+        echo -e "\n"
+        echo -e "\n"
+        echo -e "\n"
+        echo "Links:"
+        echo -e "\n"
+        echo "$timestamp"
+    } >>"$file_path"
 
-	# create unique identifier and links section
-	timestamp="$(date +"%Y%m%d%H%m")"
-
-	# format the file
-	{
-		echo "# "
-		echo -en "\n"
-		echo -en "\n"
-		echo -en "\n"
-		echo "Links:"
-		echo -en "\n"
-		echo "$timestamp"
-	} >>"$1/$filename.md"
-
-	# Open the file in Neovim
-	nvim '-c normal ggA' "$1/$filename.md"
+    # Open the file in Neovim at the top
+    nvim '-c normal ggA' "$file_path"
 }
 
-# Prompt the user if no filename is provided
+# If no argument is provided, use fzf to search existing notes
 if [[ $# -eq 0 ]]; then
-	filename=$(get_filename)
+    existing_file=$(find "$VAULT_DIR" -maxdepth 1 -type f -name "*.md" \
+    -not -path "*/.*" \
+    -not -name "README.md" \
+    -not -name "index.md" \
+    | sed "s|$VAULT_DIR/||" | sed 's/.md//' \
+    | fzf --prompt="Search Notes: ")
+
+    if [[ -n "$existing_file" ]]; then
+        filename="$existing_file"
+    else
+        filename="$(get_filename)" || exit 1
+    fi
 fi
 
-# if more than one argument is given, print error message and stop script
+# Ensure only one argument is given
 if [[ $# -gt 1 ]]; then
-	echo "Please provide only one filename separated by dashes, without .md extension."
-	echo "Example: zet my-new-note"
-	exit 1
+    echo "❌ Please provide only one filename (without .md extension)."
+    echo "Example: zet my-new-note"
+    exit 1
 fi
 
-# set filename to the argument given to the script
+# If argument is provided, use it as filename
 if [[ $# -eq 1 ]]; then
-	filename=$1
+    filename=$1
 fi
 
-open_file "$VAULT/0-inbox"
+# Open or create the file
+open_file
+
