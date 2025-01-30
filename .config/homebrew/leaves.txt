@@ -11,9 +11,11 @@ entr
 eza
 fd
 fftw
+fswatch
 fzf
 glow
 graphviz
+grep
 gsl
 htop
 hugo

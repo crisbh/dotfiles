@@ -26,6 +26,7 @@ alias wiki="vimwiki"
 
 alias todo="zet todo"
 alias pomo="todo-pomodoro"
+alias p="todo-pomodoro"
 
 alias rga="rg -."
 
