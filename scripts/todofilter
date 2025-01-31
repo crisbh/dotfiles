@@ -34,27 +34,29 @@ for file in "$NOTES_DIR/$TODAY.md" "$NOTES_DIR/$YESTERDAY.md"; do
     ### Collect unchecked TODOs (skip already processed)
     grep -h '^- \[ \]' "$file" | grep -v '^- \[>\]' > "$TEMP_FILE"
 
-    echo "Collected TODOs:"
+    echo "Collected TODOs from file ${file}:"
     cat "$TEMP_FILE"
 
     # Extract inline 'TODO:' items and convert them to standard [ ] format
     # Ignore those marked as DONE or COLLECTED
     grep -h -o 'TODO: .*' "$file" | grep -vE 'TODO: .*DONE$|TODO: \(COLLECTED\)' | sed 's/TODO: /- [ ] /' >> "$TEMP_FILE"
 
-    ### Preserve existing tasks while appending new ones
-    if [ -s "$TEMP_FILE" ]; then
-        # Extract everything above "# TODO list" (header & YAML)
-        awk '/^# TODO list/ {print; exit} {print}' "$TODO_FILE" > "$TEMP_FILE.new"
+    # Step 1: Extract everything above "# TODO list" (header & YAML)
+    awk '/^# TODO list/ {print; exit} {print}' "$TODO_FILE" > "$TEMP_FILE.new"
 
-        # Extract tasks from TODO.md (below "# TODO list")
-        awk 'f;/^# TODO list/{f=1}' "$TODO_FILE" > "$TEMP_FILE.old"
+    # Step 2: Extract existing tasks (everything below "# TODO list")
+    awk 'f;/^# TODO list/{f=1}' "$TODO_FILE" > "$TEMP_FILE.old"
 
-        # Append new tasks and preserve unique ones
+    # Step 3: If new tasks exist, merge them with the old ones
+    if [ -s "$TEMP_FILE" ]; then  
+        echo "✅ New tasks found, updating TODO.md..."
         cat "$TEMP_FILE" "$TEMP_FILE.old" | awk '!seen[$0]++' >> "$TEMP_FILE.new"
-
-        # Move everything back into TODO.md
-        mv "$TEMP_FILE.new" "$TODO_FILE"
+        mv "$TEMP_FILE.new" "$TODO_FILE"  # Save changes
+    else
+        echo "No new tasks found, keeping existing TODO.md intact!"
+        rm "$TEMP_FILE.new"  # Don't overwrite if no new tasks
     fi
+
 
     ### Mark collected tasks as processed in daily notes
     sed -i '' 's/^- \[ \] \(.*\)$/- [>] \1/g' "$file"
