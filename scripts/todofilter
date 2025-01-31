@@ -49,9 +49,22 @@ for file in "$NOTES_DIR/$TODAY.md" "$NOTES_DIR/$YESTERDAY.md"; do
 
     # Step 3: If new tasks exist, merge them with the old ones
     if [ -s "$TEMP_FILE" ]; then  
-        echo "✅ New tasks found, updating TODO.md..."
-        cat "$TEMP_FILE" "$TEMP_FILE.old" | awk '!seen[$0]++' >> "$TEMP_FILE.new"
-        mv "$TEMP_FILE.new" "$TODO_FILE"  # Save changes
+        # Extract the date from the daily note filename (YYYY-MM-DD → DD-MM-YYYY)
+        FILE_DATE=$(basename "$file" .md | awk -F'-' '{print $3"-"$2"-"$1}')
+
+        # Ensure date section exists **before adding tasks**
+        if ! grep -q "## $FILE_DATE" "$TEMP_FILE.old"; then
+            echo -e "\n## $FILE_DATE" >> "$TEMP_FILE.old"
+        fi
+
+        # Append new tasks under the correct date
+        cat "$TEMP_FILE" >> "$TEMP_FILE.old"
+
+        # Remove duplicates while preserving order
+        awk '!seen[$0]++' "$TEMP_FILE.old" >> "$TEMP_FILE.new"
+
+        # Move everything back into TODO.md
+        mv "$TEMP_FILE.new" "$TODO_FILE"
     else
         echo "No new tasks found, keeping existing TODO.md intact!"
         rm "$TEMP_FILE.new"  # Don't overwrite if no new tasks
