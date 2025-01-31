@@ -5,21 +5,58 @@ TODO_FILE="$VAULT/0-inbox/todo.md"
 DONE_FILE="$VAULT/0-inbox/done.md"
 
 echo "✅ Running daily DONE sync..."
-
 chmod +w "$TODO_FILE" "$DONE_FILE"
 
-# Loop through completed tasks in TODO.md
+TODAY=$(date +"%d-%m-%Y")  # Format: DD-MM-YYYY
+
+# Step 1: Extract YAML header and body separately
+awk 'BEGIN {in_header=1} 
+     /^---$/ {dash_count++; if (dash_count == 2) {print > "/tmp/header.txt"; in_header=0; next}} 
+     in_header {print > "/tmp/header.txt"} 
+     !in_header {print > "/tmp/body.txt"}' "$DONE_FILE"
+
+# Step 2: Add today's date at the top of the body **if not already present**, without extra lines
+if ! rg -Fxq "## $TODAY" "/tmp/body.txt"; then
+    { echo ""; echo "## $TODAY"; cat "/tmp/body.txt"; } > "/tmp/new_body.txt"
+else
+    cat "/tmp/body.txt" > "/tmp/new_body.txt"
+fi
+
+# Step 3: Process completed tasks in TODO.md
 grep '^- \[x\]' "$TODO_FILE" | while read -r task; do
     task_text=$(echo "$task" | cut -c6- | sed 's/^ *//;s/ *$//')
     escaped_task=$(printf '%s\n' "$task_text" | sed -e 's/[\/&]/\\&/g')
 
-    # Apply completion mark in daily notes
+    # Step 3.1: Apply completion mark in daily notes
     for file in "$NOTES_DIR"/*.md; do
         sed -i '' "s|^- \[ \] \(.*$escaped_task.*\)$|- [x] \1 ✅ DONE|g" "$file"
     done
 
-    ### Auto-archive completed tasks (move to DONE.md)
-    grep '^- \[x\]' "$TODO_FILE" >> "$DONE_FILE"
-    sed -i '' '/^- \[x\]/d' "$TODO_FILE"
+    # Step 3.2: **Check if the task already exists in DONE.md to prevent duplicates**
+    trimmed_task=$(echo "$task" | awk '{$1=$1};1')  # Trim & remove blank lines
+
+    #  Run `rg` separately and store the result
+    if [[ -n "$trimmed_task" ]]; then
+        if ! rg -xq -- "$trimmed_task" "/tmp/new_body.txt"; then
+            echo "✅ Adding task to DONE.md: $trimmed_task"
+
+            # Insert the task below the correct date
+            awk -v today="## $TODAY" -v task="$trimmed_task" '
+                {print}
+                $0 == today {print task}
+            ' "/tmp/new_body.txt" > "/tmp/final_body.txt"
+        else
+            cat "/tmp/new_body.txt" > "/tmp/final_body.txt"  # Keep existing content
+        fi
+    fi
 done
+
+# Step 4: Combine the header and the updated body into DONE.md
+cat /tmp/header.txt /tmp/final_body.txt > "$DONE_FILE"
+echo "✅ DONE file updated successfully!"
+
+# Step 5: Remove completed tasks from TODO.md
+sed -i '' '/^- \[x\]/d' "$TODO_FILE"
+
+echo "✅ DONE sync complete!"
 
