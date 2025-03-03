@@ -29,8 +29,7 @@ vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter" }, {
 -- 	end,
 -- })
 
--- Run script to collect TODO items from daily notes
-
+-- Functions to run script to collect TODO items from daily notes
 local function run_todo_collect()
     -- Double-check mode before running (can be useful if there was a race condition)
     if vim.fn.mode() == "i" then
@@ -39,22 +38,31 @@ local function run_todo_collect()
     vim.fn.jobstart({ "/opt/homebrew/bin/bash", os.getenv("HOME") .. "/.dotfiles/scripts/todo-collect"})
 end
 
-local timer = nil
+local collect_timer = nil
+local function reset_collect_timer()
+    if collect_timer then
+        collect_timer:stop()
+    end
+    collect_timer = vim.loop.new_timer()
+    collect_timer:start(5000, 0, vim.schedule_wrap(run_todo_collect))  -- X time in ms
+end
 
+-- On write, start (or reset) timer — but only if NOT in Insert mode
 vim.api.nvim_create_autocmd("BufWritePost", {
     pattern = vim.fn.expand("$VAULT") .. "/notes/diary/*.md",
     callback = function()
-        -- If currently still in insert mode right after save, do nothing
         if vim.fn.mode() == "i" then
             return
         end
+        reset_collect_timer()
+    end,
+})
 
-        -- Debounce logic
-        if timer then
-            timer:stop()
-        end
-        timer = vim.loop.new_timer()
-        timer:start(10000, 0, vim.schedule_wrap(run_todo_collect))
+-- On leaving Insert mode, reset timer (because user paused writing)
+vim.api.nvim_create_autocmd("InsertLeave", {
+    pattern = vim.fn.expand("$VAULT") .. "/notes/diary/*.md",
+    callback = function()
+        reset_collect_timer()
     end,
 })
 
