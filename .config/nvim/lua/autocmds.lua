@@ -13,7 +13,11 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 })
 
 -- Ignore externally modified files
-vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter" }, { command = "checktime" })
+vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter" }, {
+    callback = function()
+        vim.cmd("checktime")
+    end,
+})
 
 -- auto stop auto-compiler if its running
 -- vim.api.nvim_create_autocmd("VimLeave", {
@@ -24,6 +28,36 @@ vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter" }, { command = "checktim
 -- 		vim.fn.jobstart({ "autocomp", vim.fn.expand("%:p"), "stop" })
 -- 	end,
 -- })
+
+-- Run script to collect TODO items from daily notes
+
+local function run_todo_collect()
+    -- Double-check mode before running (can be useful if there was a race condition)
+    if vim.fn.mode() == "i" then
+        return
+    end
+    vim.fn.jobstart({ "/opt/homebrew/bin/bash", os.getenv("HOME") .. "/.dotfiles/scripts/todo-collect"})
+end
+
+local timer = nil
+
+vim.api.nvim_create_autocmd("BufWritePost", {
+    pattern = vim.fn.expand("$VAULT") .. "/notes/diary/*.md",
+    callback = function()
+        -- If currently still in insert mode right after save, do nothing
+        if vim.fn.mode() == "i" then
+            return
+        end
+
+        -- Debounce logic
+        if timer then
+            timer:stop()
+        end
+        timer = vim.loop.new_timer()
+        timer:start(10000, 0, vim.schedule_wrap(run_todo_collect))
+    end,
+})
+
 
 -- text like documents enable wrap and spell
 vim.api.nvim_create_autocmd("FileType", {

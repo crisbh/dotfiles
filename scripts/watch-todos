@@ -2,26 +2,31 @@
 
 NOTES_DIR="$VAULT/notes/diary"
 TODO_FILE="$VAULT/0-inbox/todo.md"
-SCRIPT_COLLECT="$HOME/.dotfiles/scripts/todofilter"
+SCRIPT_COLLECT="$HOME/.dotfiles/scripts/todo-collect"
 SCRIPT_TAG="$HOME/.dotfiles/scripts/todo-add-tags"
-LAST_RUN="/tmp/last_todo_run"  # Prevents rapid duplicate runs
+LAST_RUN="/tmp/last_todo_run"
+PENDING_RUN="/tmp/pending_todo_run"
 
 echo "🔍 Watching $NOTES_DIR for changes..."
+
 fswatch -o --event Updated "$NOTES_DIR" | while read -r changed_file; do
-    # Ignore updates to TODO.md to prevent looping
     if [[ "$changed_file" == "$TODO_FILE" ]]; then
         continue
     fi
 
     NOW=$(date +%s)
-    LAST=$(cat "$LAST_RUN" 2>/dev/null || echo 0)
+    echo "$NOW" > "$PENDING_RUN"
 
-    # Prevents multiple runs in a short time window
-    if (( NOW - LAST > 5 )); then
-        echo "📄 Change detected in daily notes! Running TODO extraction..."
+    sleep 20  # debounce delay
+
+    LATEST=$(cat "$PENDING_RUN")
+    if [[ "$LATEST" == "$NOW" ]]; then
+        echo "No further edits detected in the last 10 seconds. Collecting TODOs..."
         echo "$NOW" > "$LAST_RUN"
         bash "$SCRIPT_COLLECT"
         bash "$SCRIPT_TAG"
+    else
+        echo "More edits detected. Skipping this run."
     fi
 done
 

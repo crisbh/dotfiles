@@ -1,0 +1,93 @@
+#!/opt/homebrew/bin/bash  # Apple Silicon (M1/M2)
+
+# Paths
+NOTES_DIR="$VAULT/notes/diary"
+TODO_FILE="$VAULT/0-inbox/todo.md"
+DONE_FILE="$VAULT/0-inbox/done.md"
+SCRIPT_TAG="$HOME/.dotfiles/scripts/todo-add-tags"
+
+# Ensure necessary files exist
+touch "$TODO_FILE" "$DONE_FILE"
+chmod +w "$TODO_FILE" "$DONE_FILE"
+
+echo "================================"
+echo "📥 Starting TODO collection"
+echo "================================"
+
+# If a file path is provided (Neovim-triggered), process just that file.
+if [[ -n "$1" ]]; then
+    TARGET_FILES=("$1")
+    echo "📝 Mode: Neovim single-file collection (file = $1)"
+else
+    # Default to today + yesterday if no file passed (manual/cron)
+    TODAY=$(date +"%Y-%m-%d")
+    YESTERDAY=$(date -v-1d +"%Y-%m-%d")
+
+    TARGET_FILES=("$NOTES_DIR/$TODAY.md" "$NOTES_DIR/$YESTERDAY.md")
+    echo "📅 Mode: Full daily collection (today + yesterday)"
+fi
+
+for file in "${TARGET_FILES[@]}"; do
+    [ -f "$file" ] || continue  # Skip non-existing files
+
+    TEMP_FILE=$(mktemp)
+
+    ### Collect unchecked TODOs (skip already processed)
+    grep -h '^- \[ \]' "$file" | grep -v '^- \[>\]' > "$TEMP_FILE"
+
+    # Extract inline 'TODO:' items and convert to standard [ ] format
+    # Ignore those marked as DONE or COLLECTED
+    grep -h -o 'TODO: .*' "$file" | grep -vE 'TODO: .*DONE$|TODO: \(COLLECTED\)' | sed 's/TODO: /- [ ] /' >> "$TEMP_FILE"
+
+    if [ ! -s "$TEMP_FILE" ]; then
+        echo "✅ No new tasks found in $file, skipping."
+        rm -f "$TEMP_FILE"
+        continue
+    fi
+
+    # Extract date from filename (YYYY-MM-DD → DD-MM-YYYY)
+    FILE_DATE=$(basename "$file" .md | awk -F'-' '{print $3"-"$2"-"$1}')
+
+    # Step 1: Extract header & YAML from TODO.md
+    awk '/^# TODO list/ {print; exit} {print}' "$TODO_FILE" > "$TEMP_FILE.new"
+
+    # Step 2: Extract existing tasks (everything below "# TODO list")
+    awk 'f;/^# TODO list/{f=1}' "$TODO_FILE" > "$TEMP_FILE.old"
+
+    # Step 3: Ensure date section exists before adding tasks
+    if ! grep -q "## $FILE_DATE" "$TEMP_FILE.old"; then
+        echo -e "\n## $FILE_DATE" >> "$TEMP_FILE.old"
+    fi
+
+    # Step 4: Append new tasks under correct date
+    cat "$TEMP_FILE" >> "$TEMP_FILE.old"
+
+    # Step 5: Remove duplicates while preserving order
+    awk '!seen[$0]++' "$TEMP_FILE.old" >> "$TEMP_FILE.new"
+
+    # Step 6: Move everything back into TODO.md
+    mv "$TEMP_FILE.new" "$TODO_FILE"
+
+    ### Mark collected tasks as processed in the daily note
+    sed -i '' 's/^- \[ \] \(.*\)$/- [>] \1/g' "$file"
+    sed -i '' '/TODO: (COLLECTED)/!s/TODO: /TODO: (COLLECTED) /' "$file"
+
+    echo "✅ Collected tasks from $file"
+    rm -f "$TEMP_FILE"
+done
+
+echo "================================"
+echo "✅ TODO COLLECTION COMPLETE!"
+echo "================================"
+
+
+echo "================================"
+echo "NOW ADDING TAGS TO TODO ITEMS..."
+echo "================================"
+
+bash "$SCRIPT_TAG"
+
+echo "================================"
+echo "DONE WITH TAGS!"
+echo "================================"
+
