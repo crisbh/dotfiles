@@ -29,43 +29,50 @@ vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter" }, {
 -- 	end,
 -- })
 
+-----------------------------------------------------------------
 -- Functions to run script to collect TODO items from daily notes
-local function run_todo_collect()
-    -- Double-check mode before running (can be useful if there was a race condition)
-    if vim.fn.mode() == "i" then
-        return
-    end
+-----------------------------------------------------------------
+
+local todo_collect_timer = nil
+
+local function collect_todo_items()
+    vim.notify("🔔 Collecting TODOs...")
     vim.fn.jobstart({ "/opt/homebrew/bin/bash", os.getenv("HOME") .. "/.dotfiles/scripts/todo-collect"})
 end
 
-local collect_timer = nil
-local function reset_collect_timer()
-    if collect_timer then
-        collect_timer:stop()
+local function start_todo_collect_timer()
+    if todo_collect_timer then
+        vim.loop.timer_stop(todo_collect_timer)
     end
-    collect_timer = vim.loop.new_timer()
-    collect_timer:start(5000, 0, vim.schedule_wrap(run_todo_collect))  -- X time in ms
+
+    todo_collect_timer = vim.loop.new_timer()
+    todo_collect_timer:start(5000, 0, vim.schedule_wrap(function()
+        collect_todo_items()
+        todo_collect_timer = nil
+    end))
 end
 
--- On write, start (or reset) timer — but only if NOT in Insert mode
+-- Trigger timer **only after save**
 vim.api.nvim_create_autocmd("BufWritePost", {
-    pattern = vim.fn.expand("$VAULT") .. "/notes/diary/*.md",
+    pattern = os.getenv("VAULT") .. "/notes/diary/*.md",
     callback = function()
-        if vim.fn.mode() == "i" then
-            return
-        end
-        reset_collect_timer()
-    end,
+        start_todo_collect_timer()
+    end
 })
 
--- On leaving Insert mode, reset timer (because user paused writing)
+-- Reset timer when leaving insert mode (just to prevent weird double-fires)
 vim.api.nvim_create_autocmd("InsertLeave", {
-    pattern = vim.fn.expand("$VAULT") .. "/notes/diary/*.md",
+    pattern = os.getenv("VAULT") .. "/notes/diary/*.md",
     callback = function()
-        reset_collect_timer()
-    end,
+        if todo_collect_timer then
+            vim.loop.timer_stop(todo_collect_timer)
+            todo_collect_timer = nil
+        end
+    end
 })
 
+-----------------------------------------------------------------
+-----------------------------------------------------------------
 
 -- text like documents enable wrap and spell
 vim.api.nvim_create_autocmd("FileType", {
