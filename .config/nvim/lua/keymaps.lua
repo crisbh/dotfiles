@@ -54,6 +54,33 @@ vim.keymap.set('n', '<leader>cc', ":make <CR>", {desc = 'Run make'})
 -- Open the global TODO.md file 
 vim.keymap.set("n", "<leader>tt", ":e $VAULT/0-inbox/todo.md<CR>", { desc = "Open [T]ODO list" , noremap = true, silent = true })
 
+vim.keymap.set("n", "<leader>wi", function()
+    vim.cmd("edit " .. vim.fn.expand("$VAULT/notes/diary/diary.md"))
+end, { desc = "Open Diary Index" })
+
+vim.keymap.set("n", "<leader>w<leader>i", function()
+    vim.fn.jobstart("/opt/homebrew/bin/bash ~/.dotfiles/scripts/generate-diary-index", {
+        on_stdout = function(_, data)
+            if data then
+                vim.notify(table.concat(data, "\n"), vim.log.levels.INFO)
+            end
+        end,
+        on_stderr = function(_, data)
+            if data then
+                vim.notify(table.concat(data, "\n"), vim.log.levels.ERROR)
+            end
+        end,
+        on_exit = function(_, code)
+            if code == 0 then
+                vim.notify("✅ Diary index rebuilt!", vim.log.levels.INFO)
+            else
+                vim.notify("❌ Failed to rebuild diary index!", vim.log.levels.ERROR)
+            end
+        end,
+    })
+end, { desc = "Build Diary Index" })
+
+--
 -- Terminal mode
 -- Easily hit escape in terminal mode.
 vim.keymap.set("t", "<esc><esc>", "<c-\\><c-n>")
