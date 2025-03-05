@@ -1,0 +1,75 @@
+#!/opt/homebrew/bin/bash  # Apple Silicon (M1/M2)
+
+NOTES_DIR="$VAULT/notes/diary"
+INDEX_FILE="$VAULT/notes/diary/diary.md"
+
+# Desired header (customize if needed)
+HEADER="---
+id: diary
+aliases: []
+tags: []
+---
+
+# Diary
+"
+
+# Start fresh with the correct header
+echo "$HEADER" > "$INDEX_FILE"
+echo "" >> "$INDEX_FILE"
+
+# Function to get month name from number
+month_name() {
+    case $1 in
+        01) echo "January" ;;
+        02) echo "February" ;;
+        03) echo "March" ;;
+        04) echo "April" ;;
+        05) echo "May" ;;
+        06) echo "June" ;;
+        07) echo "July" ;;
+        08) echo "August" ;;
+        09) echo "September" ;;
+        10) echo "October" ;;
+        11) echo "November" ;;
+        12) echo "December" ;;
+        *) echo "Unknown" ;;
+    esac
+}
+
+# Initialize tracking variables
+current_year=""
+current_month=""
+
+# Use `find` to only capture files matching strictly YYYY-MM-DD.md (no other files!)
+find "$NOTES_DIR" -type f -name '????-??-??.md' | sort -r | while read -r file; do
+    filename=$(basename "$file" .md)
+
+    if [[ ! "$filename" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+        continue  # Extra sanity check (paranoia level max)
+    fi
+
+    year=${filename:0:4}
+    month=${filename:5:2}
+    day=${filename:8:2}
+
+    # Add year heading if needed
+    if [[ "$year" != "$current_year" ]]; then
+        echo ""
+        echo "## $year" >> "$INDEX_FILE"
+        current_year="$year"
+        current_month=""
+    fi
+
+    # Add month heading if needed
+    if [[ "$month" != "$current_month" ]]; then
+        echo "" >> "$INDEX_FILE"
+        echo "### $(month_name "$month")" >> "$INDEX_FILE"
+        current_month="$month"
+    fi
+
+    # Add the actual file link
+    echo "- [$filename]($filename)" >> "$INDEX_FILE"
+done
+
+echo "✅ Diary Index generated at $INDEX_FILE"
+
