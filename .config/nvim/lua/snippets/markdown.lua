@@ -84,7 +84,7 @@ return
       )
     ),
     -- ITALIC TEXT
-    s({trig="it", snippetType="autosnippet"},
+    s({trig="ii", snippetType="autosnippet"},
       fmta(
         [[*<>* ]],
         {
