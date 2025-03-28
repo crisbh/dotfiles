@@ -19,11 +19,11 @@ grep
 gsl
 htop
 hugo
+imagemagick
 isort
 julia
 lapack
 lazygit
-libomp
 libopenmpt
 lima
 luarocks
