@@ -27,6 +27,7 @@ lazygit
 libopenmpt
 lima
 luarocks
+mat2
 meson
 neofetch
 neomutt
