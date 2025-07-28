@@ -10,6 +10,7 @@ lazy-lock.json
 # Python Cache
 __pycache__/
 .ipynb_checkpoints
+.virtual_documents
 
 # Latex compilation files
 *-main.pdf
