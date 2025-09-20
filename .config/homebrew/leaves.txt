@@ -1,11 +1,14 @@
 aerc
 ascii
+asciinema
 automake
 bash
 bat
 bear
 convertlit
 coreutils
+curl
+docutils
 doxygen
 entr
 eza
@@ -21,7 +24,6 @@ htop
 hugo
 imagemagick
 isort
-julia
 lapack
 lazygit
 libopenmpt
@@ -29,6 +31,7 @@ lima
 luarocks
 mat2
 meson
+mysql@5.7
 neofetch
 neomutt
 neovim
@@ -36,10 +39,13 @@ node
 numpy
 pandoc
 powerlevel10k
+python@3.11
+python@3.12
 qca
 ranger
 ripgrep
 rust
+sphinx-doc
 stow
 task
 timewarrior
@@ -49,6 +55,7 @@ tree
 w3m
 wget
 xclip
+zegervdv/zathura/girara
 zegervdv/zathura/zathura
 zegervdv/zathura/zathura-pdf-mupdf
 zegervdv/zathura/zathura-pdf-poppler
