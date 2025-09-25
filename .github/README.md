@@ -13,7 +13,7 @@ Repo with the dotfiles I use in my own (local) machine. These aim at setting up 
 
 My setup includes:
 - shell: `zsh`
-- terminal: `kitty`
+- terminal: `wezterm`
 - editor: `neovim`
 - PDF reader: `zathura`
 - terminal session manager: `tmux`
