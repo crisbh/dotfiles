@@ -19,6 +19,15 @@ vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter" }, {
     end,
 })
 
+-- Disable GitHub Copilot in sensitive directories
+vim.api.nvim_create_autocmd("BufEnter", {
+  pattern = { "*/exams/*", "*/private/*", "*/privado/*", "*/confidencial/*", "*/secrets/*", "*/pruebas/*", "*/sensitive/*" },
+  callback = function()
+    vim.cmd("Copilot disable")
+    vim.notify(" Copilot disabled for sensitive path", vim.log.levels.WARN, { hl = "Comment" })
+  end,
+})
+
 -- auto stop auto-compiler if its running
 -- vim.api.nvim_create_autocmd("VimLeave", {
 -- 	desc = "Stop running auto compiler",
