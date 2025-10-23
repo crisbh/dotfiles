@@ -80,6 +80,7 @@ return {
 			--  into multiple repos for maintenance purposes.
 			"hrsh7th/cmp-nvim-lsp",
 			"hrsh7th/cmp-path",
+			"zbirenbaum/copilot-cmp",
 		},
 		config = function()
 			-- See `:help cmp`
@@ -140,6 +141,7 @@ return {
 					--    https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps
 				}),
 				sources = {
+					{ name = "copilot" }, -- 👈 ensure this comes first or near the top
 					{ name = "nvim_lsp" },
 					{ name = "luasnip" },
 					{ name = "path" },

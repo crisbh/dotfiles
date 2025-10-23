@@ -215,3 +215,4 @@ fi
 unset __conda_setup
 # <<< conda initialize <<<
 
+export PATH="/opt/homebrew/opt/node@22/bin:$PATH"
