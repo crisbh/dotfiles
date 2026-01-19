@@ -11,6 +11,7 @@ lazy-lock.json
 __pycache__/
 .ipynb_checkpoints
 .virtual_documents
+*.egg-info/
 
 # Latex compilation files
 *-main.pdf
