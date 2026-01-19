@@ -29,10 +29,10 @@ open_file() {
     touch "$file_path"
 
     # Add Obsidian Markdown header
-    timestamp="$(date +"%Y%m%d%H%M")"
+    # timestamp="$(date +"%Y%m%d%H%M")"
     { 
         echo "---"
-        echo "id: $timestamp"
+        echo "id: $filename"
         echo "aliases:"
         echo "  - $filename"
         echo "tags:"
