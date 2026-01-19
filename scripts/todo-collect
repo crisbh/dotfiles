@@ -2,8 +2,8 @@
 
 # Paths
 NOTES_DIR="$VAULT/notes/diary"
-TODO_FILE="$VAULT/0-inbox/todo.md"
-DONE_FILE="$VAULT/0-inbox/done.md"
+TODO_FILE="$VAULT/0-tasks/todo.md"
+DONE_FILE="$VAULT/0-tasks/done.md"
 SCRIPT_TAG="$HOME/.dotfiles/scripts/todo-add-tags"
 
 # Ensure necessary files exist

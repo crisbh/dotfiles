@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# A bash script to create or search notes in the zettelkasten directory of a vault.
+
+VAULT_DIR="$VAULT/0-tasks"
+
+# Function to create and open a file in the specified directory
+open_file() {
+    local file_path="$VAULT_DIR/todo.md"
+
+    # If file exists, open it
+    if [[ -f "$file_path" ]]; then
+        echo "Opening existing note: $todo.md"
+        nvim "$file_path"
+        exit 0
+    fi
+
+    # Create the new file
+    touch "$file_path"
+
+    # Open the file in Neovim at the bottom
+    nvim '-c normal Go' "$file_path"
+}
+
+# If argument is provided, use it as filename
+if [[ $# -eq 1 ]]; then
+    filename=$1
+fi
+
+# Open or create the file
+open_file
+

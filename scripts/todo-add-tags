@@ -1,6 +1,6 @@
 #!/opt/homebrew/bin/bash  # Apple Silicon (M1/M2)
 
-TODO_FILE="$VAULT/0-inbox/todo.md"
+TODO_FILE="$VAULT/0-tasks/todo.md"
 TAG_CONFIG="$HOME/.dotfiles/scripts/task-tags.conf"
 TEMP_FILE="/tmp/tagged_tasks.txt"
 

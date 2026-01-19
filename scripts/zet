@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# A bash script to create or search notes in 0-inbox
+# A bash script to create or search notes in the zettelkasten directory of a vault.
 
-VAULT_DIR="$VAULT/0-inbox"
+VAULT_DIR="$VAULT/0-zettelkasten"
 
 # Function to prompt the user for a filename
 get_filename() {
@@ -28,20 +28,23 @@ open_file() {
     # Create the new file
     touch "$file_path"
 
-    # Add metadata
+    # Add Obsidian Markdown header
     timestamp="$(date +"%Y%m%d%H%M")"
-    {
+    { 
+        echo "---"
+        echo "id: $timestamp"
+        echo "aliases:"
+        echo "  - $filename"
+        echo "tags:"
+        echo "  - $filename"
+        echo "---"
+        echo ""
         echo "# $filename"
-        echo -e "\n"
-        echo -e "\n"
-        echo -e "\n"
-        echo "Links:"
-        echo -e "\n"
-        echo "$timestamp"
+        echo ""
     } >>"$file_path"
 
-    # Open the file in Neovim at the top
-    nvim '-c normal ggA' "$file_path"
+    # Open the file in Neovim at the bottom
+    nvim '-c normal Go' "$file_path"
 }
 
 # If no argument is provided, use fzf to search existing notes
