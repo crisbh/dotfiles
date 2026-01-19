@@ -24,7 +24,7 @@ alias tms="tmux ls"
 alias vimwiki="cd $VAULT && nvim -c ':VimwikiIndex'"
 alias wiki="vimwiki"
 
-alias todo="zet todo"
+alias todo="todo-add-task"
 alias pomo="todo-pomodoro"
 alias p="todo-pomodoro"
 alias pp="todo-pomodoro 2"
