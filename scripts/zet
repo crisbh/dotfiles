@@ -37,6 +37,7 @@ open_file() {
         echo "  - $filename"
         echo "tags:"
         echo "  - $filename"
+        echo "  - $(date +"%Y")"
         echo "---"
         echo ""
         echo "# $filename"
