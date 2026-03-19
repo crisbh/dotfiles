@@ -1,5 +1,19 @@
 #!/bin/bash
 
+# Visualises PDF files in the terminal.
+# Uses timg if inside a TMUX sesion, otherwise uses pdftoppm and wezterm's imgcat.
+
+pdfview() {
+  if [ -n "$TMUX" ]; then
+    timg --title "$@"
+  else
+    pdftoppm -r 150 "$1" /tmp/pdfpreview
+    for img in /tmp/pdfpreview-*.ppm; do
+      wezterm imgcat "$img"
+    done
+    command rm -f /tmp/pdfpreview-*.ppm
+  fi
+}
 
 # Removes (temp) files with specific extensions in target directory
 
