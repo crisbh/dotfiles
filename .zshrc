@@ -113,12 +113,13 @@ export PATH=$PATH:/opt/homebrew/bin
 export PATH=$PATH:/opt/anaconda3/bin
 #export PATH=$PATH:$HOME/Library/Python/3.9/bin
 export PATH=$PATH:$HOME/.dotfiles/scripts
-export PYTHONPATH=$HOME/Projects/Peano/code/python
-export PYTHONPATH=/usr/lib64/paraview/python3.10/site-packages:$PYTHONPATH  # paraview libs location
-export PYTHONPATH=/usr/lib64/python3.10/site-packages:$PYTHONPATH           # Jinja2 location
-export PYTHONPATH=/usr/lib/python3.10/site-packages:$PYTHONPATH             # Jinja2 location
+#export PYTHONPATH=$HOME/Projects/Peano/code/python
+#export PYTHONPATH=/usr/lib64/paraview/python3.10/site-packages:$PYTHONPATH  # paraview libs location
+#export PYTHONPATH=/usr/lib64/python3.10/site-packages:$PYTHONPATH           # Jinja2 location
+#export PYTHONPATH=/usr/lib/python3.10/site-packages:$PYTHONPATH             # Jinja2 location
 export PYTHONPATH=$HOME/Projects/GR-effects-clusters:$PYTHONPATH            # Custom project folder
-export JUPYTER_PATH=$HOME/Codes/Peano/python
+export PYTHONPATH="$HOME/Projects/tophat-GR/src/:$PYTHONPATH"
+#export JUPYTER_PATH=$HOME/Codes/Peano/python
 
 # Hide the default go folder in home
 export GOPATH=$HOME/.go
