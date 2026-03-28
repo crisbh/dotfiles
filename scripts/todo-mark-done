@@ -22,6 +22,9 @@ else
     cat "/tmp/body.txt" > "/tmp/new_body.txt"
 fi
 
+# Initialise final_body.txt so Step 4 always has a valid file even with no [x] tasks
+cp /tmp/new_body.txt /tmp/final_body.txt
+
 # Step 3: Process completed tasks in TODO.md
 grep '^- \[x\]' "$TODO_FILE" | while read -r task; do
     task_text=$(echo "$task" | cut -c6- | sed 's/^ *//;s/ *$//')
@@ -37,16 +40,14 @@ grep '^- \[x\]' "$TODO_FILE" | while read -r task; do
 
     #  Run `rg` separately and store the result
     if [[ -n "$trimmed_task" ]]; then
-        if ! rg -xq -- "$trimmed_task" "/tmp/new_body.txt"; then
+        if ! rg -xq -- "$trimmed_task" "/tmp/final_body.txt"; then
             echo "✅ Adding task to DONE.md: $trimmed_task"
 
-            # Insert the task below the correct date
+            # Insert the task below the correct date, accumulating into final_body.txt
             awk -v today="## $TODAY" -v task="$trimmed_task" '
                 {print}
                 $0 == today {print task}
-            ' "/tmp/new_body.txt" > "/tmp/final_body.txt"
-        else
-            cat "/tmp/new_body.txt" > "/tmp/final_body.txt"  # Keep existing content
+            ' "/tmp/final_body.txt" > "/tmp/swap_body.txt" && mv /tmp/swap_body.txt /tmp/final_body.txt
         fi
     fi
 done

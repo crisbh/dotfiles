@@ -10,7 +10,7 @@ open_file() {
 
     # If file exists, open it
     if [[ -f "$file_path" ]]; then
-        echo "Opening existing note: $todo.md"
+        echo "Opening existing note: todo.md"
         nvim "$file_path"
         exit 0
     fi
