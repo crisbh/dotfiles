@@ -26,6 +26,7 @@ tags:
 ## Today
 > One sentence: what would make today a success?
 
+
 - [ ] 
 - [ ] 
 - [ ] 
@@ -47,7 +48,7 @@ fi
 
 # Open the daily note. Skip when called with --no-open (e.g. from within Neovim).
 # New note: jump to line 15 and enter insert mode.
-# Existing note: open normally.
+# Existing note: open at the end enter insert mode.
 if [[ "$1" != "--no-open" ]]; then
     if $just_created; then
         nvim '+normal 15GzzA' "$file"
