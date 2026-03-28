@@ -10,8 +10,6 @@ cd "$VAULT" || exit
 new_note() {
 	touch "$file"
 
-	# Format the file with the daily template
-	# TODO: make aliases field same as Obsidian notes. Same with first title
 	cat <<EOF >"$file"
 ---
 id: "$today"
@@ -40,13 +38,20 @@ EOF
 
 # If the daily note does not exist, create a new one.
 # this uses the test command with the -f flag.
+just_created=false
 if [ ! -f "$file" ]; then
 	echo "File does not exist, creating new daily note."
 	new_note
+	just_created=true
 fi
 
-# Open the daily note at the bottom of the file in insert mode
-# Skip when called with --no-open (e.g. from within Neovim)
+# Open the daily note. Skip when called with --no-open (e.g. from within Neovim).
+# New note: jump to line 15 and enter insert mode.
+# Existing note: open normally.
 if [[ "$1" != "--no-open" ]]; then
-    nvim '+ normal Gzzo' "$file"
+    if $just_created; then
+        nvim '+normal 15GzzA' "$file"
+    else
+        nvim '+normal GzzA' "$file"
+    fi
 fi
