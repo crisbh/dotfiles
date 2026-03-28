@@ -9,6 +9,7 @@ SCRIPT_TAG="$HOME/.dotfiles/scripts/todo-add-tags"
 # Ensure necessary files exist
 touch "$TODO_FILE" "$DONE_FILE"
 chmod +w "$TODO_FILE" "$DONE_FILE"
+bash "$HOME/.dotfiles/scripts/todo-backup"
 
 echo "================================"
 echo "📥 Starting TODO collection"

@@ -5,6 +5,7 @@ TODO_FILE="$VAULT/0-tasks/active.md"
 DONE_FILE="$VAULT/0-tasks/done.md"
 
 echo "✅ Running daily DONE sync..."
+bash "$HOME/.dotfiles/scripts/todo-backup"
 chmod +w "$TODO_FILE" "$DONE_FILE"
 
 TODAY=$(date +"%d-%m-%Y")  # Format: DD-MM-YYYY

@@ -12,6 +12,9 @@ VAULT="/Users/cristian/Library/Mobile Documents/iCloud~md~obsidian/Documents/kos
 @reboot defaults write -g InitialKeyRepeat -int 25 # normal minimum is 15 (225 ms)
 @reboot defaults write -g KeyRepeat -int 1 # normal minimum is 2 (30 ms)
 
+# Back up todo.md and active.md (rolling, keeps last 10 copies each)
+0 9 * * * /opt/homebrew/bin/bash ~/.dotfiles/scripts/todo-backup
+
 # Script that handle DONE todo items.
 0 10 * * * /opt/homebrew/bin/bash ~/.dotfiles/scripts/todo-mark-done
 0 18 * * * /opt/homebrew/bin/bash ~/.dotfiles/scripts/todo-mark-done

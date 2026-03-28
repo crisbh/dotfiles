@@ -1,0 +1,18 @@
+#!/opt/homebrew/bin/bash
+
+BACKUP_DIR="$VAULT/0-tasks/.backups"
+mkdir -p "$BACKUP_DIR"
+
+STAMP=$(date +"%Y-%m-%d_%H-%M")
+KEEP=10  # number of backups to retain per file
+
+for target in "$VAULT/0-tasks/todo.md" "$VAULT/0-tasks/active.md"; do
+    [ -f "$target" ] || continue
+    base=$(basename "$target" .md)
+    cp "$target" "$BACKUP_DIR/${base}_${STAMP}.md"
+
+    # Prune: delete oldest backups beyond KEEP
+    ls -t "$BACKUP_DIR/${base}_"*.md 2>/dev/null | tail -n +$((KEEP + 1)) | xargs rm -f --
+done
+
+echo "✅ Backed up todo.md and active.md to $BACKUP_DIR"
