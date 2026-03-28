@@ -10,15 +10,6 @@ return {
 	--   "BufReadPre path/to/my-vault/**.md",
 	--   "BufNewFile path/to/my-vault/**.md",
 	-- },
-	keys = {
-		{
-			"<leader>w<leader>w",
-			function()
-				vim.cmd("ObsidianToday") -- Runs the ObsidianToday command after the plugin is loaded
-			end,
-			desc = "New Obsidian diary note",
-		},
-	},
 	dependencies = {
 		-- Required.
 		"nvim-lua/plenary.nvim",
