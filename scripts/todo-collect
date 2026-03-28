@@ -34,7 +34,7 @@ for file in "${TARGET_FILES[@]}"; do
     TEMP_FILE=$(mktemp)
 
     ### Collect unchecked TODOs (skip already processed)
-    grep -h '^- \[ \]' "$file" | grep -v '^- \[>\]' > "$TEMP_FILE"
+    grep -h '^- \[ \]' "$file" | grep -v '^- \[ \][[:space:]]*$' > "$TEMP_FILE"
 
     # Extract inline 'TODO:' items and convert to standard [ ] format
     # Ignore those marked as DONE or COLLECTED
