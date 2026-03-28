@@ -1,7 +1,7 @@
 #!/bin/bash
 
 VAULT="/Users/cristian/Library/Mobile Documents/iCloud~md~obsidian/Documents/kosmos"
-TODO_FILE=$VAULT/0-tasks/todo.md
+TODO_FILE="$VAULT/0-tasks/active.md"
 TEMP_TASKS=/tmp/tasks.txt
 
 # Extract tasks into a selection list
