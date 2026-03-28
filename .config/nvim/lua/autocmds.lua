@@ -49,36 +49,37 @@ local function collect_todo_items()
     vim.fn.jobstart({ "/opt/homebrew/bin/bash", os.getenv("HOME") .. "/.dotfiles/scripts/todo-collect"})
 end
 
-local function start_todo_collect_timer()
-    if todo_collect_timer then
-        vim.loop.timer_stop(todo_collect_timer)
-    end
 
-    todo_collect_timer = vim.loop.new_timer()
-    todo_collect_timer:start(5000, 0, vim.schedule_wrap(function()
-        collect_todo_items()
-        todo_collect_timer = nil
-    end))
-end
-
--- Trigger timer **only after save**
-vim.api.nvim_create_autocmd("BufWritePost", {
-    pattern = os.getenv("VAULT") .. "/notes/diary/*.md",
-    callback = function()
-        start_todo_collect_timer()
-    end
-})
-
--- Reset timer when leaving insert mode (just to prevent weird double-fires)
-vim.api.nvim_create_autocmd("InsertLeave", {
-    pattern = os.getenv("VAULT") .. "/notes/diary/*.md",
-    callback = function()
-        if todo_collect_timer then
-            vim.loop.timer_stop(todo_collect_timer)
-            todo_collect_timer = nil
-        end
-    end
-})
+-- local function start_todo_collect_timer()
+--     if todo_collect_timer then
+--         vim.loop.timer_stop(todo_collect_timer)
+--     end
+--
+--     todo_collect_timer = vim.loop.new_timer()
+--     todo_collect_timer:start(10000, 0, vim.schedule_wrap(function()
+--         collect_todo_items()
+--         todo_collect_timer = nil
+--     end))
+-- end
+--
+-- -- Trigger timer **only after save**
+-- vim.api.nvim_create_autocmd("BufWritePost", {
+--     pattern = os.getenv("VAULT") .. "/notes/diary/*.md",
+--     callback = function()
+--         start_todo_collect_timer()
+--     end
+-- })
+--
+-- -- Reset timer when leaving insert mode (just to prevent weird double-fires)
+-- vim.api.nvim_create_autocmd("InsertLeave", {
+--     pattern = os.getenv("VAULT") .. "/notes/diary/*.md",
+--     callback = function()
+--         if todo_collect_timer then
+--             vim.loop.timer_stop(todo_collect_timer)
+--             todo_collect_timer = nil
+--         end
+--     end
+-- })
 
 -----------------------------------------------------------------
 -----------------------------------------------------------------
