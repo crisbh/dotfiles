@@ -45,5 +45,8 @@ if [ ! -f "$file" ]; then
 	new_note
 fi
 
-# Open the daily note at the bottom of the file in insert mode 
-nvim '+ normal Gzzo' "$file"
+# Open the daily note at the bottom of the file in insert mode
+# Skip when called with --no-open (e.g. from within Neovim)
+if [[ "$1" != "--no-open" ]]; then
+    nvim '+ normal Gzzo' "$file"
+fi
