@@ -12,92 +12,58 @@ while IFS=":" read -r tag pattern; do
     TAG_MAP["$tag"]="$pattern"
 done < "$TAG_CONFIG"
 
-# Read and preserve the YAML header of the TODO.md file
-HEADER_LINES=()
 TASKS_FOUND=false
+> "$TEMP_FILE"  # Truncate before writing
+
+# Single-pass: write every line as-is, except task lines which get tags applied
 while IFS= read -r LINE; do
-    if [[ "$LINE" == "---" && ${#HEADER_LINES[@]} -eq 0 ]]; then
-        HEADER_LINES+=("$LINE")
-    elif [[ ${#HEADER_LINES[@]} -gt 0 && "$LINE" != "---" ]]; then
-        HEADER_LINES+=("$LINE")
-    elif [[ "$LINE" == "---" && ${#HEADER_LINES[@]} -gt 0 ]]; then
-        HEADER_LINES+=("$LINE")
-        HEADER_LINES+=("")
-        break
-    else
-        break
-    fi
-done < "$TODO_FILE"
-
-# Write the preserved header to the temp file
-printf "%s\n" "${HEADER_LINES[@]}" > "$TEMP_FILE"
-
-# Find and keep the "# TODO list" title
-while IFS= read -r LINE; do
-    if [[ "$LINE" == "# TODO list" ]]; then
-        echo "$LINE" >> "$TEMP_FILE"
-        break
-    fi
-done < "$TODO_FILE"
-
-# Process each task and only append truly missing tags
-while IFS= read -r LINE; do
-    [[ -z "$LINE" ]] && echo "" >> "$TEMP_FILE" && continue
-
-    if [[ "$LINE" =~ ^- ]]; then
+    if [[ "$LINE" =~ ^-[[:space:]] ]]; then
         TASKS_FOUND=true
-        TASK_TEXT=$(echo "$LINE" | sed -E 's/- \[[! ]\] //')  # Remove checkboxes
-        TASK_TEXT_LOWER=$(echo "$TASK_TEXT" | tr '[:upper:]' '[:lower:]')  # Normalize to lowercase
+        TASK_TEXT=$(echo "$LINE" | sed -E 's/- \[[!> x]\] //')  # Remove checkbox
+        TASK_TEXT_LOWER=$(echo "$TASK_TEXT" | tr '[:upper:]' '[:lower:]')
 
-        # Extract existing tags from the task
-        EXISTING_TAGS=($(echo "$LINE" | rg -o '@[a-zA-Z0-9_-]+' || echo ""))
+        # Extract existing tags and seed the array
+        unset TAGS_ARRAY
         declare -A TAGS_ARRAY
-
-        # Store existing tags in the array to prevent duplicates
-        for tag in "${EXISTING_TAGS[@]}"; do
-            TAGS_ARRAY["$tag"]=1
-        done
+        while IFS= read -r existing_tag; do
+            [[ -n "$existing_tag" ]] && TAGS_ARRAY["$existing_tag"]=1
+        done < <(echo "$LINE" | rg -o '@[a-zA-Z0-9_-]+')
 
         echo "🔍 Processing task: $TASK_TEXT"
 
+        # Add tags whose pattern matches the task text
         for tag in "${!TAG_MAP[@]}"; do
-            pattern="${TAG_MAP[$tag]}"
-
-            MATCHED_TEXT=$(echo "$TASK_TEXT_LOWER" | rg -i -- "$pattern" || echo "❌ No match")
-
-            if [[ "$MATCHED_TEXT" != "❌ No match" ]]; then
-                if [[ -z "${TAGS_ARRAY[$tag]}" && ! " ${EXISTING_TAGS[@]} " =~ " $tag " ]]; then
-                    # Storing new tag '$tag' in TAGS_ARRAY
-                    TAGS_ARRAY["$tag"]=1
-                fi
-
+            if echo "$TASK_TEXT_LOWER" | rg -i -q -- "${TAG_MAP[$tag]}"; then
+                TAGS_ARRAY["$tag"]=1
             fi
         done
 
-        # Keep only the tags that actually match OR were already there
+        # Validate: keep only tags that still match (or were manually added and have no mapping)
         VALID_TAGS=()
         for tag in "${!TAGS_ARRAY[@]}"; do
-            if echo "$TASK_TEXT_LOWER" | rg -i -q -- "${TAG_MAP[$tag]}"; then
-                VALID_TAGS+=("$tag")
-            elif [[ " ${EXISTING_TAGS[@]} " =~ " $tag " ]]; then
-                VALID_TAGS+=("$tag")
+            if [[ -n "${TAG_MAP[$tag]}" ]]; then
+                echo "$TASK_TEXT_LOWER" | rg -i -q -- "${TAG_MAP[$tag]}" && VALID_TAGS+=("$tag")
+            else
+                VALID_TAGS+=("$tag")  # Preserve manually added tags with no config entry
             fi
         done
 
-        # Convert valid tags back into a space-separated list
-        FINAL_TAGS=$(echo "${VALID_TAGS[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' ' | xargs)
+        FINAL_TAGS=$(printf '%s\n' "${VALID_TAGS[@]}" | sort -u | tr '\n' ' ' | xargs)
 
-        # Build the updated task line **without stripping existing tags**
-        UPDATED_TASK="$(echo "$LINE" | sed -E 's/@[a-zA-Z0-9_-]+//g' | xargs) $FINAL_TAGS"
+        # Strip existing tags from line then append the validated set
+        UPDATED_TASK="$(echo "$LINE" | sed -E 's/ ?@[a-zA-Z0-9_-]+//g' | xargs)"
+        [[ -n "$FINAL_TAGS" ]] && UPDATED_TASK="$UPDATED_TASK $FINAL_TAGS"
         echo "$UPDATED_TASK" >> "$TEMP_FILE"
     else
         echo "$LINE" >> "$TEMP_FILE"
     fi
-done < <(awk 'f;/^# TODO list/{f=1}' "$TODO_FILE")
+done < "$TODO_FILE"
 
 # Replace the original TODO file if tasks were found
 if $TASKS_FOUND; then
     mv "$TEMP_FILE" "$TODO_FILE"
     echo "✅ Tasks updated with tags in $TODO_FILE"
+else
+    rm -f "$TEMP_FILE"
+    echo "ℹ️  No task lines found in $TODO_FILE"
 fi
-
