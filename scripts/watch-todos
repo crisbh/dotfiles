@@ -21,10 +21,9 @@ fswatch -o --event Updated "$NOTES_DIR" | while read -r changed_file; do
 
     LATEST=$(cat "$PENDING_RUN")
     if [[ "$LATEST" == "$NOW" ]]; then
-        echo "No further edits detected in the last 10 seconds. Collecting TODOs..."
+        echo "No further edits detected in the last 20 seconds. Collecting TODOs..."
         echo "$NOW" > "$LAST_RUN"
         bash "$SCRIPT_COLLECT"
-        bash "$SCRIPT_TAG"
     else
         echo "More edits detected. Skipping this run."
     fi
