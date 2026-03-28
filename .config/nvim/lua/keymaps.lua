@@ -53,7 +53,28 @@ vim.keymap.set('n', '<leader>cc', ":make <CR>", {desc = 'Run make'})
 
 -- Open the global TODO.md file 
 vim.keymap.set("n", "<leader>tt", ":e $VAULT/0-tasks/todo.md<CR>", { desc = "Open [T]ODO list" , noremap = true, silent = true })
+--
+-- Open the global active.md file 
+vim.keymap.set("n", "<leader>ta", ":e $VAULT/0-tasks/active.md<CR>", { desc = "Open [T]ODO [A]ctive list" , noremap = true, silent = true })
+--
+-- Open the global done.md file 
+vim.keymap.set("n", "<leader>td", ":e $VAULT/0-tasks/done.md<CR>", { desc = "Open [T]ODO [D]one list" , noremap = true, silent = true })
 
+-- Collect TODO items from all notes into the global TODO.md file
+local function collect_todo_items()
+    vim.notify("🔔 Collecting TODOs...")
+    vim.fn.jobstart({ "/opt/homebrew/bin/bash", os.getenv("HOME") .. "/.dotfiles/scripts/todo-collect"})
+end
+vim.keymap.set("n", "<leader>tc", collect_todo_items, { desc = "Collect [T]ODO items" })
+
+-- Add tags to TODO items
+local function add_task_tags()
+    vim.notify("🔔 Adding tags to tasks ...")
+    vim.fn.jobstart({ "/opt/homebrew/bin/bash", os.getenv("HOME") .. "/.dotfiles/scripts/todo-add-tags"})
+end
+vim.keymap.set("n", "<leader>tg", add_task_tags, { desc = "Add [T]ODO items ta[G]s" })
+
+-- Open diary index
 vim.keymap.set("n", "<leader>wi", function()
     vim.cmd("edit " .. vim.fn.expand("$VAULT/notes/diary/diary.md"))
 end, { desc = "Open Diary Index" })
