@@ -29,6 +29,8 @@ return {
 				lua = { "stylua" },
 				-- Conform can also run multiple formatters sequentially
 				python = { "isort", "black" },
+				sh = { "shfmt" },
+				bash = { "shfmt" },
 				c = { "clang-format" },
 				cpp = { "clang-format" },
 				cuda = { "clang-format" },
