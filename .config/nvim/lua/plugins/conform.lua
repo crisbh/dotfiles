@@ -31,6 +31,7 @@ return {
 				python = { "isort", "black" },
 				c = { "clang-format" },
 				cpp = { "clang-format" },
+				cuda = { "clang-format" },
 				--
 				-- You can use a sub-list to tell conform to run *until* a formatter
 				-- is found.
