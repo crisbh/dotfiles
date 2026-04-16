@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+# Format all recognised files recursively in the given directory (default: current)
+# Usage: fmt [dir]
+
+DIR="${1:-.}"
+
+run() {
+  local cmd="$1"
+  shift
+  if ! command -v "$cmd" &>/dev/null; then
+    echo "skipping $cmd (not installed)" >&2
+    return
+  fi
+  "$cmd" "$@"
+}
+
+find "$DIR" -type f | while read -r file; do
+  case "$file" in
+  *.lua) run stylua "$file" ;;
+  *.py) run isort "$file" && run black "$file" ;;
+  *.c | *.h) run clang-format -i "$file" ;;
+  *.cpp | *.hpp | *.cc) run clang-format -i "$file" ;;
+  *.cu | *.cuh) run clang-format -i "$file" ;;
+  *.sh | *.bash) run shfmt -w "$file" ;;
+  esac
+done
