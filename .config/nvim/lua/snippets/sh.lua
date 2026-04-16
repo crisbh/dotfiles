@@ -16,17 +16,16 @@ local n = require("luasnip.extras").nonempty
 local dl = require("luasnip.extras").dynamic_lambda
 local fmt = require("luasnip.extras.fmt").fmt
 local fmta = require("luasnip.extras.fmt").fmta
-local types = require("luasnip.util.types")
 local conds = require("luasnip.extras.conditions")
+local types = require("luasnip.util.types")
 -- local conds_expand = require("luasnip.extras.conditions.expand")
 local conds_expand = require("luasnip.extras.expand_conditions")
 
-
-return
-  {
-    s({trig = "doc"},
-      fmt(
-        [[
+return {
+  s(
+    { trig = "doc" },
+    fmt(
+      [[
         # NAME
         # 		{} - {}
         # 
@@ -35,43 +34,45 @@ return
 
         {}
         ]],
-        {
-          i(1, "name"),
-          i(2, "description"),
-          rep(1),
-          i(3, "usage"),
-          i(0),
-        }
-      ),
-      {condition = conds_expand.line_begin}
+      {
+        i(1, "name"),
+        i(2, "description"),
+        rep(1),
+        i(3, "usage"),
+        i(0),
+      }
     ),
-    s({
-        trig = "forl",
-        snippetType="autosnippet"
-      },
-      fmt(
-        [[
+    { condition = conds_expand.line_begin }
+  ),
+  s(
+    {
+      trig = "forl",
+      snippetType = "autosnippet",
+    },
+    fmt(
+      [[
         for {} in {}; do
           {}
         done
         ]],
-        {
-          i(1),
-          i(2),
-          i(0)
-        }
-      ),
-      {condition = conds_expand.line_begin}
+      {
+        i(1),
+        i(2),
+        i(0),
+      }
     ),
-    s({trig = "ext"},
-      fmta(
-        [[
+    { condition = conds_expand.line_begin }
+  ),
+  s(
+    { trig = "ext" },
+    fmta(
+      [[
         ${<>%.<>}
         ]],
-        {
-          i(1, "var"),
-          i(2, "ext"),
-        }
-      )
-    ),
-  }
+      {
+        i(1, "var"),
+        i(2, "ext"),
+      }
+    )
+  ),
+}

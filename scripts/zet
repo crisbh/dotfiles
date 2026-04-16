@@ -30,7 +30,7 @@ open_file() {
 
     # Add Obsidian Markdown header
     # timestamp="$(date +"%Y%m%d%H%M")"
-    { 
+    {
         echo "---"
         echo "id: $filename"
         echo "aliases:"
@@ -51,11 +51,11 @@ open_file() {
 # If no argument is provided, use fzf to search existing notes
 if [[ $# -eq 0 ]]; then
     existing_file=$(find "$VAULT_DIR" -maxdepth 1 -type f -name "*.md" \
-    -not -path "*/.*" \
-    -not -name "README.md" \
-    -not -name "index.md" \
-    | sed "s|$VAULT_DIR/||" | sed 's/.md//' \
-    | fzf --prompt="Search Notes: ")
+        -not -path "*/.*" \
+        -not -name "README.md" \
+        -not -name "index.md" |
+        sed "s|$VAULT_DIR/||" | sed 's/.md//' |
+        fzf --prompt="Search Notes: ")
 
     if [[ -n "$existing_file" ]]; then
         filename="$existing_file"
@@ -78,4 +78,3 @@ fi
 
 # Open or create the file
 open_file
-

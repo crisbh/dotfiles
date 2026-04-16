@@ -16,12 +16,12 @@ local n = require("luasnip.extras").nonempty
 local dl = require("luasnip.extras").dynamic_lambda
 local fmt = require("luasnip.extras.fmt").fmt
 local fmta = require("luasnip.extras.fmt").fmta
-local types = require("luasnip.util.types")
 local conds = require("luasnip.extras.conditions")
+local types = require("luasnip.util.types")
 -- local conds_expand = require("luasnip.extras.conditions.expand")
 local conds_expand = require("luasnip.extras.expand_conditions")
 
-local line_begin =conds_expand.line_begin
+local line_begin = conds_expand.line_begin
 --
 -- the `get_visual` function
 -- ----------------------------------------------------------------------------
@@ -29,73 +29,68 @@ local line_begin =conds_expand.line_begin
 -- returns an insert node whose initial text is set to the visual selection.
 -- When `LS_SELECT_RAW` is empty, the function simply returns an empty insert node.
 local get_visual = function(args, parent)
-  if (#parent.snippet.env.LS_SELECT_RAW > 0) then
+  if #parent.snippet.env.LS_SELECT_RAW > 0 then
     return sn(nil, i(1, parent.snippet.env.LS_SELECT_RAW))
-  else  -- If LS_SELECT_RAW is empty, return a blank insert node
+  else -- If LS_SELECT_RAW is empty, return a blank insert node
     return sn(nil, i(1))
   end
 end
 
-
 -- Return snippet tables
-return
-  {
-    -- Fenced block of code
-    s({trig="cc", snippetType="autosnippet"},
-      fmta(
-        [[
+return {
+  -- Fenced block of code
+  s(
+    { trig = "cc", snippetType = "autosnippet" },
+    fmta(
+      [[
         ```<>
         <>
         ```
 
       ]],
-        {
-          i(1, "language"),
-          d(2, get_visual),
-        }
-      ),
-      {condition = line_begin}
-    ),
-    -- TODO NOTE
-    s({trig="TODOO", snippetType="autosnippet"},
       {
-        t("**TODO:** "),
+        i(1, "language"),
+        d(2, get_visual),
       }
     ),
-    -- LINK
-    s({trig="ln", wordTrig=true, snippetType="autosnippet"},
-      fmta(
-        [[
+    { condition = line_begin }
+  ),
+  -- TODO NOTE
+  s({ trig = "TODOO", snippetType = "autosnippet" }, {
+    t("**TODO:** "),
+  }),
+  -- LINK
+  s(
+    { trig = "ln", wordTrig = true, snippetType = "autosnippet" },
+    fmta(
+      [[
         [<>](<>) 
         ]],
-        {
-          d(1, get_visual),
-          i(2, "display name"),
-        }
-      )
-    ),
-    -- BOLDFACE TEXT
-    s({trig="bf", snippetType="autosnippet"},
-      fmta(
-        [[**<>** ]],
-        {
-          d(1, get_visual),
-        }
-      )
-    ),
-    -- ITALIC TEXT
-    s({trig="ii", snippetType="autosnippet"},
-      fmta(
-        [[*<>* ]],
-        {
-          d(1, get_visual),
-        }
-      )
-    ),
-    -- SUMMARY/DETAILS HTML for Jekyll
-    s({trig="det"},
-      fmt(
-        [[
+      {
+        d(1, get_visual),
+        i(2, "display name"),
+      }
+    )
+  ),
+  -- BOLDFACE TEXT
+  s(
+    { trig = "bf", snippetType = "autosnippet" },
+    fmta([[**<>** ]], {
+      d(1, get_visual),
+    })
+  ),
+  -- ITALIC TEXT
+  s(
+    { trig = "ii", snippetType = "autosnippet" },
+    fmta([[*<>* ]], {
+      d(1, get_visual),
+    })
+  ),
+  -- SUMMARY/DETAILS HTML for Jekyll
+  s(
+    { trig = "det" },
+    fmt(
+      [[
         <details>
         <summary>
         {}
@@ -103,104 +98,108 @@ return
         {}
         </details>
         ]],
-        {
-          i(1),
-          i(0)
-        }
-      ),
-      {condition = line_begin}
+      {
+        i(1),
+        i(0),
+      }
     ),
-    -- MARKDOWNIFY filter for Jekyll
-    s({trig="md"},
-      fmta(
-        [[
+    { condition = line_begin }
+  ),
+  -- MARKDOWNIFY filter for Jekyll
+  s(
+    { trig = "md" },
+    fmta(
+      [[
         {{
           "
           <>
           "
         | markdownify }}
         ]],
-        {
-          d(1, get_visual)
-        }
-      ),
-      {condition = line_begin}
+      {
+        d(1, get_visual),
+      }
     ),
-    -- BASH CODE BLOCK
-    s({trig="bash"},
-      fmta(
-        [[
+    { condition = line_begin }
+  ),
+  -- BASH CODE BLOCK
+  s(
+    { trig = "bash" },
+    fmta(
+      [[
         ```bash
         <>
         ```
 
         ]],
-        {
-          d(1, get_visual)
-        }
-      ),
-      {condition = line_begin}
+      {
+        d(1, get_visual),
+      }
     ),
-    -- Sh CODE BLOCK 
-    s({trig="sh", snippetType="autosnippet"},
-      fmt(
-        [[
+    { condition = line_begin }
+  ),
+  -- Sh CODE BLOCK
+  s(
+    { trig = "sh", snippetType = "autosnippet" },
+    fmt(
+      [[
         ```bash
         {}
         ```
 
         ]],
-        {
-          d(1, get_visual)
-        }
-      ),
-      {condition = line_begin}
+      {
+        d(1, get_visual),
+      }
     ),
-    -- PYTHON CODE BLOCK
-    s({trig="py", snippetType="autosnippet"},
-      fmt(
-        [[
+    { condition = line_begin }
+  ),
+  -- PYTHON CODE BLOCK
+  s(
+    { trig = "py", snippetType = "autosnippet" },
+    fmt(
+      [[
         ```python
         {}
         ```
 
         ]],
-        {
-          d(1, get_visual)
-        }
-      ),
-      {condition = line_begin}
+      {
+        d(1, get_visual),
+      }
     ),
-    -- C CODE BLOCK
-    s({trig="CC", snippetType="autosnippet"},
-      fmt(
-        [[
+    { condition = line_begin }
+  ),
+  -- C CODE BLOCK
+  s(
+    { trig = "CC", snippetType = "autosnippet" },
+    fmt(
+      [[
         ```C
         {}
         ```
 
         ]],
-        {
-          d(1, get_visual)
-        }
-      ),
-      {condition = line_begin}
+      {
+        d(1, get_visual),
+      }
     ),
-    -- TEX/LATEX CODE BLOCK
-    s({trig="tex", snippetType="autosnippet"},
-      fmt(
-        [[
+    { condition = line_begin }
+  ),
+  -- TEX/LATEX CODE BLOCK
+  s(
+    { trig = "tex", snippetType = "autosnippet" },
+    fmt(
+      [[
         ```tex
         {}
         ```
 
         ]],
-        {
-          d(1, get_visual)
-        }
-      ),
-      {condition = line_begin}
+      {
+        d(1, get_visual),
+      }
     ),
-  }
-
-
+    { condition = line_begin }
+  ),
+}
