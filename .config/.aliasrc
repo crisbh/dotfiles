@@ -54,7 +54,7 @@ alias \
 	l.="ls -d .* --color=auto" \
         sl="ls" \
 	grep="grep --color=auto" \
-#	diff="diff --color=auto" \
+	diff="diff --color=auto" \
 	ccat="highlight --out-format=ansi"
 
 # Replace ls with eza if available
