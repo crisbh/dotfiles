@@ -5,6 +5,9 @@ alias dot="ls ~/.dotfiles -la && git status ~/.dotfiles"
 
 alias lg="lazygit"
 
+# git custom scripts
+alias cm="commit"
+
 # Shortcuts
 alias v="vi"
 alias za="zathura"
