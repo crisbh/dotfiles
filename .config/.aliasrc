@@ -7,6 +7,7 @@ alias lg="lazygit"
 
 # git custom scripts
 alias cm="commit"
+alias pu="push"
 
 # Shortcuts
 alias v="vi"
