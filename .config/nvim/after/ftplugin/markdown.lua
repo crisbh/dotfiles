@@ -1,7 +1,7 @@
 ------------------------------------------------------
 -- Navigation of links vimwiki style
 ------------------------------------------------------
-local diary_path = vim.fn.expand("$VAULT/notes/diary")
+local diary_path = vim.fn.expand("$VAULT/diary")
 
 local function is_markdown_file()
   return vim.bo.filetype == "markdown"

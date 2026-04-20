@@ -113,7 +113,7 @@ vim.keymap.set("n", "<leader>tg", add_task_tags, { desc = "Add [T]ODO items ta[G
 -- Open today's diary note using the `day` script as single source of truth
 vim.keymap.set("n", "<leader>w<leader>w", function()
   local today = os.date("%Y-%m-%d")
-  local file = os.getenv("VAULT") .. "/notes/diary/" .. today .. ".md"
+  local file = os.getenv("VAULT") .. "/diary/" .. today .. ".md"
   vim.fn.jobstart({ os.getenv("HOME") .. "/.dotfiles/scripts/day", "--no-open" }, {
     on_exit = function()
       vim.cmd("edit " .. vim.fn.fnameescape(file))
@@ -124,7 +124,7 @@ end, { desc = "Open today's diary note" })
 
 -- Open diary index
 vim.keymap.set("n", "<leader>wi", function()
-  vim.cmd("edit " .. vim.fn.expand("$VAULT/notes/diary/diary.md"))
+  vim.cmd("edit " .. vim.fn.expand("$VAULT/diary/diary.md"))
 end, { desc = "Open Diary Index" })
 
 vim.keymap.set("n", "<leader>w<leader>i", function()

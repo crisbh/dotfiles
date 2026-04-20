@@ -1,6 +1,6 @@
 #!/opt/homebrew/bin/bash  # Apple Silicon (M1/M2)
 
-NOTES_DIR="$VAULT/notes/diary"
+NOTES_DIR="$VAULT/diary"
 TODO_FILE="$VAULT/0-tasks/active.md"
 DONE_FILE="$VAULT/0-tasks/done.md"
 

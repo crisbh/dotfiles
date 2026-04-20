@@ -1,7 +1,7 @@
 #!/opt/homebrew/bin/bash  # Apple Silicon (M1/M2)
 
-NOTES_DIR="$VAULT/notes/diary"
-INDEX_FILE="$VAULT/notes/diary/diary.md"
+NOTES_DIR="$VAULT/diary"
+INDEX_FILE="$VAULT/diary/diary.md"
 
 # Desired header (customize if needed)
 HEADER="---

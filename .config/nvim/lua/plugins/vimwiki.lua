@@ -8,7 +8,7 @@ return {
     vim.g.vimwiki_list = {
       {
         path = "$VAULT",
-        diary_rel_path = "notes/diary",
+        diary_rel_path = "diary",
         syntax = "markdown",
         ext = ".md",
       },
