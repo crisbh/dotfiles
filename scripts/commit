@@ -1,5 +1,22 @@
 #!/bin/bash
 
-read -r -p "Enter commit message: " commitmessage
 git add -u
+
+staged=$(git diff --cached --name-only)
+if [[ -z "$staged" ]]; then
+  echo "Nothing to commit." >&2
+  exit 1
+fi
+
+count=$(echo "$staged" | wc -l | tr -d '[:space:]')
+echo "Staged ($count):"
+echo "$staged" | sed 's/^/  /'
+echo ""
+
+read -r -p "Commit message: " commitmessage
+if [[ -z "$commitmessage" ]]; then
+  echo "Aborted: empty message." >&2
+  exit 1
+fi
+
 git commit -m "$commitmessage"

@@ -1,6 +1,11 @@
 #!/bin/bash
 
-read -r -p "Enter commit message: " commitmessage
-git add -u
-git commit -m "$commitmessage"
-git push
+commit || exit 1
+
+branch=$(git symbolic-ref --short HEAD 2>/dev/null)
+remote=$(git remote get-url origin 2>/dev/null)
+
+echo ""
+echo "Pushing $branch → $remote"
+
+git push origin "$branch" 2>/dev/null || git push --set-upstream origin "$branch"
