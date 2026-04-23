@@ -5,6 +5,7 @@ automake
 bash
 bat
 bear
+boost
 btop
 clang-format
 convertlit
