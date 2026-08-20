@@ -77,4 +77,10 @@ vim.opt.cursorline = true
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.opt.scrolloff = 6
 
+-- Spell checking: check English and Spanish together. The dictionaries live in
+-- .config/nvim/spell/ (es.utf-8.spl/.sug) — English ships with Neovim — and are
+-- activated by the FileType autocmd in autocmds.lua. `zg` adds words to
+-- spell/en.utf-8.add.
+vim.opt.spelllang = { "en", "es" }
+
 vim.g.python3_host_prog = vim.fn.expand("~/.venvs/neovim/bin/python")
