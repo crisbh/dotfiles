@@ -8,10 +8,11 @@
 
 - Single-line paragraphs in all markdown files — no multi-line wrapped paragraphs
 - No underscores or spaces in filenames; use hyphens
+- Prefer TeX over unicode characters for mathematical expressions in comment blocks and markdown files
 
 ## Rule: Context Maintenance
 
-At the end of every significant task or session, summarise the current state, architectural decisions made, and pending TODO items into the CLAUDE.md file of the corresponding repo. Always ensure such file reflects the ground truth of the project so future sessions can resume without friction.
+- At the end of every significant task or session, summarise the current state, architectural decisions made, and pending TODO items into the CLAUDE.md file of the corresponding repo. Always ensure such file reflects the ground truth of the project so future sessions can resume without friction.
 
 ## Rule: Commits
 
