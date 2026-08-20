@@ -8,7 +8,7 @@ return {
       panel = { enabled = false },
       -- filetypes = { markdown = true, gitcommit = true, yaml = true, ["*"] = true },
       filetypes = {
-        ["*"] = true,
+        -- ["*"] = true,
         markdown = true,
         gitcommit = true,
         yaml = true,
