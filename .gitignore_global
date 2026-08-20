@@ -30,3 +30,5 @@ paper.pdf
 *.vtu
 *.pvd
 *.pvd.bak
+
+**/.claude/settings.local.json
