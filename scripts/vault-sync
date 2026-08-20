@@ -1,0 +1,121 @@
+#!/opt/homebrew/bin/bash
+
+# Backup the vault to GitHub: run pre-flight checks, commit, and push.
+# Handles first-time git init and remote setup.
+# Usage: vault-sync [--dry-run]
+
+DRY_RUN=0
+AUTO=0
+for arg in "$@"; do
+  case "$arg" in
+    --dry-run|-n) DRY_RUN=1 ;;
+    --auto)       AUTO=1 ;;
+    *) echo "Unknown argument: $arg" >&2; exit 1 ;;
+  esac
+done
+
+if [[ -z "$VAULT" ]]; then
+  echo "❌ \$VAULT is not set." >&2
+  exit 1
+fi
+
+cd "$VAULT" || {
+  echo "❌ Cannot cd into \$VAULT: $VAULT" >&2
+  exit 1
+}
+
+# ── First-time git setup ──────────────────────────────────────────────────────
+if [[ ! -d ".git" ]]; then
+  if [[ $AUTO -eq 1 ]]; then
+    echo "❌ Git not initialized. Run vault-sync manually first." >&2
+    exit 1
+  fi
+  echo "📦 Initializing git repository in vault..."
+  git init
+  read -rp "Enter GitHub remote URL (leave blank to skip push): " remote_url
+  if [[ -n "$remote_url" ]]; then
+    git remote add origin "$remote_url"
+    echo "✅ Remote set to $remote_url"
+  fi
+fi
+
+# ── iCloud conflict check ─────────────────────────────────────────────────────
+conflicts=$(find "$VAULT" -name '* (conflict*' -name '*.md' 2>/dev/null)
+if [[ -n "$conflicts" ]]; then
+  echo "⚠️  iCloud conflict files detected:"
+  echo "$conflicts" | sed "s|$VAULT/||" | sed 's/^/  /'
+  if [[ $AUTO -eq 0 ]]; then
+    read -rp "Continue anyway? [y/N] " answer
+    [[ "$answer" != "y" && "$answer" != "Y" ]] && {
+      echo "Aborted."
+      exit 0
+    }
+  fi
+fi
+
+# ── Pre-flight: clean empty notes ─────────────────────────────────────────────
+# echo ""
+# echo "=== Step 1/3: Clean empty notes ==="
+#vault-clean-empty
+
+# ── Pre-flight: sensitive content check ───────────────────────────────────────
+echo ""
+echo "=== Step 2/3: Check sensitive content ==="
+vault-check-sensitive
+sensitive_exit=$?
+
+if [[ $sensitive_exit -ne 0 ]]; then
+  if [[ $AUTO -eq 1 ]]; then
+    echo "⚠️  Sensitive files flagged — aborting auto-sync. Run vault-sync manually to review." >&2
+    exit 1
+  fi
+  echo ""
+  read -rp "Sensitive files were flagged and added to .gitignore. Continue with sync? [y/N] " answer
+  [[ "$answer" != "y" && "$answer" != "Y" ]] && {
+    echo "Aborted."
+    exit 0
+  }
+fi
+
+# ── Pre-flight: broken links (informational) ──────────────────────────────────
+if [[ $AUTO -eq 0 ]]; then
+  echo ""
+  echo "=== Step 3/3: Check broken links ==="
+  vault-broken-links
+fi
+
+# ── Commit ────────────────────────────────────────────────────────────────────
+echo ""
+echo "=== Committing ==="
+git add -A
+
+if git diff --cached --quiet; then
+  echo "ℹ️  Nothing to commit. Vault is up to date."
+  exit 0
+fi
+
+if [[ $DRY_RUN -eq 1 ]]; then
+  echo "🔍 Dry run — staged changes that would be committed:"
+  git diff --cached --stat
+  echo ""
+  echo "ℹ️  Dry run complete. Nothing was committed or pushed."
+  git reset HEAD -- . &>/dev/null
+  exit 0
+fi
+
+MSG="vault: sync $(date '+%Y-%m-%d %H:%M')"
+git commit -m "$MSG"
+
+# ── Push ──────────────────────────────────────────────────────────────────────
+if git remote get-url origin &>/dev/null; then
+  BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null || echo "main")
+  echo ""
+  echo "=== Pushing to origin/$BRANCH ==="
+  git push origin "$BRANCH" 2>/dev/null || git push --set-upstream origin "$BRANCH"
+  echo "✅ Pushed to origin/$BRANCH"
+else
+  echo "ℹ️  No remote configured — committed locally only."
+fi
+
+echo ""
+echo "✅ vault-sync complete."

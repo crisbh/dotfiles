@@ -1,0 +1,93 @@
+#!/opt/homebrew/bin/bash
+
+# Scan vault notes for sensitive content and add flagged files to .gitignore.
+# Never modifies note content. Exits 1 if new entries were added.
+
+if [[ -z "$VAULT" ]]; then
+  echo "❌ \$VAULT is not set." >&2
+  exit 1
+fi
+
+GITIGNORE="$VAULT/.gitignore"
+
+# Create .gitignore with static exclusions on first run
+if [[ ! -f "$GITIGNORE" ]]; then
+  cat > "$GITIGNORE" <<'EOF'
+# vault .gitignore — managed by vault-check-sensitive
+
+# Static exclusions
+.obsidian/
+attachments/
+Excalidraw/
+Clippings/
+*.log
+*.pdf
+3-archive/
+
+# Auto-flagged by vault-check-sensitive:
+EOF
+  echo "📄 Created $GITIGNORE with default exclusions."
+fi
+
+# Load existing entries into a set
+declare -A already_ignored
+while IFS= read -r line; do
+  [[ -n "$line" && "$line" != \#* ]] && already_ignored["$line"]=1
+done < "$GITIGNORE"
+
+declare -A flagged  # filepath -> reason
+
+check_pattern() {
+  local pattern="$1"
+  local reason="$2"
+  local file="$3"
+  if rg -ql "$pattern" "$file" 2>/dev/null; then
+    if [[ -n "${flagged[$file]}" ]]; then
+      flagged["$file"]="${flagged[$file]}, $reason"
+    else
+      flagged["$file"]="$reason"
+    fi
+  fi
+}
+
+echo "🔍 Scanning vault for sensitive content..."
+
+while IFS= read -r file; do
+  check_pattern '(sk-[A-Za-z0-9]{20,}|ghp_[A-Za-z0-9]{36,}|xoxb-[0-9]+-[A-Za-z0-9]+|AKIA[0-9A-Z]{16})' "api key prefix" "$file"
+  # check_pattern '[A-Za-z0-9+/]{60,}={0,2}' "long token" "$file"
+  check_pattern '(?i)(password|passwd|secret|api_key)\s*[:=]\s*\S{4,}' "plaintext credential" "$file"
+  # check_pattern '\+?[0-9]{1,3}[\s.\-]?\(?[0-9]{3}\)?[\s.\-]?[0-9]{3}[\s.\-]?[0-9]{4}' "phone number" "$file"
+  check_pattern '^private:\s*true' "private: true" "$file"
+done < <(vault-ls | sort)
+
+if [[ ${#flagged[@]} -eq 0 ]]; then
+  echo "✅ No sensitive content found."
+  exit 0
+fi
+
+echo ""
+added=0
+skipped=0
+
+for file in "${!flagged[@]}"; do
+  rel="${file#"$VAULT"/}"
+  reason="${flagged[$file]}"
+  if [[ -n "${already_ignored[$rel]}" ]]; then
+    echo "  [already ignored]  $rel ($reason)"
+    skipped=$((skipped + 1))
+  else
+    echo "  [flagged]          $rel ($reason)"
+    printf '%s\n' "$rel" >> "$GITIGNORE"
+    added=$((added + 1))
+  fi
+done
+
+echo ""
+echo "Added $added file(s) to .gitignore ($skipped already present)."
+
+if [[ $added -gt 0 ]]; then
+  echo "⚠️  Review $GITIGNORE before pushing."
+  exit 1
+fi
+
+exit 0

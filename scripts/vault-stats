@@ -1,0 +1,50 @@
+#!/opt/homebrew/bin/bash
+
+# Print a health dashboard for the vault.
+
+if [[ -z "$VAULT" ]]; then
+  echo "❌ \$VAULT is not set." >&2
+  exit 1
+fi
+
+all_notes=()
+while IFS= read -r f; do
+  all_notes+=("$f")
+done < <(find "$VAULT" -name '*.md' -not -path '*/.obsidian/*')
+
+total=${#all_notes[@]}
+
+# Word count across all notes
+total_words=0
+if [[ $total -gt 0 ]]; then
+  total_words=$(cat "${all_notes[@]}" | wc -w | tr -d '[:space:]')
+fi
+
+# Modified in last 7 days
+recent=$(find "$VAULT" -name '*.md' -not -path '*/.obsidian/*' -newer "$VAULT/.obsidian" -mtime -7 2>/dev/null | wc -l | tr -d '[:space:]')
+# Fallback: use a temp reference file if .obsidian doesn't help with -newer
+recent=$(find "$VAULT" -name '*.md' -not -path '*/.obsidian/*' -mtime -7 2>/dev/null | wc -l | tr -d '[:space:]')
+
+# Task counts
+pending=0
+done_count=0
+[[ -f "$VAULT/0-tasks/todo.md" ]]   && pending=$(grep -c '^\- \[ \]' "$VAULT/0-tasks/todo.md" 2>/dev/null || echo 0)
+[[ -f "$VAULT/0-tasks/done.md" ]]   && done_count=$(grep -c '^\- \[x\]' "$VAULT/0-tasks/done.md" 2>/dev/null || echo 0)
+
+# Per-directory counts
+zet_count=$(find "$VAULT/0-zettelkasten" -name '*.md' 2>/dev/null | wc -l | tr -d '[:space:]')
+diary_count=$(find "$VAULT/diary" -name '*.md' 2>/dev/null | wc -l | tr -d '[:space:]')
+proj_count=$(find "$VAULT/1-projects" -name '*.md' 2>/dev/null | wc -l | tr -d '[:space:]')
+
+printf "\n=== Vault Stats ===\n"
+printf "Total notes:       %s\n" "$total"
+printf "Total words:       %s\n" "$total_words"
+printf "Modified (7 days): %s\n" "$recent"
+printf "\n─── Tasks ───\n"
+printf "Pending (todo.md): %s\n" "$pending"
+printf "Done (done.md):    %s\n" "$done_count"
+printf "\n─── By directory ───\n"
+printf "0-zettelkasten:    %s\n" "$zet_count"
+printf "diary:       %s\n" "$diary_count"
+printf "1-projects:        %s\n" "$proj_count"
+printf "\n"

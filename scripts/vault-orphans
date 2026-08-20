@@ -1,0 +1,63 @@
+#!/opt/homebrew/bin/bash
+
+# Find notes with no incoming [[wikilinks]] from any other note.
+# Focuses on 0-zettelkasten/ and 1-projects/ (diary notes skipped).
+# Informational only — always exits 0.
+
+if [[ -z "$VAULT" ]]; then
+  echo "❌ \$VAULT is not set." >&2
+  exit 1
+fi
+
+echo "🔍 Scanning for orphaned notes..."
+
+# Build index of all note names (basename without .md) to check against
+declare -A note_index
+while IFS= read -r file; do
+  name=$(basename "$file" .md)
+  note_index["$name"]="$file"
+done < <(find "$VAULT" -name '*.md' -not -path '*/.obsidian/*')
+
+# Build set of all referenced note names across the entire vault
+declare -A incoming
+while IFS= read -r file; do
+  while IFS= read -r link; do
+    target=$(echo "$link" | sed 's/[|#].*//')
+    [[ -n "$target" ]] && incoming["$target"]=1
+  done < <(
+    awk '
+      /^---$/ && !seen { seen=1; in_fm=1; next }
+      in_fm && /^---$/ { in_fm=0; next }
+      in_fm { next }
+      { print }
+    ' "$file" \
+    | rg -o '\[\[([^\]|#]+)[^\]]*\]\]' --replace '$1' 2>/dev/null
+  )
+done < <(find "$VAULT" -name '*.md' -not -path '*/.obsidian/*')
+
+orphans=()
+
+# Check only zettelkasten and projects — diary is intentionally linear
+for search_dir in "$VAULT/0-zettelkasten" "$VAULT/1-projects"; do
+  [[ -d "$search_dir" ]] || continue
+  while IFS= read -r file; do
+    name=$(basename "$file" .md)
+    if [[ -z "${incoming[$name]}" ]]; then
+      orphans+=("${file#"$VAULT"/}")
+    fi
+  done < <(vault-ls | grep "^$search_dir/" | sort)
+done
+
+echo ""
+if [[ ${#orphans[@]} -eq 0 ]]; then
+  echo "✅ No orphaned notes found in 0-zettelkasten/ or 1-projects/."
+else
+  echo "Orphaned notes (${#orphans[@]}) — no incoming links:"
+  for o in "${orphans[@]}"; do
+    echo "  $o"
+  done
+  echo ""
+  echo "ℹ️  Consider linking these notes or archiving them."
+fi
+
+exit 0

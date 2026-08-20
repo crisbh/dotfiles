@@ -1,0 +1,65 @@
+#!/opt/homebrew/bin/bash
+
+# Scan vault notes for [[wikilinks]] that don't resolve to an existing note.
+# Informational only — always exits 0.
+
+if [[ -z "$VAULT" ]]; then
+  echo "❌ \$VAULT is not set." >&2
+  exit 1
+fi
+
+echo "🔍 Scanning for broken wikilinks..."
+
+# Build index of all note names (basename without .md)
+declare -A note_index
+while IFS= read -r file; do
+  name=$(basename "$file" .md)
+  note_index["$name"]=1
+done < <(find "$VAULT" -name '*.md' -not -path '*/.obsidian/*')
+
+total_broken=0
+broken_files=0
+
+while IFS= read -r file; do
+  broken_in_file=()
+  in_fm=0
+  fm_closed=0
+
+  while IFS= read -r link; do
+    # Strip |alias and #heading suffixes
+    target=$(echo "$link" | sed 's/[|#].*//')
+    [[ -z "$target" ]] && continue
+    if [[ -z "${note_index[$target]}" ]]; then
+      broken_in_file+=("$target")
+    fi
+  done < <(
+    awk '
+      /^---$/ && !seen { seen=1; in_fm=1; next }
+      in_fm && /^---$/ { in_fm=0; next }
+      in_fm { next }
+      { print }
+    ' "$file" \
+    | rg -o '\[\[([^\]|#]+)[^\]]*\]\]' --replace '$1' 2>/dev/null \
+    | sort -u
+  )
+
+  if [[ ${#broken_in_file[@]} -gt 0 ]]; then
+    echo ""
+    echo "  ${file#"$VAULT"/}"
+    for t in "${broken_in_file[@]}"; do
+      echo "    [[${t}]]"
+      total_broken=$((total_broken + 1))
+    done
+    broken_files=$((broken_files + 1))
+  fi
+done < <(vault-ls | sort)
+
+echo ""
+if [[ $total_broken -eq 0 ]]; then
+  echo "✅ No broken wikilinks found."
+else
+  echo "Found $total_broken broken link(s) in $broken_files file(s)."
+  echo "ℹ️  Fix in Obsidian before pushing if desired."
+fi
+
+exit 0
