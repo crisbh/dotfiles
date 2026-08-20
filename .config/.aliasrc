@@ -5,6 +5,10 @@ alias dot="ls ~/.dotfiles -la && git status ~/.dotfiles"
 
 alias lg="lazygit"
 
+# git
+alias gp="git pull"
+alias gP="git push"
+
 # git custom scripts
 alias cm="commit"
 alias pu="push"
