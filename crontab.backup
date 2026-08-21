@@ -25,3 +25,7 @@ VAULT="/Users/cristian/Library/Mobile Documents/iCloud~md~obsidian/Documents/kos
 # Back up the current status of the cron daemon
 0 10 * * * crontab -l > ~/.dotfiles/crontab.backup
 
+
+# Sync vault to GitHub daily
+0 10 * * * PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/bin:/bin:/Users/cristian/.dotfiles/scripts" /opt/homebrew/bin/bash /Users/cristian/.dotfiles/scripts/vault-sync --auto >> /tmp/vault-sync.log 2>&1
+@reboot sleep 60 && PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/bin:/bin:/Users/cristian/.dotfiles/scripts" /opt/homebrew/bin/bash /Users/cristian/.dotfiles/scripts/vault-sync --auto >> /tmp/vault-sync.log 2>&1
