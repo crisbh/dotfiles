@@ -1,8 +1,17 @@
 #!/bin/bash
 
-git add -u
-
+# A non-empty index means the user staged a subset deliberately (possibly with
+# `git add -p`), so commit exactly that; otherwise fall back to all tracked edits.
 staged=$(git diff --cached --name-only)
+
+if [[ -n "$staged" ]]; then
+  echo "Using pre-staged files."
+  echo ""
+else
+  git add -u
+  staged=$(git diff --cached --name-only)
+fi
+
 if [[ -z "$staged" ]]; then
   echo "Nothing to commit." >&2
   exit 1
@@ -12,6 +21,14 @@ count=$(echo "$staged" | wc -l | tr -d '[:space:]')
 echo "Staged ($count):"
 echo "$staged" | sed 's/^/  /'
 echo ""
+
+# Empty after a `git add -u`, so this only ever prints in the pre-staged case.
+unstaged=$(git diff --name-only)
+if [[ -n "$unstaged" ]]; then
+  echo "Not committing (unstaged):"
+  echo "$unstaged" | sed 's/^/  /'
+  echo ""
+fi
 
 read -r -p "Commit message: " commitmessage
 if [[ -z "$commitmessage" ]]; then
