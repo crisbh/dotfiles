@@ -1,8 +1,8 @@
 #!/opt/homebrew/bin/bash
 
-# Backup the vault to GitHub: run pre-flight checks, commit, and push.
+# Backup the vault to GitHub: run pre-flight checks, commit, pull, and push.
 # Handles first-time git init and remote setup.
-# Usage: vault-sync [--dry-run]
+# Usage: vault-sync [--dry-run] [--auto]
 
 DRY_RUN=0
 AUTO=0
@@ -38,6 +38,11 @@ if [[ ! -d ".git" ]]; then
     echo "✅ Remote set to $remote_url"
   fi
 fi
+
+# ── Repo state ────────────────────────────────────────────────────────────────
+BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null || echo "main")
+HAS_REMOTE=0
+git remote get-url origin &>/dev/null && HAS_REMOTE=1
 
 # ── iCloud conflict check ─────────────────────────────────────────────────────
 conflicts=$(find "$VAULT" -name '* (conflict*' -name '*.md' 2>/dev/null)
@@ -90,31 +95,67 @@ echo "=== Committing ==="
 git add -A
 
 if git diff --cached --quiet; then
-  echo "ℹ️  Nothing to commit. Vault is up to date."
-  exit 0
+  echo "ℹ️  Nothing new to commit."
+elif [[ $DRY_RUN -eq 1 ]]; then
+  echo "🔍 Dry run — staged changes that would be committed:"
+  git diff --cached --stat
+  git reset HEAD -- . &>/dev/null
+else
+  MSG="vault: sync $(date '+%Y-%m-%d %H:%M')"
+  git commit -m "$MSG"
+fi
+
+# ── Pull ──────────────────────────────────────────────────────────────────────
+# Runs after the commit so the working tree is clean and the rebase replays local
+# vault edits on top of whatever another machine pushed.
+HAS_COMMITS=0
+git rev-parse --verify HEAD &>/dev/null && HAS_COMMITS=1
+
+if [[ $HAS_REMOTE -eq 1 && $HAS_COMMITS -eq 1 ]]; then
+  echo ""
+  echo "=== Pulling from origin/$BRANCH ==="
+  # --exit-code returns 2 for "no such branch"; anything else non-zero means the
+  # remote was unreachable (network down, no SSH key) and must not pass silently.
+  git ls-remote --exit-code --heads origin "$BRANCH" &>/dev/null
+  ls_remote_exit=$?
+
+  if [[ $ls_remote_exit -eq 2 ]]; then
+    echo "ℹ️  origin/$BRANCH does not exist yet — nothing to pull."
+  elif [[ $ls_remote_exit -ne 0 ]]; then
+    echo "❌ Cannot reach origin (network down or SSH key unavailable)." >&2
+    echo "   Skipping pull and push; local commits are safe and will sync next run." >&2
+    exit 1
+  elif [[ $DRY_RUN -eq 1 ]]; then
+    git fetch origin "$BRANCH" &>/dev/null
+    incoming=$(git rev-list --count HEAD..FETCH_HEAD 2>/dev/null || echo 0)
+    echo "🔍 Dry run — $incoming commit(s) would be pulled from origin/$BRANCH."
+  elif git pull --rebase --autostash origin "$BRANCH"; then
+    echo "✅ Pulled from origin/$BRANCH"
+  else
+    git rebase --abort &>/dev/null
+    echo "❌ Pull failed — conflicting edits between this machine and origin/$BRANCH." >&2
+    echo "   The rebase was aborted and nothing was pushed. Resolve manually in:" >&2
+    echo "   $VAULT" >&2
+    exit 1
+  fi
 fi
 
 if [[ $DRY_RUN -eq 1 ]]; then
-  echo "🔍 Dry run — staged changes that would be committed:"
-  git diff --cached --stat
   echo ""
-  echo "ℹ️  Dry run complete. Nothing was committed or pushed."
-  git reset HEAD -- . &>/dev/null
+  echo "ℹ️  Dry run complete. Nothing was committed, pulled, or pushed."
   exit 0
 fi
 
-MSG="vault: sync $(date '+%Y-%m-%d %H:%M')"
-git commit -m "$MSG"
-
 # ── Push ──────────────────────────────────────────────────────────────────────
-if git remote get-url origin &>/dev/null; then
-  BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null || echo "main")
+if [[ $HAS_REMOTE -eq 0 ]]; then
+  echo "ℹ️  No remote configured — committed locally only."
+elif [[ $HAS_COMMITS -eq 0 ]]; then
+  echo "ℹ️  No commits yet — nothing to push."
+else
   echo ""
   echo "=== Pushing to origin/$BRANCH ==="
   git push origin "$BRANCH" 2>/dev/null || git push --set-upstream origin "$BRANCH"
   echo "✅ Pushed to origin/$BRANCH"
-else
-  echo "ℹ️  No remote configured — committed locally only."
 fi
 
 echo ""
