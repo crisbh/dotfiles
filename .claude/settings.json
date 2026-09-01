@@ -1,0 +1,58 @@
+{
+  "model": "opus",
+  "extraKnownMarketplaces": {
+    "claude-plugins-official": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-plugins-official"
+      }
+    }
+  },
+  "tui": "fullscreen",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{ [ -n \"$TMUX_PANE\" ] && d=$(jq -r \".cwd // empty\") && tmux rename-window -t \"$TMUX_PANE\" \"🚀 $(basename \"${d:-$PWD}\")\"; } 2>/dev/null || true",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{ [ -n \"$TMUX_PANE\" ] && d=$(jq -r \".cwd // empty\") && tmux rename-window -t \"$TMUX_PANE\" \"⏳ $(basename \"${d:-$PWD}\")\"; } 2>/dev/null || true",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{ [ -n \"$TMUX_PANE\" ] && d=$(jq -r \".cwd // empty\") && tmux rename-window -t \"$TMUX_PANE\" \"✅ $(basename \"${d:-$PWD}\")\"; } 2>/dev/null || true",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{ [ -n \"$TMUX_PANE\" ] && d=$(jq -r \".cwd // empty\") && tmux rename-window -t \"$TMUX_PANE\" \"💬 $(basename \"${d:-$PWD}\")\"; } 2>/dev/null || true",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
