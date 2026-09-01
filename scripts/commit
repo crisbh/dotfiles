@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# Colours off when stdout is not a terminal (piped/redirected) or NO_COLOR is set.
+if [[ -t 1 && -z "${NO_COLOR:-}" ]]; then
+  GREEN=$'\033[32m'
+  YELLOW=$'\033[33m'
+  RESET=$'\033[m'
+else
+  GREEN='' YELLOW='' RESET=''
+fi
+
 # A non-empty index means the user staged a subset deliberately (possibly with
 # `git add -p`), so commit exactly that; otherwise fall back to all tracked edits.
 staged=$(git diff --cached --name-only)
@@ -18,15 +27,19 @@ if [[ -z "$staged" ]]; then
 fi
 
 count=$(echo "$staged" | wc -l | tr -d '[:space:]')
-echo "Staged ($count):"
-echo "$staged" | sed 's/^/  /'
+printf '%sStaged (%s):%s\n' "$GREEN" "$count" "$RESET"
+printf '%s\n' "$staged" | while IFS= read -r file; do
+  printf '  %s%s%s\n' "$GREEN" "$file" "$RESET"
+done
 echo ""
 
 # Empty after a `git add -u`, so this only ever prints in the pre-staged case.
 unstaged=$(git diff --name-only)
 if [[ -n "$unstaged" ]]; then
-  echo "Not committing (unstaged):"
-  echo "$unstaged" | sed 's/^/  /'
+  printf '%sNot committing (unstaged):%s\n' "$YELLOW" "$RESET"
+  printf '%s\n' "$unstaged" | while IFS= read -r file; do
+    printf '  %s%s%s\n' "$YELLOW" "$file" "$RESET"
+  done
   echo ""
 fi
 
