@@ -1,4 +1,7 @@
-#!/opt/homebrew/bin/bash
+#!/usr/bin/env bash
+
+source "${DOTFILES:-$HOME/.dotfiles}/scripts/lib/portable.sh"
+require_cmds rg
 
 # Find notes with no incoming [[wikilinks]] from any other note.
 # Focuses on 0-zettelkasten/ and 1-projects/ (diary notes skipped).

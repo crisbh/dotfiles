@@ -4,7 +4,7 @@ return {
   color_scheme = "Dracula",
   -- color_scheme = "Tokyo Night",
   -- color_scheme = "Catppuccin Mocha",
-  font_size = 18.0,
+  font_size = 16.0,
   font = wezterm.font("JetBrains Mono"),
   enable_tab_bar = false,
   default_cursor_style = "BlinkingBar",

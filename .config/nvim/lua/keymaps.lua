@@ -90,23 +90,44 @@ vim.keymap.set(
   { desc = "Open [T]ODO [D]one list", noremap = true, silent = true }
 )
 
+-- Run a script from ~/.dotfiles/scripts by path and let its shebang pick the
+-- interpreter; hardcoding one breaks across Homebrew and Linux prefixes.
+-- Reports a failed or unstartable job instead of letting it vanish silently.
+local function run_script(name, opts)
+  opts = opts or {}
+  local cmd = { os.getenv("HOME") .. "/.dotfiles/scripts/" .. name }
+  for _, arg in ipairs(opts.args or {}) do
+    table.insert(cmd, arg)
+  end
+
+  local id = vim.fn.jobstart(cmd, {
+    on_stdout = opts.on_stdout,
+    on_stderr = opts.on_stderr,
+    on_exit = function(_, code)
+      if code ~= 0 then
+        vim.notify("❌ " .. name .. " failed (exit " .. code .. ")", vim.log.levels.ERROR)
+      elseif opts.on_success then
+        opts.on_success()
+      end
+    end,
+  })
+
+  if id <= 0 then
+    vim.notify("❌ Could not start " .. name, vim.log.levels.ERROR)
+  end
+end
+
 -- Collect TODO items from all notes into the global TODO.md file
 local function collect_todo_items()
   vim.notify("🔔 Collecting TODOs...")
-  vim.fn.jobstart({
-    "/opt/homebrew/bin/bash",
-    os.getenv("HOME") .. "/.dotfiles/scripts/todo-collect",
-  })
+  run_script("todo-collect")
 end
 vim.keymap.set("n", "<leader>tc", collect_todo_items, { desc = "Collect [T]ODO items" })
 
 -- Add tags to TODO items
 local function add_task_tags()
   vim.notify("🔔 Adding tags to tasks ...")
-  vim.fn.jobstart({
-    "/opt/homebrew/bin/bash",
-    os.getenv("HOME") .. "/.dotfiles/scripts/todo-add-tags",
-  })
+  run_script("todo-add-tags")
 end
 vim.keymap.set("n", "<leader>tg", add_task_tags, { desc = "Add [T]ODO items ta[G]s" })
 
@@ -114,8 +135,9 @@ vim.keymap.set("n", "<leader>tg", add_task_tags, { desc = "Add [T]ODO items ta[G
 vim.keymap.set("n", "<leader>w<leader>w", function()
   local today = os.date("%Y-%m-%d")
   local file = os.getenv("VAULT") .. "/diary/" .. today .. ".md"
-  vim.fn.jobstart({ os.getenv("HOME") .. "/.dotfiles/scripts/day", "--no-open" }, {
-    on_exit = function()
+  run_script("day", {
+    args = { "--no-open" },
+    on_success = function()
       vim.cmd("edit " .. vim.fn.fnameescape(file))
       vim.cmd("normal! G")
     end,
@@ -128,7 +150,7 @@ vim.keymap.set("n", "<leader>wi", function()
 end, { desc = "Open Diary Index" })
 
 vim.keymap.set("n", "<leader>w<leader>i", function()
-  vim.fn.jobstart("/opt/homebrew/bin/bash ~/.dotfiles/scripts/generate-diary-index", {
+  run_script("generate-diary-index", {
     on_stdout = function(_, data)
       if data then
         vim.notify(table.concat(data, "\n"), vim.log.levels.INFO)
@@ -139,12 +161,8 @@ vim.keymap.set("n", "<leader>w<leader>i", function()
         vim.notify(table.concat(data, "\n"), vim.log.levels.ERROR)
       end
     end,
-    on_exit = function(_, code)
-      if code == 0 then
-        vim.notify("✅ Diary index rebuilt!", vim.log.levels.INFO)
-      else
-        vim.notify("❌ Failed to rebuild diary index!", vim.log.levels.ERROR)
-      end
+    on_success = function()
+      vim.notify("✅ Diary index rebuilt!", vim.log.levels.INFO)
     end,
   })
 end, { desc = "Build Diary Index" })

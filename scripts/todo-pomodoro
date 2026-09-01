@@ -1,6 +1,12 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-VAULT="/Users/cristian/Library/Mobile Documents/iCloud~md~obsidian/Documents/kosmos"
+source "${DOTFILES:-$HOME/.dotfiles}/scripts/lib/portable.sh"
+require_cmds fzf timew
+
+if [[ -z "$VAULT" ]]; then
+    echo "❌ \$VAULT is not set." >&2
+    exit 1
+fi
 TODO_FILE="$VAULT/0-tasks/active.md"
 TEMP_TASKS=/tmp/tasks.txt
 
@@ -63,6 +69,6 @@ echo "📝 Timewarrior tags: $TAGS"
 timew start "$TAGS"
 
 # Run in the background and send notification when finished
-(sleep "$DURATION" && timew stop && osascript -e "display notification \"Pomodoro Finished!\" with title \"Focus Session\"") &
+(sleep "$DURATION" && timew stop && pnotify "Focus Session" "Pomodoro Finished!") &
 
 echo "✅ ${POMO_TYPE}Pomodoro started!"

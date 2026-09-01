@@ -1,0 +1,48 @@
+# packages-fedora.txt — dnf packages for the Fedora machine.
+# Installed by install.sh:  sudo dnf install -y $(grep -vE '^#|^$' packages-fedora.txt)
+# zsh plugins + powerlevel10k are managed by zinit (see .zshrc), so not listed here.
+
+# --- Essentials the dotfiles depend on ---
+stow
+zsh
+git
+tmux
+
+# --- Core CLI tools (aliases/config in .aliasrc, .zshrc, .fzf) ---
+eza
+fd-find
+ripgrep
+fzf
+zoxide
+bat
+
+# --- Editors / file tools ---
+neovim
+ranger
+zathura
+zathura-pdf-mupdf
+
+# --- Scripts: pomodoro, watch-todos, notifications, clipboard ---
+timew
+fswatch
+libnotify
+wl-clipboard
+xclip
+poppler-utils
+
+# --- Nice-to-haves also present on the Mac (Brewfile) ---
+htop
+btop
+tree
+wget
+curl
+entr
+pandoc
+ImageMagick
+graphviz
+
+# --- May require COPR/cargo/pip on Fedora (uncomment once a source is set up) ---
+# lazygit        # copr atim/lazygit, or download release
+# glow           # copr, or `go install`
+# tealdeer       # provides `tldr` (or: cargo install tealdeer)
+# timg           # not in default repos

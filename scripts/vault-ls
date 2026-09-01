@@ -1,4 +1,4 @@
-#!/opt/homebrew/bin/bash
+#!/usr/bin/env bash
 
 # List all .md files in the vault that are not excluded by .gitignore.
 # If the vault has a git repo, uses git ls-files to respect .gitignore.
