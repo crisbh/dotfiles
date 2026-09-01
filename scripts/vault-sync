@@ -1,7 +1,12 @@
-#!/opt/homebrew/bin/bash
+#!/usr/bin/env bash
 
 # Backup the vault to GitHub: run pre-flight checks, commit, pull, and push.
 # Handles first-time git init and remote setup.
+#
+# The vault itself is replicated between machines by Syncthing, which does NOT
+# carry .git — so exactly one machine owns this git mirror. See the ownership
+# check below.
+#
 # Usage: vault-sync [--dry-run] [--auto]
 
 DRY_RUN=0
@@ -24,6 +29,34 @@ cd "$VAULT" || {
   exit 1
 }
 
+# ── Sync ownership ────────────────────────────────────────────────────────────
+# Two machines running this on a cron would race each other pushing the same
+# repo. The owner is recorded in the vault (and therefore synced), so both
+# machines agree on who it is without any per-machine config that cron can't see.
+OWNER_FILE="$VAULT/.vault-sync-owner"
+THIS_HOST=$(hostname -s 2>/dev/null || hostname)
+
+if [[ -f "$OWNER_FILE" ]]; then
+  OWNER=$(tr -d '[:space:]' < "$OWNER_FILE")
+  if [[ -n "$OWNER" && "$OWNER" != "$THIS_HOST" ]]; then
+    echo "ℹ️  $THIS_HOST does not own the vault git mirror ($OWNER) — nothing to do."
+    echo "   To hand over, run on this machine: echo $THIS_HOST > \"$OWNER_FILE\""
+    exit 0
+  fi
+elif [[ $AUTO -eq 1 ]]; then
+  echo "❌ No vault-sync owner recorded. Run vault-sync manually once to claim it." >&2
+  exit 1
+else
+  read -rp "No vault-sync owner recorded. Claim it for $THIS_HOST? [y/N] " answer
+  if [[ "$answer" == "y" || "$answer" == "Y" ]]; then
+    echo "$THIS_HOST" > "$OWNER_FILE"
+    echo "✅ $THIS_HOST now owns the vault git mirror."
+  else
+    echo "Aborted."
+    exit 0
+  fi
+fi
+
 # ── First-time git setup ──────────────────────────────────────────────────────
 if [[ ! -d ".git" ]]; then
   if [[ $AUTO -eq 1 ]]; then
@@ -44,10 +77,12 @@ BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null || echo "main")
 HAS_REMOTE=0
 git remote get-url origin &>/dev/null && HAS_REMOTE=1
 
-# ── iCloud conflict check ─────────────────────────────────────────────────────
-conflicts=$(find "$VAULT" -name '* (conflict*' -name '*.md' 2>/dev/null)
+# ── Sync conflict check ───────────────────────────────────────────────────────
+# iCloud writes "note (conflict 1).md"; Syncthing writes
+# "note.sync-conflict-20260101-120000-ABCDEFG.md".
+conflicts=$(find "$VAULT" \( -name '* (conflict*' -o -name '*.sync-conflict-*' \) -name '*.md' 2>/dev/null)
 if [[ -n "$conflicts" ]]; then
-  echo "⚠️  iCloud conflict files detected:"
+  echo "⚠️  Sync conflict files detected:"
   echo "$conflicts" | sed "s|$VAULT/||" | sed 's/^/  /'
   if [[ $AUTO -eq 0 ]]; then
     read -rp "Continue anyway? [y/N] " answer

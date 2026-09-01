@@ -6,10 +6,22 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
-# Integrate brew and shell in macOS
-if [[ -f "/opt/homebrew/bin/brew" ]] then
-  eval "$(/opt/homebrew/bin/brew shellenv)"
-fi
+# OS detection + Homebrew integration (portable across Apple Silicon macOS,
+# Intel macOS, and Linux). BREW_PREFIX is empty when brew is absent (e.g. Fedora
+# with native dnf); dependent paths below are guarded on it.
+case "$OSTYPE" in
+  darwin*) export DOTFILES_OS=macos ;;
+  *)       export DOTFILES_OS=linux ;;
+esac
+export DOTFILES="$HOME/.dotfiles"
+for _brew in /opt/homebrew /usr/local /home/linuxbrew/.linuxbrew; do
+  if [[ -x "$_brew/bin/brew" ]]; then
+    export BREW_PREFIX="$_brew"
+    eval "$("$_brew/bin/brew" shellenv)"
+    break
+  fi
+done
+unset _brew
 
 # Set the directory we want to store zinit and plugins
 ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
@@ -104,28 +116,26 @@ bindkey '^[w' kill-region
 
 
 # Remember ssh login passwords for current session
-eval $(ssh-add --apple-use-keychain $HOME/.ssh/id_ed25519 2> /dev/null)
+# --apple-use-keychain is macOS-only; Linux ssh-add rejects it.
+if [[ $DOTFILES_OS == macos ]]; then
+  eval $(ssh-add --apple-use-keychain $HOME/.ssh/id_ed25519 2> /dev/null)
+else
+  eval $(ssh-add $HOME/.ssh/id_ed25519 2> /dev/null)
+fi
 
-# Set various PATHs
+# Set various PATHs (brew's bin is already on PATH via `brew shellenv` above)
 export PATH=$PATH:$HOME/.local/bin
 export PATH=$PATH:$HOME/.cargo/bin
-export PATH=$PATH:/opt/homebrew/bin
-export PATH=$PATH:/opt/anaconda3/bin
-#export PATH=$PATH:$HOME/Library/Python/3.9/bin
 export PATH=$PATH:$HOME/.dotfiles/scripts
-#export PYTHONPATH=$HOME/Projects/Peano/code/python
-#export PYTHONPATH=/usr/lib64/paraview/python3.10/site-packages:$PYTHONPATH  # paraview libs location
-#export PYTHONPATH=/usr/lib64/python3.10/site-packages:$PYTHONPATH           # Jinja2 location
-#export PYTHONPATH=/usr/lib/python3.10/site-packages:$PYTHONPATH             # Jinja2 location
-export PYTHONPATH=$HOME/Projects/GR-effects-clusters:$PYTHONPATH            # Custom project folder
-export PYTHONPATH="$HOME/Projects/tophat-GR/src/:$PYTHONPATH"
-#export JUPYTER_PATH=$HOME/Codes/Peano/python
 
 # Hide the default go folder in home
 export GOPATH=$HOME/.go
 
-export LDFLAGS="-L/opt/homebrew/opt/libomp/lib"
-export CPPFLAGS="-I/opt/homebrew/opt/libomp/include"
+# libomp flags for OpenMP builds (Homebrew keg — macOS only)
+if [[ -n $BREW_PREFIX && -d "$BREW_PREFIX/opt/libomp" ]]; then
+  export LDFLAGS="-L$BREW_PREFIX/opt/libomp/lib"
+  export CPPFLAGS="-I$BREW_PREFIX/opt/libomp/include"
+fi
 
 # Path to cd quicker between frequent directories
 export CDPATH=$HOME
@@ -196,24 +206,26 @@ preexec() { echo -ne '\e[5 q' ;} # Use beam shape cursor for each new prompt.
 # ==============================================================================
 ## Shell integrations
 # ==============================================================================
+
+alias python=python3
+alias pip=pip3
+
+# Pin node@22 from Homebrew when present (macOS); on Linux node comes from dnf.
+if [[ -n $BREW_PREFIX && -d "$BREW_PREFIX/opt/node@22/bin" ]]; then
+  export PATH="$BREW_PREFIX/opt/node@22/bin:$PATH"
+fi
+
+# fzf shell integration (completion + key bindings, portable)
 eval "$(fzf --zsh)"
+# Trigger sequence for fuzzy completion (instead of the default **)
+export FZF_COMPLETION_TRIGGER='ff'
+# Open fzf selections directly in neovim
+alias ffvim="fzf --multi --bind 'enter:become(nvim {})'"
+# Use fd instead of find for path/dir completion candidates
+_fzf_compgen_path() { fd --hidden --follow --exclude ".git" . "$1"; }
+_fzf_compgen_dir()  { fd --type d --hidden --follow --exclude ".git" . "$1"; }
+
 # Enable zoxide for zshell and alias to cd
 eval "$(zoxide init --cmd cd zsh)"
 # ==============================================================================
 
-# >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-__conda_setup="$('/opt/anaconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
-if [ $? -eq 0 ]; then
-    eval "$__conda_setup"
-else
-    if [ -f "/opt/anaconda3/etc/profile.d/conda.sh" ]; then
-        . "/opt/anaconda3/etc/profile.d/conda.sh"
-    else
-        export PATH="/opt/anaconda3/bin:$PATH"
-    fi
-fi
-unset __conda_setup
-# <<< conda initialize <<<
-
-export PATH="/opt/homebrew/opt/node@22/bin:$PATH"

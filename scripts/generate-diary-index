@@ -1,4 +1,4 @@
-#!/opt/homebrew/bin/bash  # Apple Silicon (M1/M2)
+#!/usr/bin/env bash
 
 NOTES_DIR="$VAULT/diary"
 INDEX_FILE="$VAULT/diary/diary.md"

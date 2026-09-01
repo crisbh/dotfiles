@@ -2,7 +2,22 @@
 # Otherwise, they will fail to execute.
 # e.g., any bash script should not contain the .sh in its name.
 #
+# This is the macOS crontab snapshot (regenerated daily by the crontab -l line
+# below). It is NOT deployed by stow; each machine keeps its own crontab.
+# PATH covers both Homebrew prefixes (Apple Silicon /opt/homebrew, Intel
+# /usr/local) plus the dotfiles scripts, so `env bash` resolves to Bash 5 and
+# the extensionless scripts are directly runnable. The APOD + `defaults` lines
+# are macOS-only, so Fedora needs its own crontab.
+#
+# VAULT OWNERSHIP: the vault is replicated between machines by Syncthing, so the
+# task jobs below (todo-backup, todo-mark-done) and vault-sync must run on
+# exactly ONE machine — running them on both double-processes done.md and races
+# the git push. This Mac is the owner today; vault-sync enforces it via
+# $VAULT/.vault-sync-owner and simply exits on a non-owner. To hand over to the
+# Linux box: move these three lines to its crontab and run there
+#   echo "$(hostname -s)" > "$VAULT/.vault-sync-owner"
 
+PATH=/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/Users/cristian/.dotfiles/scripts
 VAULT="/Users/cristian/Library/Mobile Documents/iCloud~md~obsidian/Documents/kosmos"
 
 # Run the APOD script to fetch a daily wallpaper
@@ -13,19 +28,18 @@ VAULT="/Users/cristian/Library/Mobile Documents/iCloud~md~obsidian/Documents/kos
 @reboot defaults write -g KeyRepeat -int 1 # normal minimum is 2 (30 ms)
 
 # Back up todo.md and active.md (rolling, keeps last 10 copies each)
-0 9 * * * /opt/homebrew/bin/bash ~/.dotfiles/scripts/todo-backup
+0 9 * * * /usr/bin/env bash ~/.dotfiles/scripts/todo-backup
 
 # Script that handle DONE todo items.
-0 10 * * * /opt/homebrew/bin/bash ~/.dotfiles/scripts/todo-mark-done
-0 18 * * * /opt/homebrew/bin/bash ~/.dotfiles/scripts/todo-mark-done
+0 10 * * * /usr/bin/env bash ~/.dotfiles/scripts/todo-mark-done
+0 18 * * * /usr/bin/env bash ~/.dotfiles/scripts/todo-mark-done
 
-# Back up homebrew packages list
-0 10 * * * /bin/bash -c '/opt/homebrew/bin/brew leaves > ~/.dotfiles/.config/homebrew/leaves.txt 2> ~/.dotfiles/.config/homebrew/error.log'
+# Back up the Homebrew package list to the Brewfile
+0 10 * * * brew bundle dump --file=$HOME/.dotfiles/Brewfile --force >> /tmp/brew-dump.log 2>&1
 
 # Back up the current status of the cron daemon
 0 10 * * * crontab -l > ~/.dotfiles/crontab.backup
 
-
 # Sync vault to GitHub daily
-0 10 * * * PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/bin:/bin:/Users/cristian/.dotfiles/scripts" /opt/homebrew/bin/bash /Users/cristian/.dotfiles/scripts/vault-sync --auto >> /tmp/vault-sync.log 2>&1
-@reboot sleep 60 && PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/bin:/bin:/Users/cristian/.dotfiles/scripts" /opt/homebrew/bin/bash /Users/cristian/.dotfiles/scripts/vault-sync --auto >> /tmp/vault-sync.log 2>&1
+0 10 * * * /usr/bin/env bash /Users/cristian/.dotfiles/scripts/vault-sync --auto >> /tmp/vault-sync.log 2>&1
+@reboot sleep 60 && /usr/bin/env bash /Users/cristian/.dotfiles/scripts/vault-sync --auto >> /tmp/vault-sync.log 2>&1

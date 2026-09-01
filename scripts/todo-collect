@@ -1,4 +1,6 @@
-#!/opt/homebrew/bin/bash  # Apple Silicon (M1/M2)
+#!/usr/bin/env bash
+
+source "${DOTFILES:-$HOME/.dotfiles}/scripts/lib/portable.sh"
 
 # Paths
 NOTES_DIR="$VAULT/diary"
@@ -22,7 +24,7 @@ if [[ -n "$1" ]]; then
 else
     # Default to today + yesterday if no file passed (manual/cron)
     TODAY=$(date +"%Y-%m-%d")
-    YESTERDAY=$(date -v-1d +"%Y-%m-%d")
+    YESTERDAY=$(pdate "-1 day" +"%Y-%m-%d")
 
     TARGET_FILES=("$NOTES_DIR/$TODAY.md" "$NOTES_DIR/$YESTERDAY.md")
     echo "📅 Mode: Full daily collection (today + yesterday)"
@@ -70,8 +72,8 @@ for file in "${TARGET_FILES[@]}"; do
     mv "$TEMP_FILE.new" "$TODO_FILE"
 
     ### Mark collected tasks as processed in the daily note
-    sed -i '' 's/^- \[ \] \(.*\)$/- [>] \1/g' "$file"
-    sed -i '' '/TODO: (COLLECTED)/!s/TODO: /TODO: (COLLECTED) /' "$file"
+    psed_i 's/^- \[ \] \(.*\)$/- [>] \1/g' "$file"
+    psed_i '/TODO: (COLLECTED)/!s/TODO: /TODO: (COLLECTED) /' "$file"
 
     echo "✅ Collected tasks from $file"
     rm -f "$TEMP_FILE"

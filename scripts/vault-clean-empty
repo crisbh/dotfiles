@@ -1,4 +1,4 @@
-#!/opt/homebrew/bin/bash
+#!/usr/bin/env bash
 
 # Find and interactively delete empty notes from the vault.
 # A note is "empty" if it has no content beyond YAML frontmatter,

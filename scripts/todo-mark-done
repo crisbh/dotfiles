@@ -1,4 +1,6 @@
-#!/opt/homebrew/bin/bash  # Apple Silicon (M1/M2)
+#!/usr/bin/env bash
+
+source "${DOTFILES:-$HOME/.dotfiles}/scripts/lib/portable.sh"
 
 NOTES_DIR="$VAULT/diary"
 TODO_FILE="$VAULT/0-tasks/active.md"
@@ -33,7 +35,7 @@ grep '^- \[x\]' "$TODO_FILE" | while read -r task; do
 
     # Step 3.1: Apply completion mark in daily notes
     for file in "$NOTES_DIR"/*.md; do
-        sed -i '' "s|^- \[ \] \(.*$escaped_task.*\)$|- [x] \1 ✅ DONE|g" "$file"
+        psed_i "s|^- \[ \] \(.*$escaped_task.*\)$|- [x] \1 ✅ DONE|g" "$file"
     done
 
     # Step 3.2: **Check if the task already exists in DONE.md to prevent duplicates**
@@ -58,7 +60,7 @@ cat /tmp/header.txt /tmp/final_body.txt > "$DONE_FILE"
 echo "✅ DONE file updated successfully!"
 
 # Step 5: Remove completed tasks from TODO.md
-sed -i '' '/^- \[x\]/d' "$TODO_FILE"
+psed_i '/^- \[x\]/d' "$TODO_FILE"
 
 echo "✅ DONE sync complete!"
 

@@ -1,4 +1,4 @@
-#!/opt/homebrew/bin/bash
+#!/usr/bin/env bash
 
 BACKUP_DIR="$VAULT/0-tasks/.backups"
 mkdir -p "$BACKUP_DIR"

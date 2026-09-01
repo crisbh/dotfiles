@@ -1,8 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+source "${DOTFILES:-$HOME/.dotfiles}/scripts/lib/portable.sh"
 
 today=$(date +"%Y-%m-%d")
-tomorrow=$(gdate -d "tomorrow" '+%Y-%m-%d')
-yesterday=$(gdate -d "yesterday" '+%Y-%m-%d')
+tomorrow=$(pdate "tomorrow" '+%Y-%m-%d')
+yesterday=$(pdate "yesterday" '+%Y-%m-%d')
 file="$VAULT"'/diary/'$(date +"%Y-%m-%d").md
 
 cd "$VAULT" || exit
