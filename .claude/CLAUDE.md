@@ -1,31 +1,56 @@
 # Agent Instructions
 
-## Rule: Secrets
+## Hard constraints
 
-- Never commit secrets, config files, or database files
+- Never commit secrets, credentials, config files, or database files.
+- Never force push, rewrite history, or amend commits you did not make.
+- Never commit directly to `main`/`master` — work on a branch, open a PR.
+- If a task appears to require any of the above, stop and explain why instead.
 
-## Rule: Structure Conventions
+## Git and GitHub
 
-- Single-line paragraphs in all markdown files — no multi-line wrapped paragraphs
-- No underscores or spaces in filenames; use hyphens
-- Prefer TeX over unicode characters for mathematical expressions in comment blocks and markdown files
+- Conventional commits (`feat:`, `fix:`, `docs:`, `chore:`).
+- Never mention agents or add agent co-authorship to commit messages.
+- New repos: enable branch protection on `main` (PR required, zero approvals)
+  and automatic branch deletion after merge.
+- After merging a PR: pull latest into the current branch, remove leftover
+  worktrees.
 
-## Rule: Context Maintenance
+## Files and formatting
 
-- At the end of every significant task or session, summarise the current state, architectural decisions made, and pending TODO items into the CLAUDE.md file of the corresponding repo. Always ensure such file reflects the ground truth of the project so future sessions can resume without friction.
+- Markdown: one line per paragraph, no wrapping.
+- Filenames: hyphens, no spaces or underscores.
+- Maths in comments and markdown: TeX, not unicode.
 
-## Rule: Commits
+## Investigation and audit tasks
 
-- Always use conventional commits (e.g. `feat:`, `fix:`, `docs:`, `chore:`)
-- Never add anything agent related (copilot, claude, etc.) to commit messages or co-authorship
+When asked to investigate, audit, profile, or trace (rather than change):
 
-## Rule: GitHub repos management
+- Do not modify source files. Read, run read-only commands, report.
+- Write findings to `notes/investigation-YYYY-MM-DD-<topic>.md`.
+- Structure: what was asked, what I checked, what I found, what I could not
+  determine, what I'd do next.
+- Cite `file:line` for every claim about the code. An unreferenced claim is a
+  guess and must be labelled as one.
+- Say plainly what you could not verify. The closing summary must not be more
+  confident than the body.
 
-- Always enable branch protection on `main` when creating a new GitHub repo so a PR is always required
-- Require zero reviews (PRs required but no approvals needed)
-- Enable automatic branch deletion after a PR is merged
-- After merging a PR, pull the latest changes into the current branch and delete any leftover worktrees
+## Document review
 
-## Rule: Agent specific
+When reviewing a draft, do not rewrite it unless asked. Return located
+observations grouped as: factual errors, unsupported claims, missing
+citations, internal inconsistencies, then style (brief, last). For numbers,
+check against sources in the repo and say which you could not check.
 
-- When renaming a tmux window, always prefix the name with an emoji reflecting current state: `🚀` starting, `⏳` in progress, `🔍` researching, `🔨` building, `🧪` testing, `✅` done, `🔴` error, `💬` waiting for input, `🛑` blocked
+## Project context
+
+- Keep each repo's CLAUDE.md to durable facts: how to build and test, layout,
+  conventions, what not to touch. Update it when those change.
+- Session state, progress, and pending work go in dated notes files, not in
+  CLAUDE.md.
+
+## Tmux
+
+- When renaming a tmux window, prefix with a state emoji: 🚀 starting,
+  ⏳ in progress, 🔍 researching, 🔨 building, 🧪 testing, ✅ done, 🔴 error,
+  💬 waiting for input, 🛑 blocked.
