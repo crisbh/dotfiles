@@ -22,7 +22,7 @@ return {
     "nvim-telescope/telescope.nvim",
     event = "VimEnter",
     cmd = "Telescope",
-    branch = "0.1.x",
+    branch = "master",
     dependencies = {
       "nvim-lua/plenary.nvim",
       "nvim-telescope/telescope-bibtex.nvim",
@@ -67,13 +67,20 @@ return {
       -- [[ Configure Telescope ]]
       -- See `:help telescope` and `:help telescope.setup()`
       local actions = require("telescope.actions")
+
+      -- Refresh the git status markers (see lua/git-marks.lua) whenever a picker opens
+      vim.api.nvim_create_autocmd("User", {
+        pattern = "TelescopeFindPre",
+        callback = require("git-marks").reset,
+      })
+
       require("telescope").setup({
         -- You can put your default mappings / updates / etc. in here
         --  All the info you're looking for is in `:help telescope.setup()`
         --
         defaults = {
           git_worktrees = vim.g.git_worktrees,
-          path_display = { "truncate" },
+          path_display = require("git-marks").path_display,
           sorting_strategy = "ascending",
           layout_config = {
             horizontal = { prompt_position = "top", preview_width = 0.6 },
@@ -98,6 +105,8 @@ return {
             -- hidden = true,
             find_command = { "rg", "--files", "--glob", "!**/.git/*", "-L" },
           },
+          -- Already shows the git status per file, so skip the git-marks suffix
+          git_status = { path_display = { "truncate" } },
         },
         extensions = {
           bibtex = { context = true, context_fallback = false },
@@ -122,6 +131,7 @@ return {
       vim.keymap.set("n", "<leader>fd", builtin.diagnostics, { desc = "[F]ind [D]iagnostics" })
       vim.keymap.set("n", "<leader>fr", builtin.resume, { desc = "[F]ind [R]esume" })
       vim.keymap.set("n", "<leader>fo", builtin.oldfiles, { desc = "[F]ind Recent ([o]ld) Files" })
+      vim.keymap.set("n", "<leader>fm", builtin.git_status, { desc = "[F]ind git [M]odified files" })
       vim.keymap.set("n", "<leader><leader>", builtin.buffers, { desc = "[F]ind existing buffers" })
       vim.keymap.set("n", "<leader>fF", function()
         builtin.find_files({ hidden = true, no_ignore = true })
