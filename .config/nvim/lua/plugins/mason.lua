@@ -11,7 +11,6 @@ return {
         "intelephense",
         "marksman",
         "neocmake",
-        "julials",
         "pyright",
         "lua_ls",
         "bashls",
