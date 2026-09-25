@@ -16,11 +16,6 @@ return {
     --    For additional information, see `:help lazy.nvim-lazy.nvim-structuring-your-plugins`
     { import = "plugins" },
 
-    "akinsho/toggleterm.nvim",
-    opts = {
-      terminal_mappings = true,
-    },
-
     "tpope/vim-sleuth", -- Detect tabstop and shiftwidth automatically
 
     -- NOTE: Plugins can also be added by using a table,
