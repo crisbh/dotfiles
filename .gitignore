@@ -1,0 +1,4 @@
+# Claude Code keeps credentials, history, caches and sessions in ~/.claude;
+# only track the hand-written config
+.claude/*
+!.claude/settings.json
