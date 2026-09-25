@@ -1,14 +1,5 @@
 {
   "model": "opus",
-  "extraKnownMarketplaces": {
-    "claude-plugins-official": {
-      "source": {
-        "source": "github",
-        "repo": "anthropics/claude-plugins-official"
-      }
-    }
-  },
-  "tui": "fullscreen",
   "hooks": {
     "SessionStart": [
       {
@@ -54,5 +45,16 @@
         ]
       }
     ]
-  }
+  },
+  "extraKnownMarketplaces": {
+    "claude-plugins-official": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-plugins-official"
+      }
+    }
+  },
+  "tui": "fullscreen",
+  "theme": "dark",
+  "agentPushNotifEnabled": true
 }

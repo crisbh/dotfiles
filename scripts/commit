@@ -9,16 +9,23 @@ else
   GREEN='' YELLOW='' RESET=''
 fi
 
-# A non-empty index means the user staged a subset deliberately (possibly with
-# `git add -p`), so commit exactly that; otherwise fall back to all tracked edits.
-staged=$(git diff --cached --name-only)
-
-if [[ -n "$staged" ]]; then
-  echo "Using pre-staged files."
-  echo ""
+# With paths, commit exactly those files (untracked ones included) and leave the
+# rest of the index untouched.
+# Without, a non-empty index means the user staged a subset deliberately (possibly
+# with `git add -p`), so commit exactly that; otherwise fall back to all tracked edits.
+if [[ $# -gt 0 ]]; then
+  git add -- "$@" || exit 1
+  staged=$(git diff --cached --name-only -- "$@")
 else
-  git add -u
   staged=$(git diff --cached --name-only)
+
+  if [[ -n "$staged" ]]; then
+    echo "Using pre-staged files."
+    echo ""
+  else
+    git add -u
+    staged=$(git diff --cached --name-only)
+  fi
 fi
 
 if [[ -z "$staged" ]]; then
@@ -33,11 +40,16 @@ printf '%s\n' "$staged" | while IFS= read -r file; do
 done
 echo ""
 
-# Empty after a `git add -u`, so this only ever prints in the pre-staged case.
-unstaged=$(git diff --name-only)
-if [[ -n "$unstaged" ]]; then
-  printf '%sNot committing (unstaged):%s\n' "$YELLOW" "$RESET"
-  printf '%s\n' "$unstaged" | while IFS= read -r file; do
+# With paths, anything else changed (staged or not) is left out. Without, this is
+# empty after a `git add -u`, so it only ever prints in the pre-staged case.
+if [[ $# -gt 0 ]]; then
+  leftout=$({ git diff --cached --name-only; git diff --name-only; } | sort -u | grep -vxF -f <(printf '%s\n' "$staged"))
+else
+  leftout=$(git diff --name-only)
+fi
+if [[ -n "$leftout" ]]; then
+  printf '%sNot committing:%s\n' "$YELLOW" "$RESET"
+  printf '%s\n' "$leftout" | while IFS= read -r file; do
     printf '  %s%s%s\n' "$YELLOW" "$file" "$RESET"
   done
   echo ""
@@ -49,4 +61,5 @@ if [[ -z "$commitmessage" ]]; then
   exit 1
 fi
 
-git commit -m "$commitmessage"
+# `git commit -- <paths>` commits only those paths, ignoring anything else staged.
+git commit -m "$commitmessage" -- "$@"
