@@ -3,11 +3,13 @@ install.sh
 
 # Repo docs / package manifests — not deployed to $HOME
 AGENTS.md
+CLAUDE.md
 Brewfile
 packages-fedora.txt
 
 \.git
 \.github
+^/\.gitignore$
 
 \.DS_Store
 
