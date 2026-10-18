@@ -41,5 +41,24 @@
     authors = !git log --format='%aN <%aE>' | grep -v 'users.noreply.github.com' | sort -u --ignore-case
     aliases = !git config --list | grep alias | cut -c 7-
     whoami = !git config user.name && git config user.email
+    # Worktrees (see also scripts/wt)
+    wl = worktree list
+    wp = worktree prune
+    wt = !wt
+    # Status of every worktree of this repo
+    wstatus = "!git worktree list --porcelain | awk '/^worktree /{print substr($0, 10)}' | while read -r p; do printf \"\\033[33m%s\\033[m\\n\" \"$p\"; git -C \"$p\" status -sb; done"
+    # Local branches whose remote was deleted (merged PRs)
+    gone = !git fetch -p -q && git branch -vv | awk '/: gone]/{print ($1 == \"+\" || $1 == \"*\") ? $2 : $1}'
+    # Rebase onto the latest remote default branch
+    sync = !git fetch -q origin && git rebase origin/$(git symbolic-ref --short refs/remotes/origin/HEAD | cut -d/ -f2)
+[worktree]
+    # `git worktree add ../x feat/x` tracks origin/feat/x when it exists
+    guessRemote = true
+[fetch]
+    # Drop refs of remote branches deleted upstream (feeds `git gone`)
+    prune = true
+[rerere]
+    # Reuse conflict resolutions across rebases
+    enabled = true
 [include]
     path = ~/.gitconfig.local

@@ -1,0 +1,219 @@
+#!/usr/bin/env bash
+#
+# wt: git worktrees, one tmux session each.
+#
+#   wt                    pick a worktree (fzf) and switch to its tmux session
+#   wt new <branch> [base]
+#                         create a worktree for <branch> (existing local or
+#                         remote branch, otherwise a new one from [base] or
+#                         HEAD) and switch to it
+#   wt rm [branch...]     remove worktrees (fzf multi-select without args),
+#                         kill their sessions, delete their branches if merged
+#   wt clean              remove worktrees whose branch was deleted upstream
+#                         (e.g. merged PRs), after confirmation
+#   wt ls                 list worktrees
+#   wt path [branch]      print a worktree's path, e.g. `cd "$(wt path)"`
+#
+# New worktrees go in <repo-parent>/<repo>-worktrees/<branch>, so they stay
+# together next to the main checkout. Sessions are named <repo>/<branch>.
+
+set -euo pipefail
+
+# shellcheck source=lib/common.sh
+source "${DOTFILES:-$HOME/.dotfiles}/scripts/lib/common.sh"
+
+[[ "${1:-}" == -h || "${1:-}" == --help || "${1:-}" == help ]] && {
+  usage
+  exit 0
+}
+
+git rev-parse --git-dir >/dev/null 2>&1 || die "Not inside a git repository."
+
+# The first entry of `git worktree list` is always the main checkout
+main=$(git worktree list --porcelain | awk '/^worktree /{print substr($0, 10); exit}')
+repo=$(basename "$main")
+wt_root="$(dirname "$main")/$repo-worktrees"
+
+# One "<path>\t<branch>" line per worktree; detached ones show the short SHA
+worktrees() {
+  git worktree list --porcelain | awk '
+    /^worktree / { path = substr($0, 10); branch = "" }
+    /^HEAD /     { head = substr($2, 1, 7) }
+    /^branch /   { branch = substr($2, 12) }
+    /^$/         { print path "\t" (branch != "" ? branch : "(" head ")") }
+  '
+}
+
+# Path of the worktree checked out on <branch>, if any
+path_for() {
+  worktrees | awk -F'\t' -v b="$1" '$2 == b { print $1; exit }'
+}
+
+# tmux session names cannot contain "." or ":"
+session_name() {
+  local name="$repo/$1"
+  printf '%s' "${name//[.:]/-}"
+}
+
+open_session() {
+  local path=$1 branch=$2 name
+  name=$(session_name "$branch")
+
+  if ! command -v tmux >/dev/null; then
+    echo "$path"
+    return
+  fi
+  if [[ -n "${TMUX:-}" ]]; then
+    tmux has-session -t "=$name" 2>/dev/null || tmux new-session -d -s "$name" -c "$path"
+    tmux switch-client -t "=$name"
+  else
+    tmux new-session -A -s "$name" -c "$path"
+  fi
+}
+
+pick() {
+  command -v fzf >/dev/null || die "fzf is needed to pick a worktree."
+  worktrees | fzf --delimiter='\t' --with-nth=2,1 --tabstop=4 "$@" \
+    --preview 'git -C {1} log --oneline --color=always -15'
+}
+
+cmd_switch() {
+  local line
+  line=$(pick --prompt "$repo worktree> ") || exit 0
+  open_session "${line%%$'\t'*}" "${line#*$'\t'}"
+}
+
+cmd_new() {
+  local branch=${1:-} base=${2:-HEAD} path existing
+  [[ -n "$branch" ]] || die "Usage: wt new <branch> [base]"
+
+  existing=$(path_for "$branch")
+  if [[ -n "$existing" ]]; then
+    printf '%s%s is already checked out at %s%s\n' "$YELLOW" "$branch" "$existing" "$RESET"
+    open_session "$existing" "$branch"
+    return
+  fi
+
+  path="$wt_root/${branch//\//-}"
+  mkdir -p "$wt_root"
+
+  if git show-ref --verify --quiet "refs/heads/$branch"; then
+    git worktree add "$path" "$branch"
+  elif git show-ref --verify --quiet "refs/remotes/origin/$branch"; then
+    git worktree add --track -b "$branch" "$path" "origin/$branch"
+  else
+    git worktree add -b "$branch" "$path" "$base"
+  fi
+
+  printf '%sCreated %s at %s%s\n' "$GREEN" "$branch" "$path" "$RESET"
+  open_session "$path" "$branch"
+}
+
+cmd_rm() {
+  local lines=() line path branch name
+  if [[ $# -gt 0 ]]; then
+    for branch in "$@"; do
+      path=$(path_for "$branch")
+      [[ -n "$path" ]] || die "No worktree for $branch."
+      lines+=("$path"$'\t'"$branch")
+    done
+  else
+    mapfile -t lines < <(pick --multi --prompt "remove> " | cat) || true
+  fi
+
+  for line in "${lines[@]}"; do
+    path=${line%%$'\t'*}
+    branch=${line#*$'\t'}
+    if [[ "$path" == "$main" ]]; then
+      printf '%sSkipping the main checkout (%s)%s\n' "$YELLOW" "$path" "$RESET"
+      continue
+    fi
+
+    # Refuses on uncommitted changes, so nothing is lost silently
+    if ! git worktree remove "$path"; then
+      printf '%sKept %s: commit, stash or use "git worktree remove --force"%s\n' "$YELLOW" "$path" "$RESET"
+      continue
+    fi
+
+    name=$(session_name "$branch")
+    if command -v tmux >/dev/null && tmux has-session -t "=$name" 2>/dev/null; then
+      # Leave the session first if we are in it
+      if [[ -n "${TMUX:-}" && "$(tmux display-message -p '#S')" == "$name" ]]; then
+        tmux switch-client -l 2>/dev/null || tmux switch-client -n
+      fi
+      tmux kill-session -t "=$name"
+    fi
+
+    # `-d` only deletes branches merged into HEAD
+    if [[ "$branch" != \(* ]] && git branch -d "$branch" >/dev/null 2>&1; then
+      printf '%sRemoved %s and its merged branch%s\n' "$GREEN" "$path" "$RESET"
+    else
+      printf '%sRemoved %s (branch %s kept: not merged)%s\n' "$GREEN" "$path" "$branch" "$RESET"
+    fi
+  done
+  git worktree prune
+}
+
+cmd_clean() {
+  local gone=() targets=() branch path
+  git remote | grep -q . || die "No remote to compare against."
+  git fetch --prune --quiet || die "git fetch failed."
+
+  # Branches whose upstream is gone; `+` marks ones checked out in a worktree
+  mapfile -t gone < <(git branch -vv | awk '/: gone]/{print ($1 == "+" || $1 == "*") ? $2 : $1}')
+  for branch in "${gone[@]}"; do
+    path=$(path_for "$branch")
+    if [[ -n "$path" && "$path" != "$main" ]]; then
+      targets+=("$branch")
+    fi
+  done
+
+  if ((${#targets[@]} == 0)); then
+    echo "No worktrees on branches deleted upstream."
+    return
+  fi
+
+  printf '%sBranch deleted upstream:%s\n' "$YELLOW" "$RESET"
+  for branch in "${targets[@]}"; do
+    printf '  %s%s%s  %s\n' "$YELLOW" "$branch" "$RESET" "$(path_for "$branch")"
+  done
+  confirm "Remove these worktrees?" || exit 0
+  cmd_rm "${targets[@]}"
+}
+
+cmd_ls() {
+  worktrees | while IFS=$'\t' read -r path branch; do
+    printf '%s%-30s%s %s\n' "$GREEN" "$branch" "$RESET" "$path"
+  done
+}
+
+cmd_path() {
+  local line
+  if [[ $# -gt 0 ]]; then
+    line=$(path_for "$1")
+    [[ -n "$line" ]] || die "No worktree for $1."
+    echo "$line"
+  else
+    line=$(pick --prompt "$repo worktree> ") || exit 1
+    echo "${line%%$'\t'*}"
+  fi
+}
+
+case "${1:-}" in
+  "") cmd_switch ;;
+  new)
+    shift
+    cmd_new "$@"
+    ;;
+  rm)
+    shift
+    cmd_rm "$@"
+    ;;
+  clean) cmd_clean ;;
+  ls) cmd_ls ;;
+  path)
+    shift
+    cmd_path "$@"
+    ;;
+  *) die "Unknown command: $1 (see wt --help)" ;;
+esac
