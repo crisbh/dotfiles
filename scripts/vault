@@ -1,0 +1,174 @@
+#!/usr/bin/env python3
+"""vault: maintenance and health checks for the notes vault ($VAULT).
+
+  vault ls          list notes git would see (all notes without git)
+  vault stats       counts: notes, words, recent edits, tasks, per folder
+  vault links       [[wikilinks]] that resolve to no note or attachment
+  vault orphans     zettelkasten/project notes nothing links to
+  vault sensitive [--dry-run]
+                    keep notes with secrets out of git (.gitignore + untrack);
+                    exits 1 when something new was flagged
+  vault clean       delete empty notes, after confirmation
+  vault index       rebuild diary/diary.md
+  vault sync        commit, pull and push the vault (see vault-sync --help)
+
+The old names (vault-ls, vault-broken-links, ...) still work.
+"""
+
+import argparse
+import os
+import sys
+from pathlib import Path
+
+sys.dont_write_bytecode = True  # no __pycache__ inside the dotfiles
+SCRIPTS = Path(__file__).resolve().parent
+sys.path.insert(0, str(SCRIPTS / "lib"))
+
+import vaultops  # noqa: E402
+from vaultlib import GREEN, RESET, YELLOW, Vault, confirm  # noqa: E402
+
+
+def cmd_ls(vault: Vault) -> int:
+    for note in vault.tracked_notes():
+        print(note)
+    return 0
+
+
+def cmd_stats(vault: Vault) -> int:
+    s = vaultops.stats(vault)
+    print("\n=== Vault Stats ===")
+    print(f"Total notes:       {s.notes}")
+    print(f"Total words:       {s.words}")
+    print(f"Modified (7 days): {s.recent}")
+    print("\n─── Tasks ───")
+    print(f"Pending (todo.md): {s.pending}")
+    print(f"Done (done.md):    {s.done}")
+    print("\n─── By directory ───")
+    for name, n in s.by_dir.items():
+        print(f"{name + ':':<19}{n}")
+    print()
+    return 0
+
+
+def cmd_links(vault: Vault) -> int:
+    print("🔍 Scanning for broken wikilinks...")
+    broken = vaultops.broken_links(vault)
+    for note, targets in broken.items():
+        print(f"\n  {note}")
+        for t in targets:
+            print(f"    [[{t}]]")
+    total = sum(map(len, broken.values()))
+    if total:
+        print(f"\nFound {total} broken link(s) in {len(broken)} file(s).")
+        print("ℹ️  Fix in Obsidian before pushing if desired.")
+    else:
+        print("\n✅ No broken wikilinks found.")
+    return 0  # informational
+
+
+def cmd_orphans(vault: Vault) -> int:
+    print("🔍 Scanning for orphaned notes...\n")
+    found = vaultops.orphans(vault)
+    if not found:
+        print("✅ No orphaned notes found in 0-zettelkasten/ or 1-projects/.")
+        return 0
+    print(f"Orphaned notes ({len(found)}) — no incoming links:")
+    for o in found:
+        print(f"  {o}")
+    print("\nℹ️  Consider linking these notes or archiving them.")
+    return 0  # informational
+
+
+def cmd_sensitive(vault: Vault, dry_run: bool = False) -> int:
+    if dry_run:
+        print("🔍 Dry run — reporting only, nothing is changed.")
+    elif not (vault.root / ".gitignore").exists():
+        print(f"📄 Created {vault.root / '.gitignore'} with default exclusions.")
+    print("🔍 Scanning vault for sensitive content...")
+    r = vaultops.protect_sensitive(vault, apply=not dry_run)
+    if not r.flagged:
+        print("✅ No sensitive content found.")
+        return 0
+    print()
+    for note, reasons in sorted(r.flagged.items()):
+        status = "[flagged]        " if note in r.added else "[already ignored]"
+        print(f"  {status}  {note} ({', '.join(reasons)})")
+        if note in r.untracked:
+            what = "would be untracked" if dry_run else "kept on disk, removed from git from the next commit"
+            print(f"  [untracked]        {note} ({what})")
+    verb = "Would add" if dry_run else "Added"
+    print(f"\n{verb} {len(r.added)} file(s) to .gitignore ({len(r.flagged) - len(r.added)} already present).")
+    if r.untracked:
+        print(f"{YELLOW}⚠️  {len(r.untracked)} file(s) were already committed. Untracking stops future")
+        print("   commits from including them, but earlier commits (and the remote, if")
+        print("   pushed) still contain them. Rotate any real secret, and consider")
+        print(f"   rewriting history with git-filter-repo if that matters.{RESET}")
+    if r.added or r.untracked:
+        print(f"⚠️  Review {vault.root / '.gitignore'} before pushing.")
+        return 1
+    return 0
+
+
+def cmd_clean(vault: Vault) -> int:
+    print("🔍 Scanning for empty notes...")
+    empty = vaultops.empty_notes(vault)
+    if not empty:
+        print("✅ No empty notes found.")
+        return 0
+    print(f"\nEmpty notes ({len(empty)}):")
+    for n in empty:
+        print(f"  {vault.rel(n)}")
+    print()
+    if not confirm(f"Delete these {len(empty)} file(s)?"):
+        print("Aborted.")
+        return 0
+    for n in empty:
+        n.unlink()
+        print(f"  🗑  deleted: {vault.rel(n)}")
+    print(f"\n{GREEN}✅ Deleted {len(empty)} empty note(s).{RESET}")
+    return 0
+
+
+def cmd_index(vault: Vault) -> int:
+    print(f"✅ Diary Index generated at {vaultops.write_diary_index(vault)}")
+    return 0
+
+
+COMMANDS = {
+    "ls": (cmd_ls, "list notes"),
+    "stats": (cmd_stats, "vault statistics"),
+    "links": (cmd_links, "find broken wikilinks"),
+    "orphans": (cmd_orphans, "find notes nothing links to"),
+    "sensitive": (cmd_sensitive, "keep notes with secrets out of git"),
+    "clean": (cmd_clean, "delete empty notes"),
+    "index": (cmd_index, "rebuild the diary index"),
+}
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        prog="vault", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    sub = parser.add_subparsers(dest="command", metavar="command")
+    for name, (_, help_text) in COMMANDS.items():
+        cmd = sub.add_parser(name, help=help_text)
+        if name == "sensitive":
+            cmd.add_argument("--dry-run", "-n", action="store_true", help="report only, change nothing")
+    sub.add_parser("sync", help="commit, pull and push the vault (options: see vault-sync --help)")
+
+    # Everything after `sync` belongs to vault-sync, so hand over before parsing
+    if sys.argv[1:2] == ["sync"]:
+        os.execv(SCRIPTS / "vault-sync", ["vault-sync", *sys.argv[2:]])
+    args = parser.parse_args()
+
+    if args.command is None:
+        parser.print_help()
+        sys.exit(1)
+    vault = Vault.from_env()
+    if args.command == "sensitive":
+        sys.exit(cmd_sensitive(vault, dry_run=args.dry_run))
+    sys.exit(COMMANDS[args.command][0](vault))
+
+
+if __name__ == "__main__":
+    main()

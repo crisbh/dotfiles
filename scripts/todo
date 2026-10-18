@@ -1,0 +1,74 @@
+#!/usr/bin/env python3
+"""todo: the vault's task pipeline.
+
+  todo collect [note]   collect new tasks from today's and yesterday's daily
+                        notes (or just <note>) into todo.md, then tag them
+  todo done             move [x] tasks from active.md to done.md and tick them
+                        in the daily notes
+  todo tag              add @tags to todo.md from scripts/task-tags.conf
+  todo backup           back up todo.md and active.md (newest 10 kept)
+  todo [open]           open todo.md in Neovim (the default)
+  todo pomo [2]         pick a task and run a pomodoro (2: double length)
+  todo watch            collect automatically whenever the diary changes
+
+Needs $VAULT. The old names (todo-collect, todo-mark-done, ...) still work.
+"""
+
+import argparse
+import os
+import sys
+from pathlib import Path
+
+sys.dont_write_bytecode = True  # no __pycache__ inside the dotfiles
+SCRIPTS = Path(__file__).resolve().parent
+sys.path.insert(0, str(SCRIPTS / "lib"))
+
+import taskslib  # noqa: E402
+from vaultlib import Vault  # noqa: E402
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        prog="todo", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    sub = parser.add_subparsers(dest="command", metavar="command")
+    collect = sub.add_parser("collect", help="collect tasks from daily notes")
+    collect.add_argument("note", nargs="?", type=Path, help="a single daily note")
+    sub.add_parser("done", help="move completed tasks to done.md")
+    sub.add_parser("tag", help="add @tags to todo.md")
+    sub.add_parser("backup", help="back up todo.md and active.md")
+    sub.add_parser("open", help="open todo.md in Neovim")
+    pomo = sub.add_parser("pomo", help="run a pomodoro on a task")
+    pomo.add_argument("length", nargs="?", choices=["2"], help="2 for a double pomodoro")
+    sub.add_parser("watch", help="collect whenever the diary changes")
+    args = parser.parse_args()
+
+    # Bash parts of the pipeline
+    if args.command == "pomo":
+        os.execv(SCRIPTS / "todo-pomodoro", ["todo-pomodoro", *([args.length] if args.length else [])])
+    if args.command == "watch":
+        os.execv(SCRIPTS / "watch-todos", ["watch-todos"])
+    if args.command is None:
+        args.command = "open"
+
+    vault = Vault.from_env()
+    if args.command == "collect":
+        notes = [args.note.resolve()] if args.note else None
+        print(f"📥 Collected {taskslib.collect_vault(vault, notes)} task(s).")
+    elif args.command == "done":
+        taskslib.done_vault(vault)
+    elif args.command == "tag":
+        taskslib.tag_vault(vault)
+    elif args.command == "backup":
+        taskslib.backup_vault(vault)
+        print(f"✅ Backed up todo.md and active.md to {vault.backups_dir}")
+    elif args.command == "open":
+        exists = vault.todo_file.exists()
+        vault.todo_file.parent.mkdir(parents=True, exist_ok=True)
+        vault.todo_file.touch()
+        cmd = ["nvim", str(vault.todo_file)] if exists else ["nvim", "-c", "normal Go", str(vault.todo_file)]
+        os.execvp("nvim", cmd)
+
+
+if __name__ == "__main__":
+    main()
