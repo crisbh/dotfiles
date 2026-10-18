@@ -1,0 +1,173 @@
+#!/usr/bin/env bash
+#
+# dotfiles-doctor: check that this machine matches what the dotfiles expect.
+#
+#   dotfiles-doctor      run every check; exits 1 if anything is broken (❌)
+#
+# Checks tools, environment, stow links, cron jobs, the dotfiles repo, Neovim
+# and the vault. ⚠️ marks things worth a look that do not break anything.
+
+set -uo pipefail # no -e: every check runs even when an earlier one fails
+
+# shellcheck source=lib/common.sh
+source "${DOTFILES:-$HOME/.dotfiles}/scripts/lib/common.sh"
+
+[[ "${1:-}" == -h || "${1:-}" == --help ]] && {
+  usage
+  exit 0
+}
+
+DOT="${DOTFILES:-$HOME/.dotfiles}"
+MASON="${XDG_DATA_HOME:-$HOME/.local/share}/nvim/mason/bin"
+errors=0
+warnings=0
+
+section() { printf '\n%s%s%s\n' "$BOLD" "$1" "$RESET"; }
+ok() { printf '  ✅ %s\n' "$1"; }
+bad() {
+  printf '  %s❌ %s%s\n' "$RED" "$1" "$RESET"
+  errors=$((errors + 1))
+}
+meh() {
+  printf '  %s⚠️  %s%s\n' "$YELLOW" "$1" "$RESET"
+  warnings=$((warnings + 1))
+}
+
+# version_ge <have> <need>: dotted version comparison
+version_ge() { [[ "$(printf '%s\n%s\n' "$2" "$1" | sort -V | head -1)" == "$2" ]]; }
+
+# have <cmd> [mason]: on PATH, or (with "mason") installed by Neovim's Mason
+have() {
+  command -v "$1" >/dev/null 2>&1 || { [[ "${2:-}" == mason && -x "$MASON/$1" ]]; }
+}
+
+# ── Tools ─────────────────────────────────────────────────────────────────────
+section "Tools ($DOTFILES_OS)"
+for cmd in git stow zsh tmux nvim fzf rg fd zoxide python3; do
+  if have "$cmd"; then ok "$cmd"; else bad "$cmd is missing (needed by the dotfiles)"; fi
+done
+for cmd in timew fswatch; do
+  if have "$cmd"; then ok "$cmd"; else meh "$cmd is missing (todo-pomodoro / watch-todos)"; fi
+done
+if [[ "$DOTFILES_OS" == linux ]]; then
+  if have notify-send; then ok "notify-send"; else meh "notify-send is missing (pomodoro notifications)"; fi
+fi
+for cmd in shellcheck shfmt ruff stylua; do
+  if have "$cmd" mason; then ok "$cmd"; else meh "$cmd is missing (scripts/check, formatting); install it with :Mason"; fi
+done
+for cmd in tree-sitter bat eza gh lazygit; do
+  have "$cmd" || meh "$cmd is missing (optional)"
+done
+
+if have python3; then
+  py=$(python3 -c 'import sys; print("%d.%d" % sys.version_info[:2])')
+  if version_ge "$py" 3.9; then ok "python3 $py (scripts need 3.9+)"; else bad "python3 $py is too old: todo, vault and arxiv2bib need 3.9+"; fi
+fi
+if have nvim; then
+  nv=$(nvim --version | head -1 | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?')
+  if version_ge "$nv" 0.11; then ok "neovim $nv"; else bad "neovim $nv is too old: the config needs 0.11+"; fi
+fi
+
+# ── Environment ───────────────────────────────────────────────────────────────
+section "Environment"
+if [[ -z "${VAULT:-}" ]]; then
+  bad "\$VAULT is not set (todo, vault, day, zet, note need it)"
+elif [[ ! -d "$VAULT" ]]; then
+  bad "\$VAULT points to a missing directory: $VAULT"
+else
+  ok "\$VAULT=$VAULT"
+fi
+case ":$PATH:" in
+  *":$DOT/scripts:"* | *":$HOME/scripts:"*) ok "scripts/ is on \$PATH" ;;
+  *) bad "scripts/ is not on \$PATH" ;;
+esac
+
+# ── Stow links ────────────────────────────────────────────────────────────────
+section "Stow links"
+broken=0
+while IFS= read -r link; do
+  target=$(readlink "$link")
+  [[ "$target" == *.dotfiles* ]] || continue
+  bad "broken link: ${link/#$HOME/\~} -> $target"
+  broken=$((broken + 1))
+done < <(find "$HOME" "$HOME/.config" -maxdepth 1 -xtype l 2>/dev/null)
+[[ $broken -eq 0 ]] && ok "no broken links into the dotfiles"
+
+if have stow; then
+  sim=$(cd "$DOT" && stow --simulate --verbose=1 --target "$HOME" . 2>&1)
+  unlinked=$(grep -c '^LINK:' <<<"$sim" || true)
+  conflicts=$(grep -E 'existing target|cannot stow' <<<"$sim" || true)
+  if [[ -n "$conflicts" ]]; then
+    bad "stow conflicts (run: cd ~/.dotfiles && stow --simulate -v -t ~ .):"
+    head -10 <<<"$conflicts" | while IFS= read -r line; do printf '       %s\n' "$line"; done
+  elif [[ $unlinked -gt 0 ]]; then
+    meh "$unlinked item(s) are not linked yet (run install.sh --no-pkgs):"
+    grep '^LINK:' <<<"$sim" | sed 's/^LINK: /       /' | head -10
+  else
+    ok "everything is stowed"
+  fi
+fi
+
+# ── Cron ──────────────────────────────────────────────────────────────────────
+section "Cron jobs"
+current=$(crontab -l 2>/dev/null || true)
+if [[ -f "$DOT/crontab.backup" ]]; then
+  # Expected: the jobs in the backup that run dotfiles scripts
+  while IFS= read -r script; do
+    if grep -q "scripts/$script" <<<"$current"; then
+      ok "$script is scheduled"
+    else
+      meh "$script is not scheduled here (it is in crontab.backup)"
+    fi
+  done < <(grep -oE 'scripts/[a-z-]+' "$DOT/crontab.backup" | sort -u | cut -d/ -f2)
+  backup_os=$(grep -q '/Users/' "$DOT/crontab.backup" && echo macos || echo linux)
+  if [[ "$backup_os" != "$DOTFILES_OS" ]]; then
+    meh "crontab.backup comes from $backup_os, this is $DOTFILES_OS: adapt paths before installing it"
+  fi
+fi
+[[ -n "$current" ]] || meh "no crontab on this machine"
+
+# ── Dotfiles repo ─────────────────────────────────────────────────────────────
+section "Dotfiles repo"
+if git -C "$DOT" rev-parse >/dev/null 2>&1; then
+  branch=$(git -C "$DOT" symbolic-ref --short HEAD 2>/dev/null || echo detached)
+  dirty=$(git -C "$DOT" status --porcelain | wc -l | tr -d ' ')
+  ok "on branch $branch"
+  if [[ $dirty -eq 0 ]]; then ok "no uncommitted changes"; else meh "$dirty uncommitted change(s)"; fi
+  if counts=$(git -C "$DOT" rev-list --left-right --count '@{upstream}...HEAD' 2>/dev/null); then
+    read -r behind ahead <<<"$counts"
+    [[ $behind -eq 0 ]] || meh "$behind commit(s) behind upstream (as of the last fetch)"
+    [[ $ahead -eq 0 ]] || meh "$ahead commit(s) not pushed"
+  fi
+else
+  bad "$DOT is not a git repository"
+fi
+
+# ── Vault ─────────────────────────────────────────────────────────────────────
+if [[ -n "${VAULT:-}" && -d "$VAULT" ]]; then
+  section "Vault"
+  for f in 0-tasks/todo.md 0-tasks/active.md 0-tasks/done.md; do
+    if [[ -f "$VAULT/$f" ]]; then ok "$f"; else meh "$f does not exist yet"; fi
+  done
+  if [[ -d "$VAULT/.git" ]]; then
+    owner=$(tr -d '[:space:]' <"$VAULT/.vault-sync-owner" 2>/dev/null || true)
+    host=$(hostname -s 2>/dev/null || hostname)
+    if [[ -z "$owner" ]]; then
+      meh "no vault-sync owner recorded (run vault-sync once on the machine that should push)"
+    elif [[ "$owner" == "$host" ]]; then
+      ok "this machine ($host) owns vault-sync"
+    else
+      ok "vault-sync is owned by $owner (this is $host)"
+    fi
+  else
+    meh "the vault is not a git repository (vault-sync sets it up)"
+  fi
+fi
+
+# ── Summary ───────────────────────────────────────────────────────────────────
+echo
+if [[ $errors -gt 0 ]]; then
+  printf '%s%d problem(s), %d warning(s).%s\n' "$RED" "$errors" "$warnings" "$RESET"
+  exit 1
+fi
+printf '%sNo problems, %d warning(s).%s\n' "$GREEN" "$warnings" "$RESET"

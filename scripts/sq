@@ -1,0 +1,130 @@
+#!/usr/bin/env bash
+#
+# sq: your Slurm jobs, with a picker.
+#
+#   sq                  pick a job (fzf, live `scontrol` preview):
+#                       enter tail its output · ctrl-x cancel · ctrl-e efficiency
+#                       ctrl-r refresh the list
+#   sq ls               list your jobs
+#   sq tail [jobid]     follow a job's output file (pick one without jobid)
+#   sq log [jobid]      print the path of a job's output file
+#   sq cancel [jobid…]  cancel jobs, after confirmation (multi-pick without ids)
+#   sq eff <jobid>      efficiency report of a finished job (seff)
+#
+# The output file comes from `scontrol show job` (StdOut=). For jobs Slurm has
+# already forgotten, it falls back to logs/<jobid>.log, slurm-<jobid>.out, or
+# any *<jobid>*.{log,out} file nearby.
+
+set -euo pipefail
+
+# shellcheck source=lib/common.sh
+source "${DOTFILES:-$HOME/.dotfiles}/scripts/lib/common.sh"
+
+[[ "${1:-}" == -h || "${1:-}" == --help ]] && {
+  usage
+  exit 0
+}
+
+require_cmds squeue
+FORMAT='%.12i %.30j %.9T %.10M %.10l %.5D %R'
+
+jobs_table() {
+  squeue -u "$USER" -o "$FORMAT"
+}
+
+# Pick job ids with fzf; extra arguments go to fzf
+pick() {
+  require_cmds fzf
+  jobs_table | fzf --header-lines=1 --prompt="job> " "$@" \
+    --preview 'scontrol show job {1} 2>/dev/null || echo "Job {1} is no longer known to Slurm."' \
+    --preview-window=down,45% | awk '{print $1}'
+}
+
+log_path() {
+  local id=$1 path
+  path=$(scontrol show job -o "$id" 2>/dev/null | grep -o 'StdOut=[^ ]*' | cut -d= -f2- || true)
+  if [[ -n "$path" && -e "$path" ]]; then
+    echo "$path"
+    return
+  fi
+  for path in "logs/$id.log" "slurm-$id.out"; do
+    [[ -e "$path" ]] && {
+      echo "$path"
+      return
+    }
+  done
+  path=$(find . -maxdepth 3 -type f \( -name "*$id*.log" -o -name "*$id*.out" \) 2>/dev/null | head -1)
+  [[ -n "$path" ]] || die "No output file found for job $id (looked at StdOut=, logs/, slurm-$id.out, *$id*.log/.out)."
+  echo "$path"
+}
+
+job_or_pick() {
+  if [[ -n "${1:-}" ]]; then echo "$1"; else pick --no-multi; fi
+}
+
+cmd_tail() {
+  local id path
+  id=$(job_or_pick "${1:-}")
+  [[ -n "$id" ]] || exit 0
+  path=$(log_path "$id")
+  echo "Following job $id: $path (ctrl-c to stop)"
+  exec tail -n 50 -F "$path"
+}
+
+cmd_cancel() {
+  local ids=("$@")
+  if [[ ${#ids[@]} -eq 0 ]]; then
+    mapfile -t ids < <(pick --multi)
+  fi
+  [[ ${#ids[@]} -gt 0 ]] || exit 0
+  squeue -j "$(
+    IFS=,
+    echo "${ids[*]}"
+  )" -o "$FORMAT" || true
+  confirm "Cancel ${#ids[@]} job(s)?" || exit 0
+  scancel "${ids[@]}"
+  echo "Cancelled: ${ids[*]}"
+}
+
+cmd_eff() {
+  [[ -n "${1:-}" ]] || die "Usage: sq eff <jobid>"
+  require_cmds seff
+  seff "$1"
+}
+
+cmd_pick() {
+  local out key id
+  require_cmds fzf
+  out=$(
+    jobs_table | fzf --header-lines=1 --prompt="job> " \
+      --header='enter: tail · ctrl-x: cancel · ctrl-e: efficiency · ctrl-r: refresh' \
+      --expect=ctrl-x,ctrl-e \
+      --bind "ctrl-r:reload(squeue -u '$USER' -o '$FORMAT')" \
+      --preview 'scontrol show job {1} 2>/dev/null || echo "Job {1} is no longer known to Slurm."' \
+      --preview-window=down,45%
+  ) || exit 0
+  key=$(head -1 <<<"$out")
+  id=$(sed -n 2p <<<"$out" | awk '{print $1}')
+  [[ -n "$id" ]] || exit 0
+  case "$key" in
+    ctrl-x) cmd_cancel "$id" ;;
+    ctrl-e) cmd_eff "$id" ;;
+    *) cmd_tail "$id" ;;
+  esac
+}
+
+case "${1:-}" in
+  "") cmd_pick ;;
+  ls) jobs_table ;;
+  tail) cmd_tail "${2:-}" ;;
+  log)
+    id=$(job_or_pick "${2:-}")
+    [[ -n "$id" ]] && log_path "$id"
+    ;;
+  cancel)
+    shift
+    cmd_cancel "$@"
+    ;;
+  eff) cmd_eff "${2:-}" ;;
+  *) die "Unknown command: $1 (see sq --help)" ;;
+esac

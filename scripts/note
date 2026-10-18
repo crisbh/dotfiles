@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+#
+# note: append a timestamped line to today's diary note, under "Notes and log".
+#
+#   note text to remember      the arguments are the note
+#   echo text | note           or read it from stdin
+#   note                       or type it at a prompt
+#   note -o                    then open the diary at that line
+#
+# Creates today's note from the `day` template if it does not exist yet.
+
+set -euo pipefail
+
+# shellcheck source=lib/common.sh
+source "${DOTFILES:-$HOME/.dotfiles}/scripts/lib/common.sh"
+
+open=0
+case "${1:-}" in
+  -h | --help)
+    usage
+    exit 0
+    ;;
+  -o | --open)
+    open=1
+    shift
+    ;;
+esac
+
+require_vault
+
+if [[ $# -gt 0 ]]; then
+  text="$*"
+elif [[ ! -t 0 ]]; then
+  text=$(cat)
+else
+  read -r -p "Note: " text
+fi
+text=$(printf '%s' "$text" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
+[[ -n "$text" ]] || die "Nothing to note."
+
+file="$DIARY_DIR/$(date +%Y-%m-%d).md"
+[[ -f "$file" ]] || "$(dirname "$(readlink -f "$0")")/day" --no-open >/dev/null
+
+# The log section is the last one in the daily template, so appending at the
+# end lands in it; add the heading if the note does not have one
+heading="## Notes and log"
+grep -Fxq "$heading" "$file" || printf '\n%s\n' "$heading" >>"$file"
+# Make sure the new line does not glue onto a last line without newline
+[[ -z "$(tail -c1 "$file")" ]] || echo >>"$file"
+printf -- '- %s %s\n' "$(date +%H:%M)" "$text" >>"$file"
+
+echo "📝 Added to $(basename "$file"): $text"
+if [[ $open -eq 1 ]]; then
+  exec nvim '+normal Gzz' "$file"
+fi

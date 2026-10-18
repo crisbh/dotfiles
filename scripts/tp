@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+#
+# tp: open a project in its own tmux session (switching if it exists).
+#
+#   tp             pick a directory: your projects plus zoxide's frequent dirs
+#   tp <dir>       open <dir> directly
+#
+# Projects are the subdirectories of $TP_ROOTS (default: ~/Projects), plus
+# ~/.dotfiles and $VAULT. Sessions are named after the directory. For branches
+# of one repo, see `wt`.
+
+set -euo pipefail
+
+# shellcheck source=lib/common.sh
+source "${DOTFILES:-$HOME/.dotfiles}/scripts/lib/common.sh"
+
+[[ "${1:-}" == -h || "${1:-}" == --help ]] && {
+  usage
+  exit 0
+}
+require_cmds tmux
+
+candidates() {
+  local root
+  for root in ${TP_ROOTS:-$HOME/Projects}; do
+    [[ -d "$root" ]] && find "$root" -mindepth 1 -maxdepth 1 -type d -not -name '.*'
+  done
+  echo "$HOME/.dotfiles"
+  [[ -n "${VAULT:-}" ]] && echo "$VAULT"
+  if command -v zoxide >/dev/null; then zoxide query -l 2>/dev/null | head -50; fi
+}
+
+if [[ $# -gt 0 ]]; then
+  dir=$(cd "$1" 2>/dev/null && pwd) || die "Not a directory: $1"
+else
+  require_cmds fzf
+  # Deduplicate while keeping order; show paths relative to ~
+  dir=$(candidates | awk '!seen[$0]++' | sed "s|^$HOME|~|" |
+    fzf --prompt="project> " --preview 'eza -1 --icons --group-directories-first {} 2>/dev/null || ls {}' \
+      --preview-window=right,40% | sed "s|^~|$HOME|") || exit 0
+fi
+[[ -n "$dir" ]] || exit 0
+
+# tmux session names cannot contain "." or ":"; drop a leading dot so
+# ~/.dotfiles becomes "dotfiles" rather than "-dotfiles"
+name=$(basename "$dir")
+name=${name#.}
+name=${name//[.:]/-}
+
+if [[ -n "${TMUX:-}" ]]; then
+  tmux has-session -t "=$name" 2>/dev/null || tmux new-session -d -s "$name" -c "$dir"
+  tmux switch-client -t "=$name"
+else
+  tmux new-session -A -s "$name" -c "$dir"
+fi

@@ -1,0 +1,132 @@
+#!/usr/bin/env python3
+"""arxiv2bib: fetch BibTeX for arXiv papers or DOIs and add it to a .bib file.
+
+  arxiv2bib 2401.01234                  arXiv id (old-style ids work too)
+  arxiv2bib https://arxiv.org/abs/2401.01234v2
+  arxiv2bib 10.1103/PhysRevD.104.123  a DOI (or a doi.org URL)
+  arxiv2bib ID... -f refs.bib           choose the .bib file
+  arxiv2bib ID... --print               only print, do not write
+
+The file is -f, else $BIB, else the only .bib in the current directory; with
+none of those the entries are printed. Entries whose arXiv id, DOI or key is
+already in the file are skipped.
+"""
+
+from __future__ import annotations
+
+import argparse
+import os
+import re
+import sys
+import urllib.error
+import urllib.request
+from pathlib import Path
+
+ARXIV_RE = re.compile(r"(?:arxiv\.org/(?:abs|pdf)/|arxiv:)?(\d{4}\.\d{4,5}|[a-z-]+(?:\.[A-Z]{2})?/\d{7})(v\d+)?", re.I)
+DOI_RE = re.compile(r"(?:doi\.org/|doi:)?(10\.\d{4,9}/\S+)", re.I)
+USER_AGENT = "arxiv2bib (dotfiles script; mailto:none)"
+
+
+def parse_ref(ref: str) -> tuple[str, str]:
+    """('arxiv', id) or ('doi', doi) for an id, DOI or URL."""
+    ref = ref.strip()
+    m = DOI_RE.search(ref)
+    if m:
+        return "doi", m.group(1).rstrip(".")
+    m = ARXIV_RE.search(ref[:-4] if ref.endswith(".pdf") else ref)
+    if m:
+        return "arxiv", m.group(1)
+    raise ValueError(f"not an arXiv id or DOI: {ref}")
+
+
+def fetch(kind: str, ident: str) -> str:
+    if kind == "arxiv":
+        req = urllib.request.Request(f"https://arxiv.org/bibtex/{ident}", headers={"User-Agent": USER_AGENT})
+    else:
+        req = urllib.request.Request(
+            f"https://doi.org/{ident}",
+            headers={"Accept": "application/x-bibtex; charset=utf-8", "User-Agent": USER_AGENT},
+        )
+    with urllib.request.urlopen(req, timeout=20) as resp:
+        text = resp.read().decode("utf-8").strip()
+    if not text.startswith("@"):
+        raise ValueError(f"no BibTeX returned for {ident}")
+    return text
+
+
+def tidy(entry: str) -> str:
+    """Put each field of a one-line entry (doi.org returns those) on its own line."""
+    if entry.count("\n") > 1:
+        return entry
+    head, _, body = entry.partition(",")
+    body = body.rstrip()
+    body = body[:-1] if body.endswith("}") else body
+    fields, depth, start = [], 0, 0
+    for i, ch in enumerate(body):
+        if ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+        elif ch == "," and depth == 0:
+            fields.append(body[start:i].strip())
+            start = i + 1
+    fields.append(body[start:].strip())
+    return head + ",\n" + ",\n".join(f"  {f}" for f in fields if f) + "\n}"
+
+
+def entry_key(entry: str) -> str:
+    m = re.match(r"@\w+\s*\{\s*([^,\s]+)", entry)
+    return m.group(1) if m else ""
+
+
+def already_in(bib: str, kind: str, ident: str, key: str) -> bool:
+    low = bib.lower()
+    return ident.lower() in low or (key and re.search(r"@\w+\s*\{\s*" + re.escape(key) + r"\s*,", bib) is not None)
+
+
+def default_bib() -> Path | None:
+    if os.environ.get("BIB"):
+        return Path(os.environ["BIB"])
+    bibs = sorted(Path.cwd().glob("*.bib"))
+    return bibs[0] if len(bibs) == 1 else None
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        prog="arxiv2bib", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument("refs", nargs="+", metavar="ID", help="arXiv id, DOI or URL")
+    parser.add_argument("-f", "--file", type=Path, help="the .bib file to append to")
+    parser.add_argument("--print", action="store_true", help="print only, do not write")
+    args = parser.parse_args()
+
+    target = None if args.print else (args.file or default_bib())
+    existing = target.read_text(encoding="utf-8") if target and target.exists() else ""
+    failed = 0
+
+    for ref in args.refs:
+        try:
+            kind, ident = parse_ref(ref)
+            entry = tidy(fetch(kind, ident))
+        except (ValueError, urllib.error.URLError, TimeoutError) as e:
+            print(f"❌ {ref}: {e}", file=sys.stderr)
+            failed += 1
+            continue
+        key = entry_key(entry)
+        if target and already_in(existing, kind, ident, key):
+            print(f"↩️  {ident} ({key}) is already in {target}, skipped.", file=sys.stderr)
+            continue
+        if target:
+            sep = "" if not existing or existing.endswith("\n\n") else ("\n" if existing.endswith("\n") else "\n\n")
+            with target.open("a", encoding="utf-8") as f:
+                f.write(sep + entry + "\n")
+            existing += sep + entry + "\n"
+            print(f"✅ Added {key} to {target}", file=sys.stderr)
+        else:
+            print(entry + "\n")
+
+    return 1 if failed else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
