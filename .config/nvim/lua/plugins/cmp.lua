@@ -57,6 +57,7 @@ return {
       -- Other sources
       "hrsh7th/cmp-nvim-lsp",
       "hrsh7th/cmp-path",
+      "hrsh7th/cmp-buffer",
 
       -- Copilot bridge
       "zbirenbaum/copilot-cmp",
@@ -110,6 +111,7 @@ return {
 
         -- Sources: keep LSP & snippets; cap Copilot to reduce noise
         sources = {
+          { name = "lazydev", group_index = 0 }, -- Neovim Lua API, only in Lua buffers
           { name = "nvim_lsp" },
           { name = "copilot", max_item_count = 3 },
           { name = "luasnip" },
@@ -124,7 +126,7 @@ return {
       -- Large-file guard: drop Copilot for very big buffers (>500KB)
       vim.api.nvim_create_autocmd("BufReadPost", {
         callback = function(ev)
-          local stat = vim.loop.fs_stat(ev.file)
+          local stat = vim.uv.fs_stat(ev.file)
           if stat and stat.size and stat.size > 500 * 1024 then
             cmp.setup.buffer({
               sources = {

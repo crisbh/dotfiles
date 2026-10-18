@@ -37,7 +37,7 @@ vim.opt.whichwrap = "b,s,<,>,[,]" -- Motions that will wrap to prev/next line
 
 -- Save undo history
 vim.opt.undofile = true
-vim.opt.history = 100 -- number of commands to remember in a history table
+vim.opt.history = 10000 -- number of commands to remember in a history table
 
 -- disable making a backup before overwriting a file
 vim.opt.writebackup = false
@@ -52,7 +52,7 @@ vim.opt.smartcase = true
 vim.opt.signcolumn = "yes"
 
 -- Decrease update time
-vim.opt.updatetime = 50
+vim.opt.updatetime = 250
 
 -- Decrease mapped sequence wait time
 -- Displays which-key popup sooner
@@ -84,3 +84,13 @@ vim.opt.scrolloff = 6
 vim.opt.spelllang = { "en", "es" }
 
 vim.g.python3_host_prog = vim.fn.expand("~/.venvs/neovim/bin/python")
+
+-- Diagnostics: show messages inline (off by default since Neovim 0.11),
+-- worst first, with a rounded float for `<leader>e`
+vim.diagnostic.config({
+  virtual_text = { spacing = 2, source = "if_many" },
+  severity_sort = true,
+  underline = true,
+  update_in_insert = false,
+  float = { border = "rounded", source = "if_many" },
+})

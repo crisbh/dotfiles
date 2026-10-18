@@ -20,16 +20,5 @@ return {
       },
     },
   },
-  {
-    "jay-babu/mason-nvim-dap.nvim",
-    event = "VeryLazy",
-    opts = {
-      ensure_installed = {
-        "bash",
-        "cppdbg",
-        "python",
-      },
-    },
-  },
-  { "mfussenegger/nvim-dap", event = "VeryLazy" },
+  -- nvim-dap and mason-nvim-dap live in plugins/dap.lua
 }
