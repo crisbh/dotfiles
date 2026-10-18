@@ -1,18 +1,38 @@
 #!/usr/bin/env bash
+#
+# day: open today's diary note, creating it from the template if needed.
+#
+#   day              open the note in Neovim (insert mode, at the end)
+#   day --no-open    only make sure the note exists (used from within Neovim)
 
-source "${DOTFILES:-$HOME/.dotfiles}/scripts/lib/portable.sh"
+set -euo pipefail
+
+# shellcheck source=lib/common.sh
+source "${DOTFILES:-$HOME/.dotfiles}/scripts/lib/common.sh"
+
+open=1
+case "${1:-}" in
+  "") ;;
+  --no-open) open=0 ;;
+  -h | --help)
+    usage
+    exit 0
+    ;;
+  *) die "Unknown argument: $1 (see day --help)" ;;
+esac
+
+require_vault
 
 today=$(date +"%Y-%m-%d")
 tomorrow=$(pdate "tomorrow" '+%Y-%m-%d')
 yesterday=$(pdate "yesterday" '+%Y-%m-%d')
-file="$VAULT"'/diary/'$(date +"%Y-%m-%d").md
+file="$DIARY_DIR/$today.md"
 
-cd "$VAULT" || exit
+cd "$VAULT"
 
 new_note() {
-	touch "$file"
-
-	cat <<EOF >"$file"
+  mkdir -p "$DIARY_DIR"
+  cat <<EOF >"$file"
 ---
 id: "$today"
 aliases:
@@ -43,18 +63,18 @@ EOF
 # this uses the test command with the -f flag.
 just_created=false
 if [ ! -f "$file" ]; then
-	echo "File does not exist, creating new daily note."
-	new_note
-	just_created=true
+  echo "File does not exist, creating new daily note."
+  new_note
+  just_created=true
 fi
 
 # Open the daily note. Skip when called with --no-open (e.g. from within Neovim).
 # New note: jump to line 15 and enter insert mode.
 # Existing note: open at the end enter insert mode.
-if [[ "$1" != "--no-open" ]]; then
-    if $just_created; then
-        nvim '+normal 15GzzA' "$file"
-    else
-        nvim '+normal GzzA' "$file"
-    fi
+if [[ $open -eq 1 ]]; then
+  if $just_created; then
+    nvim '+normal 15GzzA' "$file"
+  else
+    nvim '+normal GzzA' "$file"
+  fi
 fi

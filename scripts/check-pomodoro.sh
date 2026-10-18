@@ -1,4 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+# macOS only: a Raycast script command (see the @raycast metadata below)
+# that shows how long the current timewarrior interval has been running.
 
 # Required parameters:
 # @raycast.schemaVersion 1

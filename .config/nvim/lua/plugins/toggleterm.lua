@@ -2,6 +2,8 @@ return {
   "akinsho/toggleterm.nvim",
   cmd = "ToggleTerm",
   keys = {
+    { [[<C-\>]], desc = "Toggle terminal" },
+    { ",t", "<cmd>ToggleTerm<cr>", desc = "Toggle terminal" },
     {
       "<leader>gC",
       function()
@@ -34,5 +36,9 @@ return {
   },
   opts = {
     terminal_mappings = true,
+    -- VSCode-style toggleable terminal; a count picks the terminal (2<C-\>)
+    open_mapping = [[<C-\>]],
+    direction = "horizontal",
+    size = 12,
   },
 }

@@ -1,34 +1,34 @@
 #!/usr/bin/env bash
+#
+# watch-todos: collect TODOs from the diary (todo-collect) whenever it
+# changes, once edits have settled for 20 seconds. Runs until interrupted.
 
-source "${DOTFILES:-$HOME/.dotfiles}/scripts/lib/portable.sh"
+set -euo pipefail
+
+# shellcheck source=lib/common.sh
+source "${DOTFILES:-$HOME/.dotfiles}/scripts/lib/common.sh"
+
+[[ "${1:-}" == -h || "${1:-}" == --help ]] && {
+  usage
+  exit 0
+}
+
 require_cmds fswatch
+require_vault
 
-NOTES_DIR="$VAULT/diary"
-TODO_FILE="$VAULT/0-tasks/todo.md"
+NOTES_DIR="$DIARY_DIR"
 SCRIPT_COLLECT="$HOME/.dotfiles/scripts/todo-collect"
-SCRIPT_TAG="$HOME/.dotfiles/scripts/todo-add-tags"
-LAST_RUN="/tmp/last_todo_run"
-PENDING_RUN="/tmp/pending_todo_run"
+DEBOUNCE=20 # seconds of quiet before collecting
 
 echo "🔍 Watching $NOTES_DIR for changes..."
 
-fswatch -o --event Updated "$NOTES_DIR" | while read -r changed_file; do
-    if [[ "$changed_file" == "$TODO_FILE" ]]; then
-        continue
-    fi
-
-    NOW=$(date +%s)
-    echo "$NOW" > "$PENDING_RUN"
-
-    sleep 20  # debounce delay
-
-    LATEST=$(cat "$PENDING_RUN")
-    if [[ "$LATEST" == "$NOW" ]]; then
-        echo "No further edits detected in the last 20 seconds. Collecting TODOs..."
-        echo "$NOW" > "$LAST_RUN"
-        bash "$SCRIPT_COLLECT"
-    else
-        echo "More edits detected. Skipping this run."
-    fi
+# Debounce: after the first change, keep draining events until none arrives
+# for $DEBOUNCE seconds (`read -t` times out), then collect once. -o prints
+# only change counts; which files changed does not matter here. todo-collect
+# rewrites only the notes it actually changes, so its own edits cause at most
+# one extra (no-op) run.
+fswatch -o --event Updated "$NOTES_DIR" | while read -r _; do
+  while read -r -t "$DEBOUNCE" _; do :; done
+  echo "$(date '+%H:%M:%S') Edits settled. Collecting TODOs..."
+  bash "$SCRIPT_COLLECT"
 done
-

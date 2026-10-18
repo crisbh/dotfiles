@@ -1,31 +1,86 @@
 #!/usr/bin/env bash
+#
+# formatter: format all recognised files recursively in a directory.
+#
+#   formatter [dir]    default: the current directory
+#
+# Inside a git repo only tracked and new, non-ignored files are formatted, so
+# virtualenvs, build output and vendored code are left alone. Elsewhere `fd`
+# (which also honours .gitignore) is used, falling back to `find` with the
+# usual junk directories pruned.
 
-# Format all recognised files recursively in the given directory (default: current)
-# Usage: formatter [dir]
+set -euo pipefail
+
+# shellcheck source=lib/common.sh
+source "${DOTFILES:-$HOME/.dotfiles}/scripts/lib/common.sh"
+
+[[ "${1:-}" == -h || "${1:-}" == --help ]] && {
+  usage
+  exit 0
+}
 
 DIR="${1:-.}"
+[[ -d "$DIR" ]] || die "Not a directory: $DIR"
+
+# Also use the formatters Neovim's Mason installed
+PATH="$PATH:${XDG_DATA_HOME:-$HOME/.local/share}/nvim/mason/bin"
 
 total=0
+declare -A warned
 
 run() {
-  local cmd="$1"; shift
+  local cmd="$1"
+  shift
   if ! command -v "$cmd" &>/dev/null; then
-    echo "  skipping: $cmd not installed" >&2
+    # Warn once per missing tool, not once per file
+    [[ -n "${warned[$cmd]:-}" ]] || echo "  skipping: $cmd not installed" >&2
+    warned[$cmd]=1
     return 1
   fi
   "$cmd" "$@"
 }
 
+list_files() {
+  if git -C "$DIR" rev-parse --is-inside-work-tree &>/dev/null; then
+    git -C "$DIR" ls-files --cached --others --exclude-standard -z |
+      while IFS= read -r -d '' f; do printf '%s\n' "$DIR/$f"; done
+  elif command -v fd &>/dev/null; then
+    fd --type f . "$DIR"
+  else
+    find "$DIR" \( -name .git -o -name .venv -o -name venv -o -name node_modules \
+      -o -name build -o -name __pycache__ \) -prune -o -type f -print
+  fi
+}
+
 while IFS= read -r file; do
+  [[ -f "$file" ]] || continue # listed by git but deleted
   case "$file" in
-    *.lua)                echo "  [stylua]        $file"; run stylua "$file"        && total=$((total + 1)) ;;
-    *.py)                 echo "  [isort+black]   $file"; run isort -q "$file" && run black -q "$file" && total=$((total + 1)) ;;
-    *.c | *.h)            echo "  [clang-format]  $file"; run clang-format -i "$file" && total=$((total + 1)) ;;
-    *.cpp | *.hpp | *.cc) echo "  [clang-format]  $file"; run clang-format -i "$file" && total=$((total + 1)) ;;
-    *.cu | *.cuh)         echo "  [clang-format]  $file"; run clang-format -i "$file" && total=$((total + 1)) ;;
-    *.sh | *.bash)        echo "  [shfmt]         $file"; run shfmt -w "$file"      && total=$((total + 1)) ;;
+    *.lua)
+      echo "  [stylua]        $file"
+      run stylua "$file" && total=$((total + 1))
+      ;;
+    *.py)
+      echo "  [ruff]          $file"
+      run ruff check -q --select I --fix "$file" && run ruff format -q "$file" && total=$((total + 1))
+      ;;
+    *.c | *.h)
+      echo "  [clang-format]  $file"
+      run clang-format -i "$file" && total=$((total + 1))
+      ;;
+    *.cpp | *.hpp | *.cc)
+      echo "  [clang-format]  $file"
+      run clang-format -i "$file" && total=$((total + 1))
+      ;;
+    *.cu | *.cuh)
+      echo "  [clang-format]  $file"
+      run clang-format -i "$file" && total=$((total + 1))
+      ;;
+    *.sh | *.bash)
+      echo "  [shfmt]         $file"
+      run shfmt -w "$file" && total=$((total + 1))
+      ;;
   esac
-done < <(find "$DIR" -type f | sort)
+done < <(list_files | sort)
 
 echo ""
 echo "done: $total file(s) formatted in $DIR"

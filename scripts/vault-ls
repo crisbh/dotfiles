@@ -1,17 +1,6 @@
 #!/usr/bin/env bash
+#
+# vault-ls: kept for cron jobs, Neovim keymaps and muscle memory;
+# same as `vault ls` (see `vault --help`).
 
-# List all .md files in the vault that are not excluded by .gitignore.
-# If the vault has a git repo, uses git ls-files to respect .gitignore.
-# Falls back to find (excluding .obsidian/) if git is not initialized.
-
-if [[ -z "$VAULT" ]]; then
-  echo "❌ \$VAULT is not set." >&2
-  exit 1
-fi
-
-if [[ -d "$VAULT/.git" ]]; then
-  git -C "$VAULT" ls-files --cached --others --exclude-standard -- '*.md' \
-    | sed "s|^|$VAULT/|"
-else
-  find "$VAULT" -name '*.md' -not -path '*/.obsidian/*'
-fi
+exec "$(dirname "$(readlink -f "$0")")/vault" "ls" "$@"

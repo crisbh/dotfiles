@@ -1,8 +1,18 @@
 return {
+  { -- Lua LSP support for the Neovim config, runtime and plugin APIs
+    -- (replaces the archived neodev.nvim)
+    "folke/lazydev.nvim",
+    ft = "lua",
+    opts = {
+      library = {
+        { path = "${3rd}/luv/library", words = { "vim%.uv" } },
+      },
+    },
+  },
+  { "smjonas/inc-rename.nvim", cmd = "IncRename", opts = {} },
   { -- LSP Configuration & Plugins
     "neovim/nvim-lspconfig",
-    lazy = true,
-    -- event = {"VeryLazy"},
+    event = { "BufReadPre", "BufNewFile" },
     dependencies = {
       -- Automatically install LSPs and related tools to stdpath for Neovim
       "williamboman/mason.nvim",
@@ -13,9 +23,6 @@ return {
       -- NOTE: `opts = {}` is the same as calling `require('fidget').setup({})`
       { "j-hui/fidget.nvim", opts = {} },
 
-      -- `neodev` configures Lua LSP for your Neovim config, runtime and plugins
-      -- used for completion, annotations and signatures of Neovim apis
-      { "folke/neodev.nvim", opts = {} },
     },
     config = function()
       -- Brief aside: **What is LSP?**
@@ -94,7 +101,10 @@ return {
 
           -- Rename the variable under your cursor.
           --  Most Language Servers support renaming across files, etc.
-          map("<leader>rn", vim.lsp.buf.rename, "[R]e[n]ame")
+          -- Rename with a live preview of every occurrence (inc-rename.nvim)
+          vim.keymap.set("n", "<leader>rn", function()
+            return ":IncRename " .. vim.fn.expand("<cword>")
+          end, { buffer = event.buf, expr = true, desc = "LSP: [R]e[n]ame" })
 
           -- Execute a code action, usually your cursor needs to be on top of an error
           -- or a suggestion from your LSP for this to activate.
@@ -114,6 +124,14 @@ return {
           --
           -- When you move your cursor, the highlights will be cleared (the second autocommand).
           local client = vim.lsp.get_client_by_id(event.data.client_id)
+
+          -- Inlay hints (inline type and parameter names), off until toggled
+          if client and client:supports_method("textDocument/inlayHint") then
+            map("<leader>th", function()
+              vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = event.buf }), { bufnr = event.buf })
+            end, "[T]oggle Inlay [H]ints")
+          end
+
           if client and client.server_capabilities.documentHighlightProvider then
             vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
               buffer = event.buf,
@@ -148,7 +166,13 @@ return {
       local servers = {
         -- clangd = {},
         -- gopls = {},
-        -- pyright = {},
+        -- `~/Projects/.python-shims` holds symlinks named after packages whose repo
+        -- folder has a different name (e.g. tophatgr -> ../tophat-GR)
+        pyright = {
+          settings = {
+            python = { analysis = { extraPaths = { vim.fn.expand("~/Projects/.python-shims") } } },
+          },
+        },
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
@@ -187,23 +211,23 @@ return {
       -- for you, so that they are available from within Neovim.
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
-        "stylua", -- Used to format Lua code
+        -- Formatters used by conform.nvim
+        "stylua",
+        "ruff",
+        "shfmt",
+        "clang-format",
+        -- Linter used by bashls (and scripts/check)
+        "shellcheck",
       })
       require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
 
-      require("mason-lspconfig").setup({
-        handlers = {
-          function(server_name)
-            local server = servers[server_name] or {}
-            -- This handles overriding only values explicitly passed
-            -- by the server configuration above. Useful when disabling
-            -- certain features of an LSP (for example, turning off formatting for tsserver)
-            server.capabilities =
-              vim.tbl_deep_extend("force", {}, capabilities, server.capabilities or {})
-            require("lspconfig")[server_name].setup(server)
-          end,
-        },
-      })
+      -- mason-lspconfig (set up in plugins/mason.lua) enables every installed
+      -- server itself; here we only layer the shared capabilities and the
+      -- per-server overrides above on top of nvim-lspconfig's defaults
+      vim.lsp.config("*", { capabilities = capabilities })
+      for server_name, server in pairs(servers) do
+        vim.lsp.config(server_name, server)
+      end
     end,
   },
 }

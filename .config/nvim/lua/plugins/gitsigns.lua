@@ -11,7 +11,8 @@ return {
     opts = {
       signcolumn = true,
       numhl = true,
-      current_line_blame_opts = { ignore_whitespace = true },
+      current_line_blame = true, -- inline blame on the cursor line (<leader>tB toggles)
+      current_line_blame_opts = { ignore_whitespace = true, delay = 500 },
       signs = {
         add = { text = "+" },
         change = { text = "~" },

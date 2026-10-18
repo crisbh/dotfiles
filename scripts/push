@@ -1,11 +1,26 @@
-#!/bin/bash
+#!/usr/bin/env bash
+#
+# push: commit (see `commit --help`) and push the current branch.
+#
+#   push [-a] [path...]   arguments are passed on to `commit`
 
-commit || exit 1
+set -euo pipefail
 
-branch=$(git symbolic-ref --short HEAD 2>/dev/null)
-remote=$(git remote get-url origin 2>/dev/null)
+# shellcheck source=lib/common.sh
+source "${DOTFILES:-$HOME/.dotfiles}/scripts/lib/common.sh"
+
+[[ "${1:-}" == -h || "${1:-}" == --help ]] && {
+  usage
+  exit 0
+}
+
+commit "$@"
+
+branch=$(git symbolic-ref --short HEAD)
+remote=$(git remote get-url origin)
 
 echo ""
 echo "Pushing $branch → $remote"
 
-git push origin "$branch" 2>/dev/null || git push --set-upstream origin "$branch"
+# -u is idempotent: sets the upstream on the first push, a no-op afterwards
+git push -u origin "$branch"

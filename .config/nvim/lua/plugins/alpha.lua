@@ -63,6 +63,7 @@ return {
     dashboard.section.buttons.val = {
       dashboard.button("f f", " " .. "Find files", ":Telescope find_files <CR>"),
       dashboard.button("f o", "󰚰 " .. "Find recent files", ":Telescope oldfiles <CR>"),
+      dashboard.button("s", " " .. "Restore session", [[<cmd>lua require("persistence").load()<cr>]]),
       dashboard.button("LDR t t", " " .. "Check TODO list", ":e $VAULT/0-tasks/todo.md<CR>"),
       dashboard.button("LDR f v", " " .. "Find vault files"),
       dashboard.button("LDR f h", "󰮦 " .. "Find help"),

@@ -1,11 +1,23 @@
-#!/bin/bash
+#!/usr/bin/env bash
+#
+# listen: follow a Slurm job's output; kept for muscle memory, see `sq --help`.
+#
+#   listen          pick a job
+#   listen N        the Nth of your jobs in `squeue` order (0 = first), as before
+#   listen JOBID    a specific job
 
-# Get job number in the list of jobs
-jobnumber=$(($1 + 1))
+set -euo pipefail
 
-dir=logs/
-# Execute the squeue command and pipe it to awk, capturing the output
-jobid=$(squeue -u "$USER" | awk "NR==$jobnumber {print \$1}")
+sq=$(dirname "$(readlink -f "$0")")/sq
+arg=${1:-}
 
-echo "Listening to running job ${jobid}..."
-tail -f $dir${jobid}.log
+# Small numbers keep the old meaning: a position in the job list
+if [[ "$arg" =~ ^[0-9]+$ && "$arg" -lt 1000 ]]; then
+  arg=$(squeue -u "$USER" -h -o '%i' | sed -n "$((arg + 1))p")
+  [[ -n "$arg" ]] || {
+    echo "❌ You have no job number ${1}." >&2
+    exit 1
+  }
+fi
+
+exec "$sq" tail ${arg:+"$arg"}

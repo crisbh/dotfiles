@@ -1,0 +1,21 @@
+# Lint, format-check and test scripts/ on every push and PR that touches them
+name: scripts
+
+on:
+  push:
+    branches: [main]
+    paths: ["scripts/**", ".github/workflows/scripts.yml"]
+  pull_request:
+    paths: ["scripts/**", ".github/workflows/scripts.yml"]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install shfmt
+        run: sudo apt-get update && sudo apt-get install -y shfmt
+      - name: Run scripts/check
+        env:
+          DOTFILES: ${{ github.workspace }}
+        run: scripts/check
