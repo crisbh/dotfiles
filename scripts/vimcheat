@@ -1,37 +1,54 @@
-#!/bin/bash
+#!/usr/bin/env bash
+#
+# vimcheat: print a cheat sheet of easily forgotten Vim motions.
+# (The base script was taken from rwxrob.)
 
-# The base script was taken from rwxrob
+set -euo pipefail
 
-R="\033[31m"
-G="\033[32m"
-Y="\033[33m"
-RESET="\033[m"
+# shellcheck source=lib/common.sh
+source "${DOTFILES:-$HOME/.dotfiles}/scripts/lib/common.sh"
 
-# Currently sorted alphabetically
-# Could be sorted otherwise, e.g. by most forgotten commands
+[[ "${1:-}" == -h || "${1:-}" == --help ]] && {
+  usage
+  exit 0
+}
 
-printf "${Y}---------------------------------------------------------\n"
-printf "${Y}caw${R}  - ${G}change around current word${R}\n"
-printf "${Y}ciw${R}  - ${G}change current word${R}\n"
-printf "${Y}cw ${R}  - ${G}change to end of current word${R}\n"
-printf "${Y}daW${R}  - ${G}delete around current larger word${R}\n"
-printf "${Y}daf${R}  - ${G}delete current function${R}\n"
-printf "${Y}dap${R}  - ${G}delete around current paragraph${R}\n"
-printf "${Y}daw${R}  - ${G}delete around current word${R}\n"
-printf "${Y}dd${R}   - ${G}delete the current line${R}\n"
-printf "${Y}diW${R}  - ${G}delete current larger word (ex: --foo-bar)${R}\n"
-printf "${Y}dif${R}  - ${G}delete current inner function${R}\n"
-printf "${Y}dip${R}  - ${G}delete current paragraph${R}\n"
-printf "${Y}diw${R}  - ${G}delete current word${R}\n"
-printf "${Y}dw ${R}  - ${G}delete to beginning of next word${R}\n"
-printf "${Y}ea ${R}  - ${G}append to current word${R}\n"
-printf "${Y}gqap${R} - ${G}wrap around the current paragraph${R}\n"
-printf "${Y}gqip${R} - ${G}wrap the current paragraph${R}\n"
-printf "${Y}yaf${R}  - ${G}yank current function${R}\n"
-printf "${Y}yap${R}  - ${G}yank around current paragraph${R}\n"
-printf "${Y}yif${R}  - ${G}yank current inner function${R}\n"
-printf "${Y}yip${R}  - ${G}yank current paragraph${R}\n"
-printf "${Y}>ip${R}  - ${G}indent the current paragraph${R}\n"
-printf "${Y}<ip${R}  - ${G}dedent the current paragraph${R}\n"
-printf "${Y}!ip${R}  - ${G}send the current paragraph to shell command${R}\n"
-printf "${Y}---------------------------------------------------------\n"
+# "keys | description" lines, sorted alphabetically. Function text objects:
+# aF/iF are treesitter (function definition), af/if are mini.ai (function call).
+cheats=$(
+  cat <<'CHEATS'
+caw  | change around current word
+ciw  | change current word
+cw   | change to end of current word
+daW  | delete around current larger word
+daF  | delete current function (definition)
+daf  | delete current function call, e.g. foo(a, b)
+dap  | delete around current paragraph
+daw  | delete around current word
+dd   | delete the current line
+diW  | delete current larger word (ex: --foo-bar)
+diF  | delete current function body
+dif  | delete current function call's arguments
+dip  | delete current paragraph
+diw  | delete current word
+dw   | delete to beginning of next word
+ea   | append to current word
+gqap | wrap around the current paragraph
+gqip | wrap the current paragraph
+vaF  | select current function, then ]f / [f to move between functions
+yaF  | yank current function
+yap  | yank around current paragraph
+yiF  | yank current function body
+yip  | yank current paragraph
+>ip  | indent the current paragraph
+<ip  | dedent the current paragraph
+!ip  | send the current paragraph to shell command
+CHEATS
+)
+
+line="${YELLOW}---------------------------------------------------------${RESET}"
+echo "$line"
+while IFS='|' read -r keys desc; do
+  printf '%s%-5s%s - %s%s%s\n' "$YELLOW" "${keys% }" "$RED" "$GREEN" "${desc# }" "$RESET"
+done <<<"$cheats"
+echo "$line"

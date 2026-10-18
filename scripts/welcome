@@ -1,20 +1,16 @@
-#!/bin/bash
-# ~~~~~~~~~~~~~~~ Welcome Screen :) ~~~~~~~~~~~~~~~~~~~~~~~~
-# taken from TJDevries's config repo
-clear
-C='\033[1;36m'
-R="\033[31m"
-G="\033[32m"
-Y="\033[33m"
-RESET="\033[m"
+#!/usr/bin/env bash
+#
+# welcome: greeting screen with the date, a calendar and uptime.
+# (Taken from TJ DeVries's config repo.)
 
-echo -ne "${Y}Hello, $USER. Today is: " 
-date
-echo -ne "${RESET}"
-echo -e "${G}"
-cal
-echo -ne "${RESET}"
-echo
-echo -ne "${Y}Sysinfo: "
-uptime
-echo -e "${RESET}"
+# shellcheck source=lib/common.sh
+source "${DOTFILES:-$HOME/.dotfiles}/scripts/lib/common.sh"
+
+clear
+printf '%sHello, %s. Today is: %s%s\n\n' "$YELLOW" "$USER" "$(date)" "$RESET"
+if command -v cal >/dev/null; then
+  printf '%s' "$GREEN"
+  cal
+  printf '%s\n' "$RESET"
+fi
+printf '%sSysinfo: %s%s\n' "$YELLOW" "$(uptime)" "$RESET"

@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+#
+# check: lint, format-check and test the dotfiles scripts.
+#
+#   check          shellcheck + shfmt diff + Python tests; exits 1 on problems
+#   check --fix    rewrite shell scripts with shfmt first
+#
+# Uses tools from PATH, falling back to the ones Neovim's Mason installed.
+# Runs in CI too (.github/workflows/scripts.yml).
+
+set -euo pipefail
+
+cd "$(dirname "$(readlink -f "$0")")"
+PATH="$PATH:${XDG_DATA_HOME:-$HOME/.local/share}/nvim/mason/bin"
+
+case "${1:-}" in
+  "") fix=0 ;;
+  --fix) fix=1 ;;
+  -h | --help)
+    sed -n '3,9p' "$0" | sed 's/^# \{0,1\}//'
+    exit 0
+    ;;
+  *)
+    echo "Unknown argument: $1" >&2
+    exit 2
+    ;;
+esac
+
+# Shell scripts are recognised by shebang; libraries by their .sh suffix
+mapfile -t files < <(
+  grep -lE '^#!(/usr/bin/env bash|/bin/bash)' -- * 2>/dev/null
+  ls lib/*.sh
+)
+
+failed=0
+step() { printf '\n\033[1m== %s\033[m\n' "$1"; }
+
+step "shfmt (${#files[@]} files)"
+if ! command -v shfmt >/dev/null; then
+  echo "shfmt not installed"
+  failed=1
+elif [[ $fix -eq 1 ]]; then
+  shfmt -i 2 -ci -w "${files[@]}" && echo "formatted"
+elif shfmt -i 2 -ci -d "${files[@]}"; then
+  echo "ok"
+else
+  echo "run \`check --fix\` to apply"
+  failed=1
+fi
+
+step "shellcheck"
+if ! command -v shellcheck >/dev/null; then
+  echo "shellcheck not installed"
+  failed=1
+elif shellcheck -x "${files[@]}"; then
+  echo "ok"
+else
+  failed=1
+fi
+
+if [[ -d tests ]]; then
+  step "python tests"
+  PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test*.py' || failed=1
+fi
+
+echo
+if [[ $failed -eq 0 ]]; then
+  printf '\033[32mAll checks passed.\033[m\n'
+else
+  printf '\033[31mSome checks failed.\033[m\n'
+fi
+exit "$failed"

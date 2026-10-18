@@ -1,28 +1,39 @@
 #!/usr/bin/env bash
-
-# Backup the vault to GitHub: run pre-flight checks, commit, pull, and push.
-# Handles first-time git init and remote setup.
+#
+# vault-sync: back the vault up to GitHub: run pre-flight checks, commit,
+# pull, and push. Handles first-time git init and remote setup.
+#
+#   vault-sync             interactive run
+#   vault-sync --dry-run   show what would be committed and pulled; change nothing
+#   vault-sync --auto      unattended (cron): never prompts, aborts instead
 #
 # The vault itself is replicated between machines by Syncthing, which does NOT
 # carry .git — so exactly one machine owns this git mirror. See the ownership
 # check below.
-#
-# Usage: vault-sync [--dry-run] [--auto]
+
+# No `set -e`: exit codes are checked explicitly below (`$?` after the
+# sensitive-content check and `git ls-remote`), and an unattended run must not
+# stop silently halfway through a sync.
+set -uo pipefail
+
+# shellcheck source=lib/common.sh
+source "${DOTFILES:-$HOME/.dotfiles}/scripts/lib/common.sh"
 
 DRY_RUN=0
 AUTO=0
 for arg in "$@"; do
   case "$arg" in
-    --dry-run|-n) DRY_RUN=1 ;;
-    --auto)       AUTO=1 ;;
-    *) echo "Unknown argument: $arg" >&2; exit 1 ;;
+    --dry-run | -n) DRY_RUN=1 ;;
+    --auto) AUTO=1 ;;
+    -h | --help)
+      usage
+      exit 0
+      ;;
+    *) die "Unknown argument: $arg (see vault-sync --help)" ;;
   esac
 done
 
-if [[ -z "$VAULT" ]]; then
-  echo "❌ \$VAULT is not set." >&2
-  exit 1
-fi
+require_vault
 
 cd "$VAULT" || {
   echo "❌ Cannot cd into \$VAULT: $VAULT" >&2
@@ -37,7 +48,7 @@ OWNER_FILE="$VAULT/.vault-sync-owner"
 THIS_HOST=$(hostname -s 2>/dev/null || hostname)
 
 if [[ -f "$OWNER_FILE" ]]; then
-  OWNER=$(tr -d '[:space:]' < "$OWNER_FILE")
+  OWNER=$(tr -d '[:space:]' <"$OWNER_FILE")
   if [[ -n "$OWNER" && "$OWNER" != "$THIS_HOST" ]]; then
     echo "ℹ️  $THIS_HOST does not own the vault git mirror ($OWNER) — nothing to do."
     echo "   To hand over, run on this machine: echo $THIS_HOST > \"$OWNER_FILE\""
@@ -49,7 +60,7 @@ elif [[ $AUTO -eq 1 ]]; then
 else
   read -rp "No vault-sync owner recorded. Claim it for $THIS_HOST? [y/N] " answer
   if [[ "$answer" == "y" || "$answer" == "Y" ]]; then
-    echo "$THIS_HOST" > "$OWNER_FILE"
+    echo "$THIS_HOST" >"$OWNER_FILE"
     echo "✅ $THIS_HOST now owns the vault git mirror."
   else
     echo "Aborted."
@@ -101,7 +112,11 @@ fi
 # ── Pre-flight: sensitive content check ───────────────────────────────────────
 echo ""
 echo "=== Step 2/3: Check sensitive content ==="
-vault-check-sensitive
+if [[ $DRY_RUN -eq 1 ]]; then
+  vault-check-sensitive --dry-run
+else
+  vault-check-sensitive
+fi
 sensitive_exit=$?
 
 if [[ $sensitive_exit -ne 0 ]]; then

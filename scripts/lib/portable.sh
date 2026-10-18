@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # portable.sh — cross-platform helpers for the dotfiles scripts.
 #
 # Sourced, never executed. Papers over BSD (macOS) vs GNU (Linux) differences in

@@ -1,80 +1,69 @@
-#!/bin/bash
+#!/usr/bin/env bash
+#
+# zet: open or create a note in the vault's zettelkasten.
+#
+#   zet          pick a note with fzf; typing a name that matches nothing and
+#                pressing Enter creates that note
+#   zet <name>   open <name>.md, creating it if needed (name without .md)
 
-# A bash script to create or search notes in the zettelkasten directory of a vault.
+set -euo pipefail
 
-VAULT_DIR="$VAULT/0-zettelkasten"
+# shellcheck source=lib/common.sh
+source "${DOTFILES:-$HOME/.dotfiles}/scripts/lib/common.sh"
 
-# Function to prompt the user for a filename
-get_filename() {
-    read -r -p "Enter a filename: " filename
-    if [[ -z "$filename" ]]; then
-        echo "❌ No filename entered. Exiting..."
-        exit 1
-    fi
-    echo "$filename"
-}
+case "${1:-}" in
+  -h | --help)
+    usage
+    exit 0
+    ;;
+esac
+[[ $# -le 1 ]] || die "Please provide only one filename (without .md extension). Example: zet my-new-note"
 
-# Function to create and open a file in the specified directory
+require_vault
+
+# Create the note with an Obsidian header and open it at the bottom; open it
+# as-is if it already exists
 open_file() {
-    local file_path="$VAULT_DIR/$filename.md"
+  local filename=$1 file_path="$ZET_DIR/$1.md"
 
-    # If file exists, open it
-    if [[ -f "$file_path" ]]; then
-        echo "Opening existing note: $filename.md"
-        nvim "$file_path"
-        exit 0
-    fi
+  if [[ -f "$file_path" ]]; then
+    echo "Opening existing note: $filename.md"
+    exec nvim "$file_path"
+  fi
 
-    # Create the new file
-    touch "$file_path"
+  mkdir -p "$ZET_DIR"
+  cat >"$file_path" <<EOF
+---
+id: $filename
+aliases:
+  - $filename
+tags:
+  - $filename
+  - $(date +"%Y")
+---
 
-    # Add Obsidian Markdown header
-    # timestamp="$(date +"%Y%m%d%H%M")"
-    {
-        echo "---"
-        echo "id: $filename"
-        echo "aliases:"
-        echo "  - $filename"
-        echo "tags:"
-        echo "  - $filename"
-        echo "  - $(date +"%Y")"
-        echo "---"
-        echo ""
-        echo "# $filename"
-        echo ""
-    } >>"$file_path"
+# $filename
 
-    # Open the file in Neovim at the bottom
-    nvim '-c normal Go' "$file_path"
+EOF
+  exec nvim '-c normal Go' "$file_path"
 }
 
-# If no argument is provided, use fzf to search existing notes
-if [[ $# -eq 0 ]]; then
-    existing_file=$(find "$VAULT_DIR" -maxdepth 1 -type f -name "*.md" \
-        -not -path "*/.*" \
-        -not -name "README.md" \
-        -not -name "index.md" |
-        sed "s|$VAULT_DIR/||" | sed 's/.md//' |
-        fzf --prompt="Search Notes: ")
-
-    if [[ -n "$existing_file" ]]; then
-        filename="$existing_file"
-    else
-        filename="$(get_filename)" || exit 1
-    fi
-fi
-
-# Ensure only one argument is given
-if [[ $# -gt 1 ]]; then
-    echo "❌ Please provide only one filename (without .md extension)."
-    echo "Example: zet my-new-note"
-    exit 1
-fi
-
-# If argument is provided, use it as filename
 if [[ $# -eq 1 ]]; then
-    filename=$1
+  filename=$1
+else
+  require_cmds fzf
+  # --print-query prints the typed text first, then the pick (if any), so the
+  # last line is the pick, or the typed name when nothing matched
+  filename=$(
+    find "$ZET_DIR" -maxdepth 1 -type f -name "*.md" \
+      -not -name ".*" -not -name "README.md" -not -name "index.md" |
+      sed "s|^$ZET_DIR/||; s|\.md$||" | sort |
+      fzf --prompt="Search Notes: " --print-query | tail -1
+  ) || true
+  if [[ -z "$filename" ]]; then
+    read -r -p "Enter a filename: " filename
+    [[ -n "$filename" ]] || die "No filename entered."
+  fi
 fi
 
-# Open or create the file
-open_file
+open_file "$filename"
