@@ -4,34 +4,86 @@
     <a href="https://github.com/crisbh/dotfiles/pulse">
       <img src="https://img.shields.io/github/last-commit/crisbh/dotfiles?color=%4dc71f&label=Last%20Commit&logo=github&style=flat-square"/>
     </a>
+    <a href="https://github.com/crisbh/dotfiles/actions/workflows/scripts.yml">
+      <img src="https://img.shields.io/github/actions/workflow/status/crisbh/dotfiles/scripts.yml?branch=main&label=scripts&logo=github&style=flat-square"/>
+    </a>
 </p>
 </div>
 
 ## Overview
 
-Repo with the dotfiles I use in my own (local) machine. These aim at setting up a smooth daily workflow.
+The dotfiles I use on my own machines, macOS and Fedora, aimed at a smooth terminal-centred daily workflow: editing, research code on HPC clusters, notes and tasks.
 
-My setup includes:
-- shell: `zsh`
-- terminal: `wezterm`
-- editor: `neovim`
-- PDF reader: `zathura`
-- terminal session manager: `tmux`
-- tiling windows manager: `amethyst` (macOS)
+| | |
+|---|---|
+| Shell | `zsh` (plugins via zinit, aliases in `.config/.aliasrc`) |
+| Terminal | `wezterm` (also configs for `kitty`) |
+| Editor | `neovim` |
+| Session manager | `tmux` |
+| PDF reader | `zathura` |
+| File manager | `ranger` |
+| Tiling window manager | `amethyst` (macOS) |
+| Git | `.gitconfig` with `delta`, worktree aliases and the `wt` helper |
 
 ## Installation
 
-I use [`GNU stow`](https://www.gnu.org/software/stow/) to deploy the various dotfiles from this repo in the form of
-symlinks. For this, go into the repo's directory and run
+Clone the repo into `~/.dotfiles` and run the install script:
 
 ```shell
-stow -t $HOME .
+git clone git@github.com:crisbh/dotfiles.git ~/.dotfiles
+cd ~/.dotfiles
+bash install.sh            # install packages (asks first), then deploy
+bash install.sh --no-pkgs  # only deploy
 ```
 
-Notice that this method requires that the file structure in this repo mimicks the one in
-the user's home directory.
+Packages come from the `Brewfile` on macOS and `packages-fedora.txt` on Fedora. Deployment uses [GNU stow](https://www.gnu.org/software/stow/): the repo mirrors the layout of `$HOME`, and every file not listed in `.stow-local-ignore` is symlinked into place (the script shows a dry run before changing anything). To deploy by hand instead:
 
-Alternatively, just run the provided `install` bash script as
 ```shell
-bash install.sh
+stow -t "$HOME" .
 ```
+
+Then check the machine:
+
+```shell
+dotfiles-doctor
+```
+
+It reports missing tools, broken symlinks, unstowed files, missing cron jobs and the state of the notes vault.
+
+## Neovim
+
+A Kickstart-based config (Neovim 0.11+) with lazy.nvim and one plugin spec per file in `.config/nvim/lua/plugins/`. Highlights:
+
+- **Language servers** installed by Mason and enabled automatically, with format on save through conform.nvim (`<leader>tf` toggles it), inline diagnostics and inlay hints (`<leader>th`).
+- **Treesitter** highlighting, plus text objects and motions for functions, classes, parameters and blocks (`vaF`, `]f`, `>P`, ...) and sticky scroll for the enclosing function.
+- **Telescope** pickers marked with each file's git status, and a picker for modified files (`<leader>fm`).
+- **IDE-style panels**: diagnostics and references (`<leader>xx`), project search and replace (`<leader>sr`), a debugger UI on the function keys, breadcrumbs, and sessions per directory (`<leader>ss`).
+- **Git**: Neogit, gitsigns (inline blame, hunk staging) and `<leader>gC` to commit the current file.
+
+## Scripts
+
+Everything in `scripts/` is on `PATH`. Run any of them with `--help` for details.
+
+| Command | What it does |
+|---|---|
+| `commit`, `push` | Show what will be committed, ask for a message, commit (and push). `commit <file>` commits only that file. |
+| `wt` | Git worktrees, one tmux session each: pick, create, remove, and clean up after merged PRs. tmux: prefix `W`. |
+| `tp` | Open a project in its own tmux session. tmux: prefix `P`. |
+| `todo` | Task pipeline for the notes vault: collect tasks from daily notes, tag them, move finished ones to `done.md`, pomodoros. |
+| `vault` | Vault maintenance: stats, broken links, orphaned notes, keeping secrets out of git, and `vault sync` to back it up to GitHub. |
+| `day`, `zet`, `note` | Open today's diary note, open or create a zettelkasten note, append a quick timestamped note. |
+| `sq` | Slurm jobs in a picker: follow output, cancel, check efficiency. |
+| `arxiv2bib` | Fetch BibTeX for arXiv ids or DOIs into a `.bib` file. |
+| `formatter` | Format every recognised file in a project (ruff, stylua, shfmt, clang-format). |
+| `dotfiles-doctor` | Check a machine against what the dotfiles expect. |
+
+The notes scripts expect `$VAULT` to point at the notes vault, which `.zshrc` sets per OS.
+
+## Development
+
+```shell
+scripts/check        # shfmt, shellcheck and the Python tests
+scripts/check --fix  # also reformat the shell scripts
+```
+
+The same check runs on every pull request touching `scripts/`. Bash scripts share `scripts/lib/common.sh`; the Python tools use only the standard library (Python 3.9+), with tests in `scripts/tests/`. See [`AGENTS.md`](../AGENTS.md) for the full conventions.
