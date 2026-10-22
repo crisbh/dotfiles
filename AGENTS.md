@@ -8,7 +8,8 @@ Personal dotfiles for macOS (Homebrew) and Fedora (dnf), deployed into `$HOME` w
 - Packages: `Brewfile` (macOS) and `packages-fedora.txt` (Fedora), both installed by `install.sh`.
 - `.zshrc` sets `DOTFILES_OS` (`macos`/`linux`) and `$VAULT` (the notes vault; `~/notes` on Fedora) and puts `scripts/` on `PATH`. Aliases live in `.config/.aliasrc`.
 - `crontab.backup` is written daily by a cron job on the Mac (`crontab -l > ...`): do not edit it by hand. It uses macOS paths; the Fedora machine has no crontab.
-- `.claude/` is tool state; only `settings.json` and `CLAUDE.md` there are tracked.
+- `.claude/` holds only the tracked Claude Code config (`settings.json`, `CLAUDE.md`). `~/.claude` must be a real directory with those two files linked in, never a folded symlink to the repo, or credentials, history and sessions land in the working tree: `install.sh` creates it (and migrates a folded link) before stowing, and `dotfiles-doctor` checks it. Entries in `.stow-local-ignore` for root-only files are anchored (`^/CLAUDE\.md$`) so they do not also skip `.claude/CLAUDE.md`.
+- Claude Code is installed by the `claude-code` cask on macOS and by the native installer (`~/.local/bin/claude`, self-updating) on Fedora; its tmux hooks need `jq`.
 
 ## Neovim (`.config/nvim`)
 

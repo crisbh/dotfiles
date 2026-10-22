@@ -2,11 +2,12 @@
 # Installed by install.sh:  sudo dnf install -y $(grep -vE '^#|^$' packages-fedora.txt)
 # zsh plugins + powerlevel10k are managed by zinit (see .zshrc), so not listed here.
 
-# --- Essentials the dotfiles depend on ---
+# --- Essentials the dotfiles depend on (jq: Claude Code hooks) ---
 stow
 zsh
 git
 tmux
+jq
 
 # --- Core CLI tools (aliases/config in .aliasrc, .zshrc, .fzf) ---
 eza

@@ -2,6 +2,7 @@
 # only track the hand-written config
 .claude/*
 !.claude/settings.json
+!.claude/CLAUDE.md
 
 # Python bytecode (scripts/ is Python too)
 __pycache__/

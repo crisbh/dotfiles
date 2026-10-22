@@ -2,8 +2,8 @@ crontab.backup
 install.sh
 
 # Repo docs / package manifests — not deployed to $HOME
-AGENTS.md
-CLAUDE.md
+^/AGENTS\.md$
+^/CLAUDE\.md$
 Brewfile
 packages-fedora.txt
 
@@ -16,3 +16,6 @@ packages-fedora.txt
 ^/README.*
 ^/LICENSE.*
 ^/COPYING
+
+# Investigation notes (Fedora $VAULT is ~/notes, so never stow this)
+^/notes

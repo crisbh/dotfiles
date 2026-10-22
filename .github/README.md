@@ -39,8 +39,11 @@ bash install.sh --no-pkgs  # only deploy
 Packages come from the `Brewfile` on macOS and `packages-fedora.txt` on Fedora. Deployment uses [GNU stow](https://www.gnu.org/software/stow/): the repo mirrors the layout of `$HOME`, and every file not listed in `.stow-local-ignore` is symlinked into place (the script shows a dry run before changing anything). To deploy by hand instead:
 
 ```shell
+mkdir -p ~/.claude   # keep Claude Code state out of the repo (install.sh does this)
 stow -t "$HOME" .
 ```
+
+Claude Code comes from the Brewfile on macOS; on Fedora install it with the native installer (`curl -fsSL https://claude.ai/install.sh | bash`).
 
 Then check the machine:
 
