@@ -31,5 +31,6 @@ Personal dotfiles for macOS (Homebrew) and Fedora (dnf), deployed into `$HOME` w
 ## Checks
 
 - `scripts/check` runs shfmt (`-i 2 -ci`), shellcheck and the Python tests; `scripts/check --fix` reformats. CI runs it on PRs touching `scripts/` (`.github/workflows/scripts.yml`).
+- Single test: `cd scripts/tests && python3 -m unittest testtasks.TagTest.test_email_is_not_a_tag` (module, class or method).
 - Tests are in `scripts/tests/` (stdlib `unittest`, files named `test*.py` without underscores). `tests/fixture.py` builds a small vault with fixed dates; `tests/golden/` holds the expected pipeline output. Never run tests or experiments against the real `$VAULT`.
 - `dotfiles-doctor` checks a machine against what the dotfiles expect (tools, links, cron, vault).
