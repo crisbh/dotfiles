@@ -20,17 +20,22 @@ alias zat="zathura"
 alias c="clear"
 alias q="exit"
 
+# Vim
 alias zshrc="vim ~/.zshrc && source ~/.zshrc"
 alias aliasrc="vim ~/.config/.aliasrc && source ~/.config/.aliasrc"
 alias nvimrc="vim ~/.config/nvim/init.vim"
 alias vimrc="vim ~/.vimrc"
 alias vsplit="vim -O"
+
+# tmux
 alias tm="tmux"
 alias tma="tmux a"
 alias tms="tmux ls"
 
+# Vault and task system
 alias vimwiki="cd $VAULT && nvim -c ':VimwikiIndex'"
 alias wiki="vimwiki"
+alias idea="zet idea"
 
 # `todo` (scripts/todo) opens the list when run without a subcommand
 alias pomo="todo-pomodoro"
@@ -67,9 +72,9 @@ alias \
 
 # Replace ls with eza if available
 if [ -x "$(command -v eza)" ]; then
-    alias ls="eza"
-    alias la="eza --long --all --group"
-    alias ltr="ls -l -snew --group-directories-first"
+    alias ls="eza --icons"
+    alias la="eza --long --all --group --icons"
+    alias ltr="ls -l -snew --group-directories-first --icons"
 fi
 
 # Utilities
