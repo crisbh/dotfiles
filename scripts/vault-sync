@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 #
 # vault-sync: share the vault through GitHub: run pre-flight checks, commit,
-# pull, and push. Handles first-time git init and remote setup.
+# pull, process tasks (todo collect + todo done), and push. Handles first-time
+# git init and remote setup.
 #
 #   vault-sync             interactive run
 #   vault-sync --dry-run   show what would be committed and pulled; change nothing
@@ -10,7 +11,9 @@
 # Every machine runs this: each commits its own edits, rebases them onto what
 # the others pushed, and pushes. Only what the vault's allow-list .gitignore
 # names is shared (0-tasks/, 0-zettelkasten/, templates/); diary/ and the rest
-# stay local to each machine.
+# stay local to each machine. Tasks are processed after the pull, on files that
+# already include the other machines' edits, so what is done on one machine
+# reaches done.md everywhere.
 
 # No `set -e`: exit codes are checked explicitly below (`$?` after the
 # sensitive-content check and `git ls-remote`), and an unattended run must not
@@ -210,8 +213,22 @@ fi
 
 if [[ $DRY_RUN -eq 1 ]]; then
   echo ""
+  echo "🔍 Dry run — would run todo collect and todo done."
+  echo ""
   echo "ℹ️  Dry run complete. Nothing was committed, pulled, or pushed."
   exit 0
+fi
+
+# ── Tasks ─────────────────────────────────────────────────────────────────────
+# A failing step must not stop the sync: warn and push what there is.
+echo ""
+echo "=== Processing tasks ==="
+todo collect || warn "todo collect failed — tasks were not collected this run."
+todo "done" || warn "todo done failed — completed tasks were not moved this run."
+git add -A
+if ! git diff --cached --quiet; then
+  git commit -m "vault: tasks $(date '+%Y-%m-%d %H:%M')"
+  HAS_COMMITS=1
 fi
 
 # ── Push ──────────────────────────────────────────────────────────────────────
