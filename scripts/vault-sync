@@ -85,6 +85,13 @@ fi
 
 # ── Repo state ────────────────────────────────────────────────────────────────
 BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null || echo "main")
+# Every machine shares main; pushing any other branch would publish whatever it
+# holds (a stray `master` from an old setup once carried diary notes).
+if [[ "$BRANCH" != main ]]; then
+  echo "❌ The vault is on branch '$BRANCH'; vault-sync only shares main." >&2
+  echo "   Switch to it first, e.g.: git -C \"$VAULT\" switch main" >&2
+  exit 1
+fi
 HAS_REMOTE=0
 git remote get-url origin &>/dev/null && HAS_REMOTE=1
 
@@ -137,6 +144,17 @@ if [[ $AUTO -eq 0 ]]; then
   echo ""
   echo "=== Step 3/3: Check broken links ==="
   vault-broken-links
+fi
+
+# ── Allow-list check ──────────────────────────────────────────────────────────
+# Only an allow-list .gitignore (starting with `/*`, see GITIGNORE_TEMPLATE in
+# lib/vaultops.py) keeps diary/ and the other local folders out of the commit.
+first_rule=$(grep -v -e '^#' -e '^[[:space:]]*$' .gitignore 2>/dev/null | head -n 1)
+if [[ "$first_rule" != "/*" ]]; then
+  echo "❌ $VAULT/.gitignore is not the allow-list, so local folders would be committed." >&2
+  echo "   Start it with the allow-list from GITIGNORE_TEMPLATE in" >&2
+  echo "   ${DOTFILES:-$HOME/.dotfiles}/scripts/lib/vaultops.py, then run vault-sync again." >&2
+  exit 1
 fi
 
 # ── Commit ────────────────────────────────────────────────────────────────────
