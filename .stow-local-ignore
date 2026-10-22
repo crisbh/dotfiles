@@ -1,4 +1,5 @@
 crontab.backup
+crontab-fedora
 install.sh
 
 # Repo docs / package manifests — not deployed to $HOME

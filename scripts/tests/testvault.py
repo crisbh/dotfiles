@@ -70,6 +70,15 @@ class SensitiveTest(VaultCase):
         report = vaultops.protect_sensitive(self.vault)
         self.assertEqual((report.flagged, report.added, report.untracked), ({}, [], []))
 
+    def test_gitignore_shares_only_allow_list(self):
+        vaultops.protect_sensitive(self.vault)
+        out = subprocess.run(
+            ["git", "-C", str(self.vault.root), "check-ignore", "--no-index", "--",
+             "diary/2026-10-16.md", "1-projects/creds.md", "0-zettelkasten/alpha.md", "0-tasks/todo.md"],
+            capture_output=True, text=True,
+        )
+        self.assertEqual(out.stdout.split(), ["diary/2026-10-16.md", "1-projects/creds.md"])
+
     def test_patterns(self):
         hits = {
             "api key prefix": "token ghp_" + "a" * 36,

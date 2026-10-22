@@ -111,14 +111,19 @@ SENSITIVE_PATTERNS = {
 GITIGNORE_TEMPLATE = """\
 # vault .gitignore — managed by `vault sensitive`
 
+# Allow-list: only these are shared between machines; diary/ and the rest
+# stay local. Lines below the allow-list win, so flagged notes stay ignored.
+/*
+!/.gitignore
+!/0-tasks/
+!/0-zettelkasten/
+!/templates/
+
 # Static exclusions
-.obsidian/
-attachments/
-Excalidraw/
-Clippings/
+0-tasks/.!*
+0-tasks/.backups/
 *.log
 *.pdf
-3-archive/
 
 # Auto-flagged by `vault sensitive`:
 """

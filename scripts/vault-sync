@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 #
-# vault-sync: back the vault up to GitHub: run pre-flight checks, commit,
+# vault-sync: share the vault through GitHub: run pre-flight checks, commit,
 # pull, and push. Handles first-time git init and remote setup.
 #
 #   vault-sync             interactive run
 #   vault-sync --dry-run   show what would be committed and pulled; change nothing
 #   vault-sync --auto      unattended (cron): never prompts, aborts instead
 #
-# The vault itself is replicated between machines by Syncthing, which does NOT
-# carry .git — so exactly one machine owns this git mirror. See the ownership
-# check below.
+# Every machine runs this: each commits its own edits, rebases them onto what
+# the others pushed, and pushes. Only what the vault's allow-list .gitignore
+# names is shared (0-tasks/, 0-zettelkasten/, templates/); diary/ and the rest
+# stay local to each machine.
 
 # No `set -e`: exit codes are checked explicitly below (`$?` after the
 # sensitive-content check and `git ls-remote`), and an unattended run must not
@@ -40,34 +41,6 @@ cd "$VAULT" || {
   exit 1
 }
 
-# ── Sync ownership ────────────────────────────────────────────────────────────
-# Two machines running this on a cron would race each other pushing the same
-# repo. The owner is recorded in the vault (and therefore synced), so both
-# machines agree on who it is without any per-machine config that cron can't see.
-OWNER_FILE="$VAULT/.vault-sync-owner"
-THIS_HOST=$(hostname -s 2>/dev/null || hostname)
-
-if [[ -f "$OWNER_FILE" ]]; then
-  OWNER=$(tr -d '[:space:]' <"$OWNER_FILE")
-  if [[ -n "$OWNER" && "$OWNER" != "$THIS_HOST" ]]; then
-    echo "ℹ️  $THIS_HOST does not own the vault git mirror ($OWNER) — nothing to do."
-    echo "   To hand over, run on this machine: echo $THIS_HOST > \"$OWNER_FILE\""
-    exit 0
-  fi
-elif [[ $AUTO -eq 1 ]]; then
-  echo "❌ No vault-sync owner recorded. Run vault-sync manually once to claim it." >&2
-  exit 1
-else
-  read -rp "No vault-sync owner recorded. Claim it for $THIS_HOST? [y/N] " answer
-  if [[ "$answer" == "y" || "$answer" == "Y" ]]; then
-    echo "$THIS_HOST" >"$OWNER_FILE"
-    echo "✅ $THIS_HOST now owns the vault git mirror."
-  else
-    echo "Aborted."
-    exit 0
-  fi
-fi
-
 # ── First-time git setup ──────────────────────────────────────────────────────
 if [[ ! -d ".git" ]]; then
   if [[ $AUTO -eq 1 ]]; then
@@ -75,11 +48,38 @@ if [[ ! -d ".git" ]]; then
     exit 1
   fi
   echo "📦 Initializing git repository in vault..."
-  git init
-  read -rp "Enter GitHub remote URL (leave blank to skip push): " remote_url
-  if [[ -n "$remote_url" ]]; then
-    git remote add origin "$remote_url"
-    echo "✅ Remote set to $remote_url"
+  git init -b main
+  # Check the URL now: a bare `user/repo` is taken as a local path and only
+  # fails later, on every pull and push.
+  while :; do
+    read -rp "GitHub remote URL, e.g. git@github.com:user/repo.git (blank to skip push): " remote_url
+    [[ -z "$remote_url" ]] && break
+    if git ls-remote "$remote_url" &>/dev/null; then
+      git remote add origin "$remote_url"
+      echo "✅ Remote set to $remote_url"
+      break
+    fi
+    echo "❌ Cannot reach $remote_url — check the URL and your SSH key, then try again."
+  done
+
+  # Another machine may have pushed already: adopt its history and make sure
+  # local files do not silently overwrite the shared ones.
+  if [[ -n "$remote_url" ]] && git ls-remote --exit-code --heads origin main &>/dev/null; then
+    git fetch origin main
+    git reset -q --mixed origin/main
+    git branch --set-upstream-to=origin/main main &>/dev/null
+    # Files this machine does not have yet just come from GitHub
+    git ls-files -z --deleted | xargs -0 -r git checkout --
+    differs=$(git status --porcelain --untracked-files=no)
+    if [[ -n "$differs" ]]; then
+      echo ""
+      echo "⚠️  These local files differ from origin/main:"
+      while IFS= read -r line; do echo "  $line"; done <<<"$differs"
+      echo "   Keep GitHub's version:  git -C \"$VAULT\" checkout -- <paths>"
+      echo "   Keep yours:             run vault-sync again to commit and push them"
+      exit 1
+    fi
+    echo "✅ Checked out origin/main"
   fi
 fi
 
@@ -204,7 +204,20 @@ elif [[ $HAS_COMMITS -eq 0 ]]; then
 else
   echo ""
   echo "=== Pushing to origin/$BRANCH ==="
-  git push origin "$BRANCH" 2>/dev/null || git push --set-upstream origin "$BRANCH"
+  # Rejected when another machine pushed since the pull: rebase onto it once.
+  if ! git push --set-upstream origin "$BRANCH"; then
+    echo "ℹ️  Push rejected — pulling again and retrying."
+    if ! git pull --rebase --autostash origin "$BRANCH"; then
+      git rebase --abort &>/dev/null
+      echo "❌ Pull failed — conflicting edits between this machine and origin/$BRANCH." >&2
+      echo "   Nothing was pushed. Resolve manually in: $VAULT" >&2
+      exit 1
+    fi
+    if ! git push --set-upstream origin "$BRANCH"; then
+      echo "❌ Push failed; local commits are safe and will sync next run." >&2
+      exit 1
+    fi
+  fi
   echo "✅ Pushed to origin/$BRANCH"
 fi
 
