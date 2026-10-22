@@ -6,3 +6,6 @@
 
 # Python bytecode (scripts/ is Python too)
 __pycache__/
+
+# Local investigation notes, never committed
+notes/
