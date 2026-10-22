@@ -56,7 +56,41 @@ if [[ "${1:-}" != "--no-pkgs" ]]; then
 	fi
 fi
 
+# --- Keep Claude Code state out of the repo ---
+# Claude Code writes credentials, history and sessions into ~/.claude. If that
+# directory does not exist, stow folds it into one symlink to the repo and all
+# of that lands in the working tree. A real ~/.claude makes stow link only the
+# tracked files into it; an existing folded link is migrated once.
+prepare_claude_dir() {
+	local home_dir="$TARGET_DIR/.claude" repo_dir="$DIR/.claude" tracked f
+	if [[ ! -L "$home_dir" ]]; then
+		mkdir -p "$home_dir"
+		return 0
+	fi
+	[[ "$(readlink -f "$home_dir")" == "$(readlink -f "$repo_dir")" ]] || return 0
+
+	echo "$HOME/.claude is a symlink into the repo, so Claude Code state lives in the working tree."
+	if pgrep -x claude >/dev/null 2>&1; then
+		echo "Quit every Claude Code session, then re-run to move it out."
+		return 1
+	fi
+	read -rp "Move it to a real ~/.claude? (y/n): " CLAUDE_CONFIRM
+	[[ "$CLAUDE_CONFIRM" =~ ^[Yy]$ ]] || return 1
+
+	rm "$home_dir" && mkdir "$home_dir" || return 1
+	# Everything except the tracked files moves; stow links those back in
+	tracked=$(git -C "$DIR" ls-files .claude)
+	shopt -s dotglob nullglob
+	for f in "$repo_dir"/*; do
+		grep -qxF ".claude/$(basename "$f")" <<<"$tracked" && continue
+		mv "$f" "$home_dir/" || return 1
+	done
+	shopt -u dotglob nullglob
+	echo "Moved Claude Code state to ~/.claude."
+}
+
 # --- Deploy with stow ---
+prepare_claude_dir || echo "Leaving ~/.claude as it is."
 echo
 echo "Starting dry run of GNU stow..."
 DRY_RUN_OUTPUT=$(stow --simulate --target "$TARGET_DIR" "$SOURCE_DIR" | tee /dev/tty)

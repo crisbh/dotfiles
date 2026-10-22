@@ -4,7 +4,7 @@
 #
 #   dotfiles-doctor      run every check; exits 1 if anything is broken (❌)
 #
-# Checks tools, environment, stow links, cron jobs, the dotfiles repo, Neovim
+# Checks tools, environment, stow links, Claude Code, cron jobs, the dotfiles repo, Neovim
 # and the vault. ⚠️ marks things worth a look that do not break anything.
 
 set -uo pipefail # no -e: every check runs even when an earlier one fails
@@ -106,6 +106,22 @@ if have stow; then
   else
     ok "everything is stowed"
   fi
+fi
+
+# ── Claude Code ───────────────────────────────────────────────────────────────
+section "Claude Code"
+if have claude; then ok "claude $(claude --version 2>/dev/null | cut -d' ' -f1)"; else meh "claude is missing (optional)"; fi
+if have jq; then ok "jq"; else bad "jq is missing (the tmux hooks in .claude/settings.json need it)"; fi
+if [[ -L "$HOME/.claude" ]]; then
+  bad "Claude Code state lives in the repo: ~/.claude is a symlink (quit Claude Code, run install.sh --no-pkgs)"
+else
+  for f in settings.json CLAUDE.md; do
+    if [[ "$(readlink -f "$HOME/.claude/$f")" == "$(readlink -f "$DOT/.claude/$f")" ]]; then
+      ok "linked: ~/.claude/$f"
+    else
+      bad "not linked to the dotfiles: ~/.claude/$f (run install.sh --no-pkgs)"
+    fi
+  done
 fi
 
 # ── Cron ──────────────────────────────────────────────────────────────────────
