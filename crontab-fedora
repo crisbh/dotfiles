@@ -1,0 +1,11 @@
+# Fedora crontab: install with `crontab ~/.dotfiles/crontab-fedora`.
+# The Mac's crontab is snapshotted in crontab.backup. The task jobs
+# (todo-backup, todo-mark-done) run on the Mac only; vault-sync runs on both
+# machines, staggered so they do not push at the same minute.
+
+PATH=/usr/local/bin:/usr/bin:/bin:/home/cbarrera/.dotfiles/scripts
+VAULT=/home/cbarrera/notes
+
+# Share 0-tasks, 0-zettelkasten and templates through GitHub
+30 10 * * * /usr/bin/env bash /home/cbarrera/.dotfiles/scripts/vault-sync --auto >> /tmp/vault-sync.log 2>&1
+@reboot sleep 60 && /usr/bin/env bash /home/cbarrera/.dotfiles/scripts/vault-sync --auto >> /tmp/vault-sync.log 2>&1

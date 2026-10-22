@@ -127,19 +127,18 @@ fi
 # ── Cron ──────────────────────────────────────────────────────────────────────
 section "Cron jobs"
 current=$(crontab -l 2>/dev/null || true)
-if [[ -f "$DOT/crontab.backup" ]]; then
-  # Expected: the jobs in the backup that run dotfiles scripts
+# crontab.backup is the Mac's crontab (written by its cron); crontab-fedora is
+# the one to install on Linux.
+if [[ "$DOTFILES_OS" == macos ]]; then cronfile="$DOT/crontab.backup"; else cronfile="$DOT/crontab-fedora"; fi
+if [[ -f "$cronfile" ]]; then
+  # Expected: the jobs in the crontab file that run dotfiles scripts
   while IFS= read -r script; do
     if grep -q "scripts/$script" <<<"$current"; then
       ok "$script is scheduled"
     else
-      meh "$script is not scheduled here (it is in crontab.backup)"
+      meh "$script is not scheduled here (it is in $(basename "$cronfile"))"
     fi
-  done < <(grep -oE 'scripts/[a-z-]+' "$DOT/crontab.backup" | sort -u | cut -d/ -f2)
-  backup_os=$(grep -q '/Users/' "$DOT/crontab.backup" && echo macos || echo linux)
-  if [[ "$backup_os" != "$DOTFILES_OS" ]]; then
-    meh "crontab.backup comes from $backup_os, this is $DOTFILES_OS: adapt paths before installing it"
-  fi
+  done < <(grep -oE 'scripts/[a-z-]+' "$cronfile" | sort -u | cut -d/ -f2)
 fi
 [[ -n "$current" ]] || meh "no crontab on this machine"
 
@@ -166,15 +165,14 @@ if [[ -n "${VAULT:-}" && -d "$VAULT" ]]; then
     if [[ -f "$VAULT/$f" ]]; then ok "$f"; else meh "$f does not exist yet"; fi
   done
   if [[ -d "$VAULT/.git" ]]; then
-    owner=$(tr -d '[:space:]' <"$VAULT/.vault-sync-owner" 2>/dev/null || true)
-    host=$(hostname -s 2>/dev/null || hostname)
-    if [[ -z "$owner" ]]; then
-      meh "no vault-sync owner recorded (run vault-sync once on the machine that should push)"
-    elif [[ "$owner" == "$host" ]]; then
-      ok "this machine ($host) owns vault-sync"
-    else
-      ok "vault-sync is owned by $owner (this is $host)"
-    fi
+    url=$(git -C "$VAULT" remote get-url origin 2>/dev/null || true)
+    vbranch=$(git -C "$VAULT" symbolic-ref --short HEAD 2>/dev/null || echo detached)
+    case "$url" in
+      "") meh "the vault has no origin remote (vault-sync commits locally only)" ;;
+      *://* | *:*) ok "vault remote: $url" ;;
+      *) bad "vault remote '$url' is not a URL (fix: git -C \"\$VAULT\" remote set-url origin git@github.com:USER/REPO.git)" ;;
+    esac
+    if [[ "$vbranch" == main ]]; then ok "vault branch: main"; else meh "vault is on '$vbranch', vault-sync shares main"; fi
   else
     meh "the vault is not a git repository (vault-sync sets it up)"
   fi
