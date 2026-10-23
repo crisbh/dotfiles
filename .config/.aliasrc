@@ -8,6 +8,7 @@ alias lg="lazygit"
 # git
 alias gp="git pull"
 alias gP="git push"
+alias s="git status"
 
 # git custom scripts
 alias cm="commit"

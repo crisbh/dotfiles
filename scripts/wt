@@ -3,10 +3,11 @@
 # wt: git worktrees, one tmux session each.
 #
 #   wt                    pick a worktree (fzf) and switch to its tmux session
-#   wt new <branch> [base]
+#   wt new [branch] [base]
 #                         create a worktree for <branch> (existing local or
 #                         remote branch, otherwise a new one from [base] or
-#                         HEAD) and switch to it
+#                         HEAD, after confirmation) and switch to it; without
+#                         <branch>, pick one with fzf or type a new name
 #   wt rm [branch...]     remove worktrees (fzf multi-select without args),
 #                         kill their sessions, delete their branches if merged
 #   wt clean              remove worktrees whose branch was deleted upstream
@@ -83,9 +84,35 @@ cmd_switch() {
   open_session "${line%%$'\t'*}" "${line#*$'\t'}"
 }
 
+# Local and origin branches, most recently committed first, without duplicates
+branches() {
+  git for-each-ref --sort=-committerdate --format='%(refname)' refs/heads refs/remotes/origin |
+    sed -e 's#^refs/heads/##' -e 's#^refs/remotes/origin/##' |
+    awk '$0 != "HEAD" && !seen[$0]++'
+}
+
+# Pick a branch with fzf; whatever is typed is taken as a new name if nothing
+# matches it
+pick_branch() {
+  local out rc=0
+  command -v fzf >/dev/null || die "fzf is needed to pick a branch (or run: wt new <branch>)."
+  git fetch --quiet --prune origin 2>/dev/null || warn "git fetch failed; remote branches may be stale."
+  out=$(branches | fzf --print-query --prompt "$repo branch> " \
+    --header 'Enter: pick a branch, or type a new name' \
+    --preview 'git log --oneline --color=always -15 {} 2>/dev/null || git log --oneline --color=always -15 origin/{}') || rc=$?
+  case $rc in
+    0) sed -n 2p <<<"$out" ;;
+    1) head -n 1 <<<"$out" ;;
+    *) return 1 ;;
+  esac
+}
+
 cmd_new() {
   local branch=${1:-} base=${2:-HEAD} path existing
-  [[ -n "$branch" ]] || die "Usage: wt new <branch> [base]"
+  if [[ -z "$branch" ]]; then
+    branch=$(pick_branch) || exit 0
+    [[ -n "$branch" ]] || exit 0
+  fi
 
   existing=$(path_for "$branch")
   if [[ -n "$existing" ]]; then
@@ -95,13 +122,29 @@ cmd_new() {
   fi
 
   path="$wt_root/${branch//\//-}"
-  mkdir -p "$wt_root"
+
+  # A branch pushed since the last fetch would otherwise look new
+  if ! git show-ref --verify --quiet "refs/heads/$branch"; then
+    git fetch --quiet origin "$branch" 2>/dev/null || true
+  fi
 
   if git show-ref --verify --quiet "refs/heads/$branch"; then
+    mkdir -p "$wt_root"
     git worktree add "$path" "$branch"
   elif git show-ref --verify --quiet "refs/remotes/origin/$branch"; then
+    mkdir -p "$wt_root"
     git worktree add --track -b "$branch" "$path" "origin/$branch"
   else
+    # Most likely a typo: say so and show branches sharing the last word
+    warn "$branch exists neither locally nor on origin."
+    local similar
+    similar=$(branches | grep -F -- "${branch##*[-/_]}" | head -n 10 || true)
+    if [[ -n "$similar" ]]; then
+      printf 'Similar branches:\n'
+      sed 's/^/  /' <<<"$similar"
+    fi
+    confirm "Create new branch $branch from $base?" || exit 1
+    mkdir -p "$wt_root"
     git worktree add -b "$branch" "$path" "$base"
   fi
 
