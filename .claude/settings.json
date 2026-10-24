@@ -44,6 +44,18 @@
           }
         ]
       }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "c=$(jq -r '.tool_input.command // empty'); if printf '%s' \"$c\" | grep -qE 'gh +pr +(create|edit)' && printf '%s' \"$c\" | grep -qiE 'claude\\.ai/code|Claude-Session:'; then echo 'Remove the Claude session link from the PR description (no agent attribution).' >&2; exit 2; fi",
+            "timeout": 5
+          }
+        ]
+      }
     ]
   },
   "extraKnownMarketplaces": {

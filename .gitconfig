@@ -3,6 +3,7 @@
     autocrlf = input
     whitespace = fix
     pager = delta
+    hooksPath = ~/.config/git/hooks
 [push]
     default = current
     autoSetupRemote = true

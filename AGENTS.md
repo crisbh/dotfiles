@@ -5,6 +5,7 @@ Personal dotfiles for macOS (Homebrew) and Fedora (dnf), deployed into `$HOME` w
 ## Layout and deployment
 
 - The repo root is the stow package: every file not matched by `.stow-local-ignore` is symlinked into `$HOME` by `install.sh` (`bash install.sh --no-pkgs` to only re-stow). Repo-only files (docs, manifests, CI, `.gitignore`) must be listed in `.stow-local-ignore`, or they land in `$HOME`.
+- `.gitconfig` sets `core.hooksPath` to `~/.config/git/hooks` (`.config/git/hooks/` here) for every repository: `commit-msg` rejects agent attribution, then runs the repository's own `commit-msg`. Other hooks in `.git/hooks` do not run while it is set, and `pre-commit install` refuses to install.
 - Packages: `Brewfile` (macOS, shared by every Mac) and `packages-fedora.txt` (Fedora), both installed by `install.sh` and both kept by hand. To update the Brewfile, run `brew bundle dump --force --no-describe --file=<scratch file>` and copy over the lines for what was installed on request; a full dump also lists dependencies.
 - `.zshrc` sets `DOTFILES_OS` (`macos`/`linux`) and `$VAULT` (the notes vault; `~/notes` on Fedora) and puts `scripts/` on `PATH`. Aliases live in `.config/.aliasrc`.
 - Crontabs are kept by hand and installed with `crontab <file>`: `crontab-macos` on every Mac, `crontab-fedora` on Fedora. Both hard-code that machine's home and Homebrew paths. `dotfiles-doctor` checks the jobs in the right one are scheduled.

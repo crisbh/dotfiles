@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+#
+# commit-msg: reject agent attribution (Claude session links, Co-Authored-By
+# Claude) in commit messages, then run the repository's own commit-msg hook.
+#
+# Installed for every repository by core.hooksPath in ~/.gitconfig, which
+# replaces .git/hooks: this hook calls the repository's commit-msg itself, but
+# its other hooks do not run.
+
+set -euo pipefail
+
+if grep -qiE 'claude\.ai/code|^Claude-Session:|^Co-Authored-By:.*(claude|anthropic)' "$1"; then
+  echo "commit-msg: the message contains agent attribution; remove these lines:" >&2
+  grep -inE 'claude\.ai/code|^Claude-Session:|^Co-Authored-By:.*(claude|anthropic)' "$1" >&2
+  exit 1
+fi
+
+local_hook="$(git rev-parse --git-common-dir)/hooks/commit-msg"
+if [[ -x "$local_hook" ]]; then
+  exec "$local_hook" "$@"
+fi
