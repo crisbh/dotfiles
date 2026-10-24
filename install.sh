@@ -33,7 +33,9 @@ install_packages() {
 			return 1
 		fi
 		echo "Installing macOS packages from Brewfile..."
-		brew bundle --file="$DIR/Brewfile"
+		# --verbose shows each package as it installs; casks with a .pkg (mactex)
+		# stop to ask for your password
+		brew bundle --verbose --file="$DIR/Brewfile"
 	elif [[ "$OS" == linux ]]; then
 		if ! command -v dnf >/dev/null 2>&1; then
 			echo "dnf not found — this bootstrap targets Fedora. Install packages manually."
