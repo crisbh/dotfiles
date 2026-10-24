@@ -141,6 +141,7 @@ cmd_new() {
     similar=$(branches | grep -F -- "${branch##*[-/_]}" | head -n 10 || true)
     if [[ -n "$similar" ]]; then
       printf 'Similar branches:\n'
+      # shellcheck disable=SC2001
       sed 's/^/  /' <<<"$similar"
     fi
     confirm "Create new branch $branch from $base?" || exit 1
