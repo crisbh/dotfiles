@@ -39,6 +39,13 @@ done
 
 require_vault
 
+# An iCloud vault is the same folder on every Mac: only the Mac with
+# ~/.vault-owner runs git in it, or iCloud syncs .git between Macs mid-write.
+if [[ "$VAULT" == *"/Mobile Documents/"* && ! -f "$HOME/.vault-owner" ]]; then
+  [[ $AUTO -eq 1 ]] && exit 0
+  die "The vault is in iCloud and this Mac is not its owner: run vault-sync on the Mac that has ~/.vault-owner."
+fi
+
 cd "$VAULT" || {
   echo "❌ Cannot cd into \$VAULT: $VAULT" >&2
   exit 1

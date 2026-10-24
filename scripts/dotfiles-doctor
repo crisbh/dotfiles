@@ -94,6 +94,10 @@ done < <(find "$HOME" "$HOME/.config" -maxdepth 1 -xtype l 2>/dev/null)
 [[ $broken -eq 0 ]] && ok "no broken links into the dotfiles"
 
 if have stow; then
+  for d in .config .ssh .tmux; do
+    [[ -L "$HOME/$d" && "$(readlink -f "$HOME/$d")" == "$(readlink -f "$DOT/$d")" ]] &&
+      bad "$HOME/$d is a symlink into the repo, so what lands there ends up in the working tree (make it a real directory)"
+  done
   sim=$(cd "$DOT" && stow --simulate --verbose=1 --target "$HOME" . 2>&1)
   unlinked=$(grep -c '^LINK:' <<<"$sim" || true)
   conflicts=$(grep -E 'existing target|cannot stow' <<<"$sim" || true)
@@ -127,9 +131,8 @@ fi
 # ── Cron ──────────────────────────────────────────────────────────────────────
 section "Cron jobs"
 current=$(crontab -l 2>/dev/null || true)
-# crontab.backup is the Mac's crontab (written by its cron); crontab-fedora is
-# the one to install on Linux.
-if [[ "$DOTFILES_OS" == macos ]]; then cronfile="$DOT/crontab.backup"; else cronfile="$DOT/crontab-fedora"; fi
+# crontab-macos is installed on every Mac, crontab-fedora on Linux.
+if [[ "$DOTFILES_OS" == macos ]]; then cronfile="$DOT/crontab-macos"; else cronfile="$DOT/crontab-fedora"; fi
 if [[ -f "$cronfile" ]]; then
   # Expected: the jobs in the crontab file that run dotfiles scripts
   while IFS= read -r script; do
@@ -164,6 +167,13 @@ if [[ -n "${VAULT:-}" && -d "$VAULT" ]]; then
   for f in 0-tasks/todo.md 0-tasks/active.md 0-tasks/done.md; do
     if [[ -f "$VAULT/$f" ]]; then ok "$f"; else meh "$f does not exist yet"; fi
   done
+  if [[ "$VAULT" == *"/Mobile Documents/"* ]]; then
+    if [[ -f "$HOME/.vault-owner" ]]; then
+      ok "this Mac owns the iCloud vault: it runs vault-sync and the task jobs (~/.vault-owner)"
+    else
+      ok "another Mac owns the iCloud vault: vault-sync and the task jobs do not run here (no ~/.vault-owner)"
+    fi
+  fi
   if [[ -d "$VAULT/.git" ]]; then
     url=$(git -C "$VAULT" remote get-url origin 2>/dev/null || true)
     vbranch=$(git -C "$VAULT" symbolic-ref --short HEAD 2>/dev/null || echo detached)

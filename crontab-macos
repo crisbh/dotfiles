@@ -1,0 +1,30 @@
+# macOS crontab, shared by every Mac: install with `crontab ~/.dotfiles/crontab-macos`.
+# Kept by hand, like crontab-fedora. Scripts run from cron cannot have a .*
+# extension (no .sh), or they fail to run.
+#
+# The vault is in iCloud, so every Mac sees the same files: the task jobs and
+# vault-sync run only on the Mac that has ~/.vault-owner (`touch ~/.vault-owner`
+# on exactly one Mac). Running them on two Macs would process done.md twice and
+# run git on a .git directory that iCloud is syncing.
+
+PATH=/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/Users/cristian/.dotfiles/scripts
+VAULT="/Users/cristian/Library/Mobile Documents/iCloud~md~obsidian/Documents/kosmos"
+
+# Daily APOD wallpaper (~/.APOD_Mac_Daily is not in the dotfiles)
+0 10 * * * test -x ~/.APOD_Mac_Daily/apod_daily && ~/.APOD_Mac_Daily/apod_daily
+
+# Faster key repeat on startup
+@reboot defaults write -g InitialKeyRepeat -int 25 # normal minimum is 15 (225 ms)
+@reboot defaults write -g KeyRepeat -int 1 # normal minimum is 2 (30 ms)
+
+# ── Vault owner only ──────────────────────────────────────────────────────────
+# Back up todo.md and active.md (rolling, keeps last 10 copies each)
+0 9 * * * test -f ~/.vault-owner && /opt/homebrew/bin/bash ~/.dotfiles/scripts/todo-backup
+
+# Move done tasks to done.md
+0 10 * * * test -f ~/.vault-owner && /opt/homebrew/bin/bash ~/.dotfiles/scripts/todo-mark-done
+0 18 * * * test -f ~/.vault-owner && /opt/homebrew/bin/bash ~/.dotfiles/scripts/todo-mark-done
+
+# Share 0-tasks, 0-zettelkasten and templates through GitHub
+0 10 * * * test -f ~/.vault-owner && /opt/homebrew/bin/bash ~/.dotfiles/scripts/vault-sync --auto >> /tmp/vault-sync.log 2>&1
+@reboot sleep 60 && test -f ~/.vault-owner && /opt/homebrew/bin/bash ~/.dotfiles/scripts/vault-sync --auto >> /tmp/vault-sync.log 2>&1

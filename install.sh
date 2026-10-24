@@ -89,8 +89,22 @@ prepare_claude_dir() {
 	echo "Moved Claude Code state to ~/.claude."
 }
 
+# --- Keep ~/.config, ~/.ssh and ~/.tmux out of the repo ---
+# Same folding problem: on a fresh machine ~/.config would become a link to the
+# repo and collect every tool's state (gh keeps its token there), ~/.ssh the
+# private keys and ~/.tmux the tmux plugins.
+# The catppuccin theme is cloned before stowing, so stow links custom/claude.sh
+# into the clone; otherwise tpm sees the folder and skips installing it.
+prepare_home_dirs() {
+	local plugins="$TARGET_DIR/.tmux/plugins"
+	mkdir -p "$TARGET_DIR/.config" "$TARGET_DIR/.ssh" "$plugins" && chmod 700 "$TARGET_DIR/.ssh" || return 1
+	[[ -d "$plugins/tpm" ]] || git clone --depth 1 https://github.com/tmux-plugins/tpm "$plugins/tpm" || return 1
+	[[ -d "$plugins/catppuccin-tmux" ]] || git clone https://github.com/omerxx/catppuccin-tmux "$plugins/catppuccin-tmux" || return 1
+}
+
 # --- Deploy with stow ---
 prepare_claude_dir || echo "Leaving ~/.claude as it is."
+prepare_home_dirs || echo "Could not prepare ~/.config, ~/.ssh and ~/.tmux/plugins: check them before stowing."
 echo
 echo "Starting dry run of GNU stow..."
 DRY_RUN_OUTPUT=$(stow --simulate --target "$TARGET_DIR" "$SOURCE_DIR" | tee /dev/tty)
@@ -104,7 +118,7 @@ else
 	if [[ "$CONFIRMATION" =~ ^[Yy]$ ]]; then
 		echo "Deploying configuration files..."
 		stow --target "$TARGET_DIR" "$SOURCE_DIR"
-		echo "Installation complete!"
+		echo "Installation complete! In tmux, press prefix + I to install the plugins."
 	else
 		echo "Installation canceled."
 	fi
