@@ -1,0 +1,280 @@
+#!/usr/bin/env bash
+#
+# repos: keep work in sync across machines. Finds the git repositories under
+# the folders listed in scripts/repos.conf and shows which have work that is
+# not on a remote yet.
+#
+#   repos            start of the day: fetch every repo, fast-forward the clean
+#                    ones that are behind, run vault-sync, show what is left
+#   repos --leave    before switching machines: run vault-sync, then open
+#                    lazygit in each repo with unsynced work (or skip it)
+#   repos --status   show the table without fetching (no network)
+#   repos --check    only refresh the cache (cron, every 15 minutes)
+#   repos --notify   refresh the cache and notify if anything is unsynced (cron)
+#   repos --summary  one line if anything is unsynced, from the cache (new shells
+#                    print the same line from .zshrc)
+#   repos --tmux     short text for the tmux status bar, from the cache
+#
+# Unsynced: uncommitted or untracked files, commits on a local branch that no
+# remote has, or no remote at all. Stashes are shown but do not count.
+
+# No `set -e`: a broken repository must not stop the check of the others, so
+# git failures are handled where they matter.
+set -uo pipefail
+
+# shellcheck source=lib/common.sh
+source "${DOTFILES:-$HOME/.dotfiles}/scripts/lib/common.sh"
+
+DOT="${DOTFILES:-$HOME/.dotfiles}"
+# REPOS_CONF and REPOS_CACHE override these (the tests use them)
+CONF="${REPOS_CONF:-$DOT/scripts/repos.conf}"
+CACHE="${REPOS_CACHE:-${XDG_CACHE_HOME:-$HOME/.cache}/repos-status}"
+STALE=120 # seconds before --tmux refreshes the cache in the background
+
+# Repositories under the folders in repos.conf, one per line
+find_repos() {
+  local dir depth r
+  [[ -f "$CONF" ]] || die "Missing $CONF"
+  while read -r dir depth; do
+    [[ -z "$dir" || "$dir" == \#* || "$dir" == ignore-branch ]] && continue
+    dir=${dir/#\~/$HOME}
+    [[ -d "$dir" ]] || continue
+    find "$dir" -maxdepth "$((${depth:-0} + 1))" -name .git -prune -print 2>/dev/null
+  done <"$CONF" | sed 's|/\.git$||' | sort -u |
+    while IFS= read -r r; do
+      # Submodules are covered by the repository that contains them
+      [[ -n "$(git -C "$r" rev-parse --show-superproject-working-tree 2>/dev/null)" ]] && continue
+      printf '%s\n' "$r"
+    done
+}
+
+# Branch patterns from the ignore-branch lines of repos.conf
+IGNORED=()
+load_ignored() {
+  local key pattern
+  [[ -f "$CONF" ]] || return 0
+  while read -r key pattern; do
+    [[ "$key" == ignore-branch && -n "$pattern" ]] && IGNORED+=("$pattern")
+  done <"$CONF"
+}
+
+ignored_branch() {
+  local p
+  for p in "${IGNORED[@]+"${IGNORED[@]}"}"; do
+    # shellcheck disable=SC2053 # $p is a pattern
+    [[ "$1" == $p ]] && return 0
+  done
+  return 1
+}
+
+# repo_state <repo>: sets BRANCH, CHANGED, UNTRACKED, UNPUSHED, STASHES,
+# AHEAD, BEHIND (of the upstream, as of the last fetch), NOREMOTE, SUMMARY
+# and UNSYNCED (1 or 0)
+repo_state() {
+  local r=$1 top is_main ref track wt counts parts=()
+  local refs=()
+  BRANCH=$(git -C "$r" symbolic-ref --short -q HEAD || echo "(detached)")
+  CHANGED=$(($(git --no-optional-locks -C "$r" status --porcelain --untracked-files=no 2>/dev/null | wc -l)))
+  UNTRACKED=$(($(git -C "$r" ls-files --others --exclude-standard --directory 2>/dev/null | wc -l)))
+  STASHES=$(($(git -C "$r" stash list 2>/dev/null | wc -l)))
+  NOREMOTE=0
+  [[ -n "$(git -C "$r" remote 2>/dev/null)" ]] || NOREMOTE=1
+
+  # Commits no remote has, on the branches this checkout is responsible for:
+  # its own branch, plus (in the main checkout) branches not checked out in
+  # another worktree, which that worktree reports instead. Branches whose
+  # upstream is gone were merged through a PR (often squashed, so their
+  # commits are on no remote) and are skipped, as are ignore-branch ones.
+  top=$(git -C "$r" rev-parse --show-toplevel 2>/dev/null)
+  is_main=0
+  [[ "$(git -C "$r" rev-parse --git-dir)" == "$(git -C "$r" rev-parse --git-common-dir)" ]] && is_main=1
+  while IFS='|' read -r ref track wt; do
+    [[ "$track" == "[gone]" ]] && continue
+    ignored_branch "${ref#refs/heads/}" && continue
+    if [[ "$wt" == "$top" || ($is_main -eq 1 && -z "$wt") ]]; then refs+=("$ref"); fi
+  done < <(git -C "$r" for-each-ref --format='%(refname)|%(upstream:track)|%(worktreepath)' refs/heads)
+  [[ "$BRANCH" == "(detached)" ]] && refs+=(HEAD)
+  UNPUSHED=0
+  if [[ ${#refs[@]} -gt 0 && $NOREMOTE -eq 0 ]]; then
+    UNPUSHED=$(git -C "$r" rev-list --count "${refs[@]}" --not --remotes 2>/dev/null || echo 0)
+  fi
+
+  AHEAD=0 BEHIND=0
+  if counts=$(git -C "$r" rev-list --left-right --count 'HEAD...@{upstream}' 2>/dev/null); then
+    read -r AHEAD BEHIND <<<"$counts"
+  fi
+
+  [[ $CHANGED -gt 0 ]] && parts+=("$CHANGED changed")
+  [[ $UNTRACKED -gt 0 ]] && parts+=("$UNTRACKED untracked")
+  [[ $UNPUSHED -gt 0 ]] && parts+=("$UNPUSHED unpushed")
+  [[ $NOREMOTE -eq 1 ]] && parts+=("no remote")
+  [[ $BEHIND -gt 0 ]] && parts+=("$BEHIND behind")
+  [[ $STASHES -gt 0 ]] && parts+=("$STASHES stashed")
+  SUMMARY=""
+  if [[ ${#parts[@]} -gt 0 ]]; then
+    SUMMARY=$(printf '%s, ' "${parts[@]}")
+    SUMMARY=${SUMMARY%, }
+  fi
+  UNSYNCED=0
+  if [[ $CHANGED -gt 0 || $UNTRACKED -gt 0 || $UNPUSHED -gt 0 || $NOREMOTE -eq 1 ]]; then UNSYNCED=1; fi
+}
+
+tilde() { printf '%s' "${1/#$HOME/\~}"; }
+
+# Write the unsynced repositories to the cache ("path<tab>summary" lines)
+write_cache() {
+  local r tmp
+  mkdir -p "$(dirname "$CACHE")"
+  tmp="$CACHE.$$"
+  for r in "$@"; do
+    repo_state "$r"
+    [[ $UNSYNCED -eq 1 ]] && printf '%s\t%s\n' "$(tilde "$r")" "$SUMMARY"
+  done >"$tmp"
+  mv "$tmp" "$CACHE"
+}
+
+show_table() {
+  local r icon
+  for r in "$@"; do
+    repo_state "$r"
+    if [[ $UNSYNCED -eq 1 ]]; then
+      icon="⚠️ "
+    elif [[ $BEHIND -gt 0 ]]; then
+      icon="⬇️ "
+    else
+      icon="✅"
+    fi
+    printf '%s %-44s %-24s %s\n' "$icon" "$(tilde "$r")" "$BRANCH" "$SUMMARY"
+  done
+}
+
+# One fetch per repository, even when several worktrees share it, in parallel
+fetch_all() {
+  local r common seen=" "
+  export GIT_TERMINAL_PROMPT=0
+  : "${GIT_SSH_COMMAND:=ssh -o ConnectTimeout=10 -o BatchMode=yes}"
+  export GIT_SSH_COMMAND
+  for r in "$@"; do
+    [[ -n "$(git -C "$r" remote 2>/dev/null)" ]] || continue
+    common=$(git -C "$r" rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || continue
+    [[ "$seen" == *" $common "* ]] && continue
+    seen+="$common "
+    (git -C "$r" fetch --all --prune --quiet >/dev/null 2>&1 || warn "fetch failed: $(tilde "$r")") &
+  done
+  wait
+}
+
+# Fast-forward clean repositories that are only behind their upstream
+pull_clean() {
+  local r
+  for r in "$@"; do
+    repo_state "$r"
+    [[ $BEHIND -gt 0 ]] || continue
+    if [[ $AHEAD -gt 0 ]]; then
+      warn "$(tilde "$r"): $BRANCH has diverged from its upstream; not pulled"
+    elif [[ $CHANGED -gt 0 ]]; then
+      warn "$(tilde "$r"): $BEHIND behind, not pulled (uncommitted changes)"
+    elif git -C "$r" merge --ff-only --quiet '@{upstream}' 2>/dev/null; then
+      printf '⬇️  %s: pulled %s commit(s) on %s\n' "$(tilde "$r")" "$BEHIND" "$BRANCH"
+    else
+      warn "$(tilde "$r"): fast-forward failed; pull it by hand"
+    fi
+  done
+}
+
+run_vault_sync() {
+  [[ -n "${VAULT:-}" ]] || return 0
+  printf '\n%s== vault%s\n' "$BOLD" "$RESET"
+  "$DOT/scripts/vault-sync" --auto || warn "vault-sync failed (see above)"
+}
+
+# Number of unsynced repositories in the cache, and their names
+cache_count() { [[ -f "$CACHE" ]] && wc -l <"$CACHE" | tr -d ' ' || echo 0; }
+cache_names() { [[ -f "$CACHE" ]] && cut -f1 "$CACHE" | xargs -n1 basename | paste -sd, - | sed 's/,/, /g'; }
+
+mtime() { stat -c %Y "$1" 2>/dev/null || stat -f %m "$1"; }
+
+cmd_check() {
+  local lock="$CACHE.lock"
+  mkdir -p "$(dirname "$CACHE")"
+  # A lock left by a killed run expires after 10 minutes
+  if [[ -d "$lock" && $(($(date +%s) - $(mtime "$lock"))) -gt 600 ]]; then rmdir "$lock"; fi
+  mkdir "$lock" 2>/dev/null || return 0
+  # shellcheck disable=SC2064
+  trap "rmdir '$lock' 2>/dev/null" EXIT
+  local repos=()
+  while IFS= read -r r; do repos+=("$r"); done < <(find_repos)
+  write_cache "${repos[@]}"
+}
+
+cmd_leave() {
+  local r answer repos=()
+  command -v lazygit >/dev/null || die "repos --leave needs lazygit."
+  run_vault_sync
+  while IFS= read -r r; do repos+=("$r"); done < <(find_repos)
+  printf '\n%s== repositories%s\n' "$BOLD" "$RESET"
+  for r in "${repos[@]}"; do
+    while :; do
+      repo_state "$r"
+      [[ $UNSYNCED -eq 1 ]] || break
+      printf '⚠️  %s (%s): %s\n' "$(tilde "$r")" "$BRANCH" "$SUMMARY"
+      read -rp "   [l]azygit, [s]kip, [q]uit? " answer </dev/tty
+      case "$answer" in
+        l | L | "") lazygit -p "$r" ;;
+        s | S) break ;;
+        q | Q) break 2 ;;
+      esac
+    done
+  done
+  echo
+  show_table "${repos[@]}"
+  write_cache "${repos[@]}"
+}
+
+load_ignored
+mode=${1:-start}
+case "$mode" in
+  start | --status)
+    repos=()
+    while IFS= read -r r; do repos+=("$r"); done < <(find_repos)
+    [[ ${#repos[@]} -gt 0 ]] || die "No repositories found under the folders in $CONF"
+    if [[ "$mode" == start ]]; then
+      printf '%s== fetching %d repositories%s\n' "$BOLD" "${#repos[@]}" "$RESET"
+      fetch_all "${repos[@]}"
+      pull_clean "${repos[@]}"
+      run_vault_sync
+      printf '\n%s== repositories%s\n' "$BOLD" "$RESET"
+    fi
+    show_table "${repos[@]}"
+    write_cache "${repos[@]}"
+    n=$(cache_count)
+    [[ $n -eq 0 ]] || printf '\n%s%s repo(s) with unsynced work: run repos --leave before switching machines.%s\n' "$YELLOW" "$n" "$RESET"
+    ;;
+  --leave) cmd_leave ;;
+  --check) cmd_check ;;
+  --notify)
+    cmd_check
+    n=$(cache_count)
+    [[ $n -eq 0 ]] || pnotify "Unsynced work" "$n repo(s): $(cache_names). Run repos --leave."
+    ;;
+  --summary)
+    n=$(cache_count)
+    [[ $n -eq 0 ]] || printf '%s⚠️  %s repo(s) with unsynced work (%s): run repos --leave before switching machines.%s\n' \
+      "$YELLOW" "$n" "$(cache_names)" "$RESET"
+    ;;
+  --tmux)
+    if [[ ! -f "$CACHE" || $(($(date +%s) - $(mtime "$CACHE"))) -gt $STALE ]]; then
+      ("$0" --check >/dev/null 2>&1 &)
+    fi
+    n=$(cache_count)
+    if [[ ! -f "$CACHE" ]]; then
+      echo "…"
+    elif [[ $n -eq 0 ]]; then
+      echo "synced"
+    else
+      echo "$n to sync"
+    fi
+    ;;
+  -h | --help) usage ;;
+  *) die "Unknown argument: $1 (see repos --help)" ;;
+esac

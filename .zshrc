@@ -1,3 +1,14 @@
+# Repositories with unsynced work, from the cache `repos` keeps (nothing when
+# everything is pushed). It must print above the instant prompt below, and is
+# plain zsh so the prompt is not delayed.
+() {
+  local cache=${REPOS_CACHE:-${XDG_CACHE_HOME:-$HOME/.cache}/repos-status}
+  [[ -s $cache ]] || return 0
+  local -a lines=("${(@f)$(<$cache)}")
+  local -a names=(${${lines[@]%%$'\t'*}:t})
+  print -P "%F{yellow}⚠️  ${#lines} repo(s) with unsynced work (${(j:, :)names}): run repos --leave before switching machines.%f"
+}
+
 # ==============================================================================
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]

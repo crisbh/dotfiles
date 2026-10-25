@@ -86,6 +86,7 @@ Everything in `scripts/` is on `PATH`. Run any of them with `--help` for details
 | `todo` | Task pipeline for the notes vault: collect tasks from daily notes, tag them, move finished ones to `done.md`, pomodoros. |
 | `vault` | Vault maintenance: stats, broken links, orphaned notes, keeping secrets out of git, and `vault sync` to back it up to GitHub. |
 | `day`, `zet`, `note` | Open today's diary note, open or create a zettelkasten note, append a quick timestamped note. |
+| `repos` | Every repo's sync state across machines: `repos` to start the day (fetch, fast-forward, vault sync), `repos --leave` before switching machines (lazygit in each repo with unpushed work). Reminders: tmux status bar, new shells, and notifications at 16:00 and 18:00. |
 | `sq` | Slurm jobs in a picker: follow output, cancel, check efficiency. |
 | `arxiv2bib` | Fetch BibTeX for arXiv ids or DOIs into a `.bib` file. |
 | `rerun` | Run a command again whenever a file in the repo (or matching `-g GLOB`) changes. |

@@ -21,6 +21,13 @@ VAULT="/Users/cristian/Library/Mobile Documents/iCloud~md~obsidian/Documents/kos
 0 10 * * * test -f ~/.vault-owner && /opt/homebrew/bin/bash ~/.dotfiles/scripts/todo-mark-done
 0 18 * * * test -f ~/.vault-owner && /opt/homebrew/bin/bash ~/.dotfiles/scripts/todo-mark-done
 
-# Share 0-tasks, 0-zettelkasten and templates through GitHub
-0 10 * * * test -f ~/.vault-owner && /opt/homebrew/bin/bash ~/.dotfiles/scripts/vault-sync --auto >> /tmp/vault-sync.log 2>&1
+# Share 0-tasks, 0-zettelkasten and templates through GitHub, hourly (at :05,
+# clear of the todo jobs)
+5 * * * * test -f ~/.vault-owner && /opt/homebrew/bin/bash ~/.dotfiles/scripts/vault-sync --auto >> /tmp/vault-sync.log 2>&1
 @reboot sleep 60 && test -f ~/.vault-owner && /opt/homebrew/bin/bash ~/.dotfiles/scripts/vault-sync --auto >> /tmp/vault-sync.log 2>&1
+
+# ── Every Mac ─────────────────────────────────────────────────────────────────
+# Repositories with unsynced work: refresh the cache for tmux and new shells,
+# and notify at the usual ends of the day
+*/15 * * * * /opt/homebrew/bin/bash ~/.dotfiles/scripts/repos --check
+0 16,18 * * * /opt/homebrew/bin/bash ~/.dotfiles/scripts/repos --notify
