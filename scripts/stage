@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+#
+# stage: pick changed files with fzf and stage or unstage them, with a diff
+# preview. The list refreshes after each action; Esc quits.
+#
+#   stage          Tab to select several files, then:
+#                    Enter   stage them (git add)
+#                    Ctrl-U  unstage them (git restore --staged)
+#
+# Untracked folders are listed as one entry, like `git status`.
+
+set -euo pipefail
+
+# shellcheck source=lib/common.sh
+source "${DOTFILES:-$HOME/.dotfiles}/scripts/lib/common.sh"
+
+# Entries are "XY<tab>path", with git status's two status letters
+list() {
+  local entry xy path
+  while IFS= read -r -d '' entry; do
+    xy=${entry:0:2} path=${entry:3}
+    # A rename is followed by its old path, which is not needed here
+    [[ $xy == R* || $xy == C* ]] && IFS= read -r -d '' _
+    printf '%s\t%s\n' "$xy" "$path"
+  done < <(git status --porcelain=v1 -z)
+}
+
+paths() {
+  local line
+  for line in "$@"; do printf '%s\0' "${line#*$'\t'}"; done
+}
+
+show_diff() {
+  if command -v delta >/dev/null; then
+    delta --no-gitconfig --line-numbers --width "${FZF_PREVIEW_COLUMNS:-80}"
+  else
+    cat
+  fi
+}
+
+preview() {
+  local xy=${1:0:2} path=${1#*$'\t'}
+  if [[ $xy == '??' ]]; then
+    if [[ -d $path ]]; then
+      ls -la "$path"
+    elif command -v bat >/dev/null; then
+      bat --color=always --style=numbers -- "$path"
+    else
+      cat -- "$path"
+    fi
+    return
+  fi
+  if [[ ${xy:0:1} != ' ' ]]; then
+    printf '\033[32m── staged ──\033[m\n'
+    git diff --cached --color=always -- "$path" | show_diff
+  fi
+  if [[ ${xy:1:1} != ' ' ]]; then
+    printf '\033[31m── not staged ──\033[m\n'
+    git diff --color=always -- "$path" | show_diff
+  fi
+}
+
+if [[ ${1:-} != -h && ${1:-} != --help ]]; then
+  git rev-parse --is-inside-work-tree >/dev/null 2>&1 || die "Not inside a git repository."
+  # git status paths are relative to the top of the repository
+  cd "$(git rev-parse --show-toplevel)"
+fi
+
+case "${1:-}" in
+  "") ;;
+  --list) list && exit 0 ;;
+  --preview) preview "$2" && exit 0 ;;
+  --add)
+    shift
+    paths "$@" | xargs -0 git add --
+    exit 0
+    ;;
+  --unstage)
+    shift
+    paths "$@" | xargs -0 git restore --staged --
+    exit 0
+    ;;
+  -h | --help)
+    usage
+    exit 0
+    ;;
+  *) die "Unknown argument: $1 (see stage --help)" ;;
+esac
+
+command -v fzf >/dev/null || die "stage needs fzf."
+[[ -n "$(list)" ]] || {
+  echo "Nothing to stage."
+  exit 0
+}
+
+self=$(printf %q "$(cd "$(dirname "$0")" && pwd)/$(basename "$0")")
+list | fzf --multi --ansi --reverse --delimiter '\t' \
+  --header 'Tab select · Enter stage · Ctrl-U unstage · Esc quit' \
+  --preview "$self --preview {}" --preview-window 'right,65%' \
+  --bind "enter:execute-silent($self --add {+})+reload($self --list)+clear-selection" \
+  --bind "ctrl-u:execute-silent($self --unstage {+})+reload($self --list)+clear-selection" \
+  >/dev/null || true
+git status -sb
