@@ -93,18 +93,17 @@ if [[ -x "$(command -v nvim)" ]]; then
 fi
 
 # History in cache directory:
-HISTSIZE=10000
+HISTSIZE=100000
 SAVEHIST=$HISTSIZE
 [ ! -f "$HOME/.cache/zsh/history" ] && touch "$HOME/.cache/zsh/history" \
     && echo "History file not found. Creating one..."
 HISTFILE=~/.cache/zsh/history
-HISTDUP=erase
-export HISTCONTROL=ignoredups
 setopt appendhistory
 setopt sharehistory
+setopt extended_history  # save a timestamp with each command
 setopt hist_ignore_space
-setopt hist_ignore_all_dups
-setopt hist_save_no_dups
+# Repeats are kept (only back-to-back duplicates are dropped) so `freq` can
+# count them; searches still show each command once
 setopt hist_ignore_dups
 setopt hist_find_no_dups
 
@@ -151,7 +150,6 @@ export MANPAGER="less -R --use-color -Dd+g -Du+b"
 # --------------------------------------------
 
 # Load aliases and shortcuts if existent.
-[ -f "$HOME/.config/.shortcutrc" ] && source "$HOME/.config/shortcutrc"
 [ -f "$HOME/.config/.aliasrc" ] && source "$HOME/.config/.aliasrc"
 
 # --------------------------------------------
