@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+#
+# macos-defaults: apply the macOS settings the dotfiles expect (run once per
+# Mac; the settings persist across reboots).
+#
+#   macos-defaults            apply them
+#   macos-defaults --dry-run  print the commands instead
+#
+# Key repeat changes take effect after logging out and back in.
+
+set -euo pipefail
+
+# shellcheck source=lib/common.sh
+source "${DOTFILES:-$HOME/.dotfiles}/scripts/lib/common.sh"
+
+dry=0
+case "${1:-}" in
+  "") ;;
+  -n | --dry-run) dry=1 ;;
+  -h | --help)
+    usage
+    exit 0
+    ;;
+  *) die "Unknown argument: $1 (see macos-defaults --help)" ;;
+esac
+
+[[ "$(uname -s)" == Darwin ]] || die "macos-defaults only runs on macOS."
+
+run() {
+  if [[ $dry -eq 1 ]]; then
+    printf '%s\n' "$*"
+  else
+    "$@"
+  fi
+}
+
+screenshots="$HOME/Pictures/Screenshots"
+
+# Faster key repeat than System Settings allows (minimums there: 15 and 2)
+run defaults write -g InitialKeyRepeat -int 25 # 375 ms
+run defaults write -g KeyRepeat -int 1         # 15 ms
+
+# Screenshots go to their own folder instead of the Desktop
+run mkdir -p "$screenshots"
+run defaults write com.apple.screencapture location -string "$screenshots"
+run killall SystemUIServer
+
+[[ $dry -eq 1 ]] || echo "Done. Log out and back in for the key repeat settings."

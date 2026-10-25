@@ -60,7 +60,7 @@ The Macs share the Brewfile and `crontab-macos`, and see the same vault through 
 1. Install the Xcode command line tools (`xcode-select --install`) and [Homebrew](https://brew.sh), and set up an SSH key for GitHub.
 2. Clone into `~/.dotfiles` (cron and the scripts expect that path) and run `bash install.sh`, then press prefix + `I` in tmux and open `nvim` once to install the plugins.
 3. Log in: `gh auth login`, `claude`, and git-credential-manager on first push.
-4. `crontab ~/.dotfiles/crontab-macos`. Do not create `~/.vault-owner`: only one Mac runs `vault-sync` and the task jobs on the iCloud vault, and that file marks it.
+4. `macos-defaults`, then `crontab ~/.dotfiles/crontab-macos`. Do not create `~/.vault-owner`: only one Mac runs `vault-sync` and the task jobs on the iCloud vault, and that file marks it.
 5. Run `dotfiles-doctor`.
 
 ## Neovim
@@ -89,6 +89,7 @@ Everything in `scripts/` is on `PATH`. Run any of them with `--help` for details
 | `arxiv2bib` | Fetch BibTeX for arXiv ids or DOIs into a `.bib` file. |
 | `formatter` | Format every recognised file in a project (ruff, stylua, shfmt, clang-format). |
 | `dotfiles-doctor` | Check a machine against what the dotfiles expect. |
+| `macos-defaults` | Apply the macOS settings the dotfiles expect (key repeat, screenshot folder). |
 
 The notes scripts expect `$VAULT` to point at the notes vault, which `.zshrc` sets per OS.
 
