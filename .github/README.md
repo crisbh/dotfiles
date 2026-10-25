@@ -80,6 +80,7 @@ Everything in `scripts/` is on `PATH`. Run any of them with `--help` for details
 | Command | What it does |
 |---|---|
 | `commit`, `push` | Show what will be committed, ask for a message, commit (and push). `commit <file>` commits only that file. |
+| `stage` | Pick changed files with fzf and stage or unstage them, with a diff preview. |
 | `wt` | Git worktrees, one tmux session each: pick, create, remove, and clean up after merged PRs. tmux: prefix `W`. |
 | `tp` | Open a project in its own tmux session. tmux: prefix `P`. |
 | `todo` | Task pipeline for the notes vault: collect tasks from daily notes, tag them, move finished ones to `done.md`, pomodoros. |
@@ -87,6 +88,7 @@ Everything in `scripts/` is on `PATH`. Run any of them with `--help` for details
 | `day`, `zet`, `note` | Open today's diary note, open or create a zettelkasten note, append a quick timestamped note. |
 | `sq` | Slurm jobs in a picker: follow output, cancel, check efficiency. |
 | `arxiv2bib` | Fetch BibTeX for arXiv ids or DOIs into a `.bib` file. |
+| `rerun` | Run a command again whenever a file in the repo (or matching `-g GLOB`) changes. |
 | `formatter` | Format every recognised file in a project (ruff, stylua, shfmt, clang-format). |
 | `dotfiles-doctor` | Check a machine against what the dotfiles expect. |
 | `macos-defaults` | Apply the macOS settings the dotfiles expect (key repeat, screenshot folder). |
