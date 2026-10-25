@@ -24,7 +24,7 @@ alias q="exit"
 # Vim
 alias zshrc="vim ~/.zshrc && source ~/.zshrc"
 alias aliasrc="vim ~/.config/.aliasrc && source ~/.config/.aliasrc"
-alias nvimrc="vim ~/.config/nvim/init.vim"
+alias nvimrc="vim ~/.config/nvim/init.lua"
 alias vimrc="vim ~/.vimrc"
 alias vsplit="vim -O"
 
@@ -55,8 +55,6 @@ alias \
 	rm="rm -vI" \
 	bc="bc -ql" \
 	mkd="mkdir -pv" \
-	yt="youtube-dl --add-metadata -i" \
-	yta="yt -x -f bestaudio/best" \
 	ffmpeg="ffmpeg -hide_banner"
 
 # Colorize commands when possible.
@@ -68,8 +66,7 @@ alias \
 	l.="ls -d .* --color=auto" \
         sl="ls" \
 	grep="grep --color=auto" \
-	diff="diff --color=auto" \
-	ccat="highlight --out-format=ansi"
+	diff="diff --color=auto"
 
 # Replace ls with eza if available
 if [ -x "$(command -v eza)" ]; then
@@ -89,8 +86,6 @@ if [ -x "$(command -v htop)" ]; then
     alias top="htop"
 fi
 
-# Peano grid visualisation script
-alias renderpeanogrid='pvpython ~/Codes/Peano/python/peano4/visualisation/render.py grid.peano-patch-file'
 
 # jupyter notebooks
 alias jn='jupyter-notebook'

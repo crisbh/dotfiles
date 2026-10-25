@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+#
+# rerun: run a command, then run it again whenever a watched file changes
+# (uses entr). Ctrl-C stops.
+#
+#   rerun CMD [ARGS...]           watch the files git knows about here
+#                                 (tracked, plus untracked ones not ignored)
+#   rerun -g GLOB CMD [ARGS...]   watch only files matching GLOB, e.g. '*.py'
+#                                 (required outside a git repository)
+#
+# Files created after it starts are not watched: restart it to pick them up.
+# Do not watch the command's own output files, or it reruns forever.
+
+set -euo pipefail
+
+# shellcheck source=lib/common.sh
+source "${DOTFILES:-$HOME/.dotfiles}/scripts/lib/common.sh"
+
+glob=""
+case "${1:-}" in
+  -h | --help | "")
+    usage
+    exit 0
+    ;;
+  -g)
+    [[ $# -ge 3 ]] || die "Usage: rerun -g GLOB CMD [ARGS...]"
+    glob=$2
+    shift 2
+    ;;
+esac
+
+command -v entr >/dev/null || die "rerun needs entr (brew install entr)."
+
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  files=$(git ls-files --cached --others --exclude-standard -- "${glob:-.}")
+elif [[ -n $glob ]]; then
+  files=$(find . -type f -name "$glob" -not -path '*/.git/*')
+else
+  die "Not in a git repository: say which files to watch with -g GLOB."
+fi
+[[ -n $files ]] || die "No files to watch${glob:+ match $glob}."
+
+echo "Watching $(wc -l <<<"$files" | tr -d ' ') file(s); Ctrl-C to stop."
+entr -c "$@" <<<"$files"
