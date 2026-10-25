@@ -17,11 +17,6 @@ VAULT="/Users/cristian/Library/Mobile Documents/iCloud~md~obsidian/Documents/kos
 @reboot defaults write -g InitialKeyRepeat -int 25 # normal minimum is 15 (225 ms)
 @reboot defaults write -g KeyRepeat -int 1 # normal minimum is 2 (30 ms)
 
-# Repositories with unsynced work: refresh the cache for tmux and new shells,
-# and notify at the usual ends of the day
-*/15 * * * * /opt/homebrew/bin/bash ~/.dotfiles/scripts/repos --check
-0 16,18 * * * /opt/homebrew/bin/bash ~/.dotfiles/scripts/repos --notify
-
 # ── Vault owner only ──────────────────────────────────────────────────────────
 # Back up todo.md and active.md (rolling, keeps last 10 copies each)
 0 9 * * * test -f ~/.vault-owner && /opt/homebrew/bin/bash ~/.dotfiles/scripts/todo-backup
@@ -34,3 +29,9 @@ VAULT="/Users/cristian/Library/Mobile Documents/iCloud~md~obsidian/Documents/kos
 # clear of the todo jobs)
 5 * * * * test -f ~/.vault-owner && /opt/homebrew/bin/bash ~/.dotfiles/scripts/vault-sync --auto >> /tmp/vault-sync.log 2>&1
 @reboot sleep 60 && test -f ~/.vault-owner && /opt/homebrew/bin/bash ~/.dotfiles/scripts/vault-sync --auto >> /tmp/vault-sync.log 2>&1
+
+# ── Every Mac ─────────────────────────────────────────────────────────────────
+# Repositories with unsynced work: refresh the cache for tmux and new shells,
+# and notify at the usual ends of the day
+*/15 * * * * /opt/homebrew/bin/bash ~/.dotfiles/scripts/repos --check
+0 16,18 * * * /opt/homebrew/bin/bash ~/.dotfiles/scripts/repos --notify
