@@ -72,6 +72,10 @@ pnotify() {
   if [[ "$DOTFILES_OS" == macos ]]; then
     osascript -e "display notification \"$msg\" with title \"$title\"" 2>/dev/null
   elif command -v notify-send >/dev/null 2>&1; then
+    # cron jobs do not get the desktop session's bus address
+    if [[ -z "${DBUS_SESSION_BUS_ADDRESS:-}" && -S "/run/user/$(id -u)/bus" ]]; then
+      export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u)/bus"
+    fi
     notify-send "$title" "$msg"
   fi
 }

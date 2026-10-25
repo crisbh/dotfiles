@@ -6,6 +6,12 @@
 PATH=/usr/local/bin:/usr/bin:/bin:/home/cbarrera/.dotfiles/scripts
 VAULT=/home/cbarrera/notes
 
-# Share 0-tasks, 0-zettelkasten and templates through GitHub
-30 10 * * * /usr/bin/env bash /home/cbarrera/.dotfiles/scripts/vault-sync --auto >> /tmp/vault-sync.log 2>&1
+# Share 0-tasks, 0-zettelkasten and templates through GitHub, hourly
+# (staggered from the Mac's :05)
+35 * * * * /usr/bin/env bash /home/cbarrera/.dotfiles/scripts/vault-sync --auto >> /tmp/vault-sync.log 2>&1
 @reboot sleep 60 && /usr/bin/env bash /home/cbarrera/.dotfiles/scripts/vault-sync --auto >> /tmp/vault-sync.log 2>&1
+
+# Repositories with unsynced work: refresh the cache for tmux and new shells,
+# and notify at the usual ends of the day
+*/15 * * * * /usr/bin/env bash /home/cbarrera/.dotfiles/scripts/repos --check
+0 16,18 * * * /usr/bin/env bash /home/cbarrera/.dotfiles/scripts/repos --notify
