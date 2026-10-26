@@ -1,7 +1,8 @@
 # Brewfile — macOS Homebrew packages, shared by every Mac. Kept by hand: after
 # installing or removing something, run `brew bundle dump --force --no-describe`
-# to a scratch file and copy the relevant lines here (see AGENTS.md).
-tap "0xjemm/youtube-music-macos"
+# to a scratch file and copy the relevant lines here (see AGENTS.md). Leave out
+# per-machine state such as `link: false`, and mark every tap `trusted: true`.
+tap "0xjemm/youtube-music-macos", trusted: true
 tap "espanso/espanso", trusted: true
 tap "felixkratz/formulae", "https://github.com/FelixKratz/homebrew-formulae", trusted: true
 tap "gromgit/brewtils", trusted: true
@@ -25,6 +26,7 @@ brew "docutils"
 brew "doxygen"
 brew "entr"
 brew "eza"
+brew "fastfetch"
 brew "fd"
 brew "fftw"
 brew "fswatch"
@@ -46,17 +48,15 @@ brew "lazygit"
 brew "libopenmpt"
 brew "lima"
 brew "luarocks"
-brew "marp-cli", link: false
+brew "marp-cli"
 brew "mat2"
 brew "meson"
 brew "mysql"
-brew "neofetch"
 brew "neomutt"
 brew "neovim"
 brew "node@22"
 brew "numpy"
 brew "open-mpi"
-brew "openjdk"
 brew "pandoc"
 brew "python@3.11"
 brew "python@3.12"
@@ -99,7 +99,6 @@ cask "mactex-no-gui"
 cask "macvim-app"
 cask "miniconda"
 cask "obsidian"
-cask "rar"
 cask "raycast"
 cask "reminders-menubar"
 cask "skim"
@@ -109,6 +108,5 @@ cask "wezterm"
 cask "youtube-music"
 cask "zen"
 cargo "cargo-update"
-npm "@marp-team/marp-cli"
 npm "@mermaid-js/mermaid-cli"
 npm "neovim"

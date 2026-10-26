@@ -55,9 +55,20 @@ fi
 for cmd in shellcheck shfmt ruff stylua; do
   if have "$cmd" mason; then ok "$cmd"; else meh "$cmd is missing (scripts/check, formatting); install it with :Mason"; fi
 done
-for cmd in tree-sitter bat eza gh lazygit; do
+for cmd in tree-sitter bat eza gh lazygit marp mmdc; do
   have "$cmd" || meh "$cmd is missing (optional)"
 done
+# brew bundle carries on past failures (unlinked formulae, casks whose app was
+# installed by hand, npm packages), so compare against the Brewfile itself
+if [[ "$DOTFILES_OS" == macos ]] && have brew; then
+  if bundle=$(PATH="$(brew --prefix)/opt/node@22/bin:$PATH" brew bundle check --verbose --no-upgrade --file "$DOT/Brewfile" 2>&1); then
+    ok "Brewfile satisfied"
+  else
+    while IFS= read -r line; do
+      meh "Brewfile: ${line#→ } (bash install.sh repairs it)"
+    done < <(grep '^→' <<<"$bundle")
+  fi
+fi
 
 if have python3; then
   py=$(python3 -c 'import sys; print("%d.%d" % sys.version_info[:2])')

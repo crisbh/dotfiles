@@ -25,6 +25,39 @@ case "$(uname -s)" in
 	*)      OS=unknown ;;
 esac
 
+# --- Repair what brew bundle left unsatisfied ---
+# brew bundle carries on past failures: a formula left unlinked, a cask whose
+# app is already in /Applications (installed by hand), an npm or cargo package
+# that did not build. Ask `brew bundle check` what is still wrong, fix the kinds
+# it can fix, and list the rest so they are not found weeks later.
+brew_repair() {
+	local check line kind name
+	check=$(brew bundle check --verbose --no-upgrade --file="$DIR/Brewfile" 2>&1) && return 0
+	while IFS= read -r line; do
+		# Lines look like "→ Formula coreutils needs to be linked."
+		[[ "$line" =~ ^→\ (Formula|Cask|npm\ Package|Cargo\ Package)\ ([^ ]+)\ needs\ to\ be\ ([a-z]+) ]] || continue
+		kind=${BASH_REMATCH[1]} name=${BASH_REMATCH[2]}
+		case "$kind:${BASH_REMATCH[3]}" in
+			Formula:linked) brew link "$name" ;;
+			Formula:unlinked) brew unlink "$name" ;;
+			Formula:installed) brew install "$name" ;;
+			# --adopt takes over an app installed by hand, and installs as usual otherwise
+			Cask:installed) brew install --cask --adopt "$name" ;;
+			npm\ Package:installed) npm install -g "$name" ;;
+			Cargo\ Package:installed) cargo install "$name" ;;
+		esac || echo "Could not repair $kind $name."
+	done <<<"$check"
+
+	if check=$(brew bundle check --verbose --no-upgrade --file="$DIR/Brewfile" 2>&1); then
+		echo "Brewfile is satisfied."
+	else
+		echo
+		echo "Still unresolved after repair (fix by hand, then run dotfiles-doctor):"
+		grep '^→' <<<"$check"
+		return 1
+	fi
+}
+
 # --- Install packages ---
 install_packages() {
 	if [[ "$OS" == macos ]]; then
@@ -33,9 +66,13 @@ install_packages() {
 			return 1
 		fi
 		echo "Installing macOS packages from Brewfile..."
+		# node@22 is keg-only: put it (and cargo) first so the npm and cargo
+		# entries use the same toolchain as the shell (.zshrc pins node@22)
+		PATH="$(brew --prefix)/opt/node@22/bin:$HOME/.cargo/bin:$PATH"
 		# --verbose shows each package as it installs; casks with a .pkg (mactex)
 		# stop to ask for your password
-		brew bundle --verbose --file="$DIR/Brewfile"
+		brew bundle --verbose --file="$DIR/Brewfile" || echo "brew bundle reported failures; repairing what it can..."
+		brew_repair
 	elif [[ "$OS" == linux ]]; then
 		if ! command -v dnf >/dev/null 2>&1; then
 			echo "dnf not found — this bootstrap targets Fedora. Install packages manually."
