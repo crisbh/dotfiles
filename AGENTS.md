@@ -39,3 +39,4 @@ Personal dotfiles for macOS (Homebrew) and Fedora (dnf), deployed into `$HOME` w
 - Single test: `cd scripts/tests && python3 -m unittest testtasks.TagTest.test_email_is_not_a_tag` (module, class or method).
 - Tests are in `scripts/tests/` (stdlib `unittest`, files named `test*.py` without underscores). `tests/fixture.py` builds a small vault with fixed dates; `tests/golden/` holds the expected pipeline output. Never run tests or experiments against the real `$VAULT`.
 - `dotfiles-doctor` checks a machine against what the dotfiles expect (tools, links, cron, vault).
+- `dotfiles-test` installs the committed dotfiles in a fresh Fedora container (podman in the Lima VM `dotfiles-test`) and checks the result; it needs `lima`, and the first run boots the VM (about 10 minutes). Run it after changing `install.sh`, `packages-fedora.txt`, `.zshrc` or the stow layout.
