@@ -106,9 +106,9 @@ fi
 # History in cache directory:
 HISTSIZE=100000
 SAVEHIST=$HISTSIZE
-[ ! -f "$HOME/.cache/zsh/history" ] && touch "$HOME/.cache/zsh/history" \
-    && echo "History file not found. Creating one..."
 HISTFILE=~/.cache/zsh/history
+# zsh creates the file on first write, but not its directory (fresh machine)
+[[ -d ${HISTFILE:h} ]] || mkdir -p ${HISTFILE:h}
 setopt appendhistory
 setopt sharehistory
 setopt extended_history  # save a timestamp with each command
