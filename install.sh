@@ -146,11 +146,18 @@ prepare_claude_dir || echo "Leaving ~/.claude as it is."
 prepare_home_dirs || echo "Could not prepare ~/.config, ~/.ssh and ~/.tmux/plugins: check them before stowing."
 echo
 echo "Starting dry run of GNU stow..."
-DRY_RUN_OUTPUT=$(stow --simulate --target "$TARGET_DIR" "$SOURCE_DIR" | tee /dev/tty)
+# stow reports on stderr, lists what it would do only with --verbose, and exits
+# 1 on a conflict
+DRY_RUN_OUTPUT=$(stow --simulate --verbose --target "$TARGET_DIR" "$SOURCE_DIR" 2>&1)
+DRY_RUN_STATUS=$?
+echo "$DRY_RUN_OUTPUT"
 echo
 
-if echo "$DRY_RUN_OUTPUT" | head -n2 | tail -n1 | grep -qE "^(WARNING|LINK)"; then
-	echo "Configuration seems to be already up-to-date. Aborting Installation..."
+if [[ $DRY_RUN_STATUS -ne 0 ]]; then
+	echo "stow would fail (see above): move the conflicting files out of the way, then re-run."
+	exit 1
+elif ! grep -qE '^(LINK|UNLINK|MKDIR|RMDIR):' <<<"$DRY_RUN_OUTPUT"; then
+	echo "Everything is already stowed."
 else
 	read -p "Proceed with stow deployment? (y/n): " CONFIRMATION
 
