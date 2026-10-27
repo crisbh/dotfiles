@@ -1,0 +1,27 @@
+# Development: conventional-commit prefixes, code fences, clipboard.
+# yaml-language-server: $schema=https://raw.githubusercontent.com/espanso/espanso/dev/schemas/match.schema.json
+
+matches:
+  # Conventional commits (as used in every repo, see ~/.claude/CLAUDE.md)
+  - trigger: ":feat"
+    replace: "feat: "
+  - trigger: ":fix"
+    replace: "fix: "
+  - trigger: ":docs"
+    replace: "docs: "
+  - trigger: ":chore"
+    replace: "chore: "
+
+  # Code fence with the cursor inside
+  - trigger: ":code"
+    replace: "```\n$|$\n```"
+
+  # Paste the clipboard as plain text (drops rich-text formatting)
+  - trigger: ":clip"
+    replace: "{{clip}}"
+    vars:
+      - name: clip
+        type: clipboard
+
+  - trigger: ":shrug"
+    replace: '¯\_(ツ)_/¯'

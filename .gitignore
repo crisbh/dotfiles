@@ -9,3 +9,7 @@ __pycache__/
 
 # Local investigation notes, never committed
 notes/
+
+# espanso: snippets with personal details, and packages from `espanso install`
+.config/espanso/match/personal.yml
+.config/espanso/match/packages/

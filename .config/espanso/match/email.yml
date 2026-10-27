@@ -1,0 +1,19 @@
+# Email greetings and sign-offs, English and Spanish.
+# yaml-language-server: $schema=https://raw.githubusercontent.com/espanso/espanso/dev/schemas/match.schema.json
+
+matches:
+  - trigger: ":hi"
+    replace: "Hi $|$,\n\n"
+  - trigger: ":hola"
+    replace: "Hola $|$,\n\n"
+
+  - trigger: ":br"
+    replace: "Best regards,\nCristian"
+  - trigger: ":thx"
+    replace: "Thanks,\nCristian"
+  - trigger: ":cheers"
+    replace: "Cheers,\nCristian"
+  - trigger: ":sld"
+    replace: "Saludos,\nCristian"
+  - trigger: ":abz"
+    replace: "Un abrazo,\nCristian"
