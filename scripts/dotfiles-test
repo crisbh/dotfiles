@@ -1,0 +1,137 @@
+#!/usr/bin/env bash
+#
+# dotfiles-test: install the committed dotfiles on a fresh Fedora container and
+# check the result: packages, stow, zsh, tmux, Neovim, Python tests and
+# dotfiles-doctor. Exits 1 if any check fails.
+#
+#   dotfiles-test          test HEAD of ~/.dotfiles
+#   dotfiles-test --keep   leave the container running (name: dotfiles-test)
+#
+# Runs podman inside the Lima VM `dotfiles-test`, created on first use (the
+# first boot takes about 10 minutes, a run about 10 more). The repo is cloned
+# inside the container, so uncommitted changes are not tested. The full log is
+# kept in ~/.cache/dotfiles-test.log. Remove the VM with
+# `limactl delete -f dotfiles-test`.
+
+set -euo pipefail
+
+# shellcheck source=lib/common.sh
+source "${DOTFILES:-$HOME/.dotfiles}/scripts/lib/common.sh"
+
+VM=dotfiles-test
+IMAGE=registry.fedoraproject.org/fedora:latest
+DOT="${DOTFILES:-$HOME/.dotfiles}"
+LOG="${XDG_CACHE_HOME:-$HOME/.cache}/dotfiles-test.log"
+KEEP=0
+
+case "${1:-}" in
+  "") ;;
+  --keep) KEEP=1 ;;
+  -h | --help)
+    usage
+    exit 0
+    ;;
+  *) die "Unknown argument: $1" ;;
+esac
+
+command -v limactl >/dev/null || die "limactl not found (brew install lima)"
+
+# --- VM with podman ---
+if ! limactl list --quiet 2>/dev/null | grep -qx "$VM"; then
+  echo "Creating the Lima VM $VM (first boot takes about 10 minutes)..."
+  limactl start --name="$VM" --tty=false --cpus=4 --memory=6 template:default
+elif [[ "$(limactl list --format '{{.Status}}' "$VM")" != Running ]]; then
+  limactl start --tty=false "$VM"
+fi
+if ! limactl shell "$VM" -- command -v podman >/dev/null 2>&1; then
+  echo "Installing podman in the VM..."
+  limactl shell "$VM" -- bash -c 'cloud-init status --wait >/dev/null
+    sudo apt-get update -qq && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq podman >/dev/null'
+fi
+
+# --- Run the test in a fresh container ---
+# Lima mounts the home directory read-only at the same path; the container
+# clones from it. The test itself runs as root first, then as a sudo user.
+mkdir -p "$(dirname "$LOG")"
+echo "Testing $(git -C "$DOT" log --oneline -1) in $IMAGE (log: $LOG)..."
+limactl shell "$VM" -- sudo podman rm -f "$VM" >/dev/null 2>&1 || true
+limactl shell "$VM" -- sudo podman run -d --name "$VM" -v "$DOT:/src:ro" "$IMAGE" sleep infinity >/dev/null
+
+set +e
+limactl shell "$VM" -- sudo podman exec -i "$VM" bash -s >"$LOG" 2>&1 <<'CONTAINER'
+dnf install -y -q sudo git util-linux-script procps-ng >/dev/null || exit 1
+useradd -m -s /bin/bash tester
+echo 'tester ALL=(ALL) NOPASSWD: ALL' >/etc/sudoers.d/tester
+cat >/home/tester/run.sh <<'EOF'
+set -u
+export TERM=xterm-256color
+export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0='*'
+failed=0
+pass() { echo "RESULT ✅ $1"; }
+fail() { echo "RESULT ❌ $1"; failed=1; }
+check() { if eval "$2"; then pass "$1"; else fail "$1"; fi; }
+# install.sh tees to /dev/tty and sudo reads the terminal: give it a pty and
+# pipe the answers straight into install.sh
+in_pty() { script -qec "$1" /dev/null 2>&1 | sed -E 's/\x1b\[[0-9;?]*[A-Za-z]//g; s/\r//g'; }
+
+cd ~ && git clone -q /src ~/.dotfiles && git -C ~/.dotfiles log --oneline -1
+cd ~/.dotfiles
+
+echo "==== install.sh"
+out=$(in_pty 'printf "y\\ny\\n" | bash install.sh; echo "exit=$?"')
+echo "$out"
+check "install.sh exits 0" 'grep -q "^exit=0" <<<"$out"'
+check "install.sh deploys" 'grep -q "Installation complete" <<<"$out"'
+for d in .claude .config .ssh .tmux .tmux/plugins; do
+  check "~/$d is a real directory" "[[ -d ~/$d && ! -L ~/$d ]]"
+done
+
+echo "==== install.sh again"
+out=$(in_pty 'printf "n\\n" | bash install.sh; echo "exit=$?"')
+echo "$out"
+check "second run finds everything stowed" 'grep -q "already stowed" <<<"$out"'
+
+echo "==== interactive zsh"
+out=$(in_pty 'timeout 300 zsh -ic "print VAULT=\$VAULT; whence -p todo repos dotfiles-doctor"; echo "exit=$?"')
+echo "$out"
+check "zsh starts" 'grep -q "^exit=0" <<<"$out"'
+check "\$VAULT is set" 'grep -q "^VAULT=$HOME/notes" <<<"$out"'
+check "scripts/ is on PATH" 'grep -q "/.dotfiles/scripts/dotfiles-doctor" <<<"$out"'
+check "zsh prints no errors" '! grep -qE "cannot|command not found|parse error" <<<"$out"'
+
+echo "==== tmux"
+check "tmux config loads" 'tmux new-session -d -s t "sleep 5" && tmux source-file ~/.tmux.conf'
+tmux kill-server 2>/dev/null
+
+echo "==== neovim"
+timeout 900 nvim -n --headless "+Lazy! sync" +qa >/dev/null 2>&1
+out=$(nvim -n --headless +'lua io.write(#require("lazy").plugins())' +qa 2>&1)
+echo "plugins: $out"
+check "Neovim loads its plugins" '[[ $out =~ ^[0-9]+$ && $out -gt 0 ]]'
+
+echo "==== python tests"
+check "python tests pass" '(cd ~/.dotfiles/scripts/tests && python3 -m unittest 2>&1 | tail -3)'
+
+echo "==== dotfiles-doctor"
+out=$(in_pty 'zsh -ic dotfiles-doctor; echo "exit=$?"')
+echo "$out"
+check "dotfiles-doctor finds no problems" 'grep -q "^exit=0" <<<"$out"'
+
+check "repo is clean afterwards" '[[ -z $(git -C ~/.dotfiles status --porcelain) ]]'
+exit "$failed"
+EOF
+chown tester /home/tester/run.sh
+su - tester -c 'bash ~/run.sh'
+CONTAINER
+status=$?
+set -e
+
+[[ $KEEP -eq 1 ]] || limactl shell "$VM" -- sudo podman rm -f "$VM" >/dev/null 2>&1
+grep '^RESULT' "$LOG" | sed 's/^RESULT //'
+[[ $KEEP -eq 1 ]] && echo "Container kept: limactl shell $VM -- sudo podman exec -it -u tester -w /home/tester $VM zsh"
+if [[ $status -eq 0 ]]; then
+  printf '%sAll checks passed.%s\n' "$GREEN" "$RESET"
+else
+  printf '%sSome checks failed (exit %s): see %s%s\n' "$RED" "$status" "$LOG" "$RESET"
+fi
+exit "$status"
