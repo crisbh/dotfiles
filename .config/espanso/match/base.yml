@@ -1,0 +1,40 @@
+# Personal details and dates. Every .yml in this folder is loaded.
+# The email snippet lives in personal.yml next to this file, which is not
+# committed (the repo is public); create it on each machine:
+#
+#   matches:
+#     - trigger: ":mail"
+#       replace: "you@example.com"
+#
+# Triggers must not be prefixes of each other: espanso expands as soon as one
+# matches.
+# yaml-language-server: $schema=https://raw.githubusercontent.com/espanso/espanso/dev/schemas/match.schema.json
+
+matches:
+  - trigger: ":name"
+    replace: "Cristian Barrera Hinojosa"
+
+  # ISO dates, the format the diary uses
+  - trigger: ":date"
+    replace: "{{date}}"
+    vars:
+      - name: date
+        type: date
+        params:
+          format: "%Y-%m-%d"
+
+  - trigger: ":time"
+    replace: "{{time}}"
+    vars:
+      - name: time
+        type: date
+        params:
+          format: "%H:%M"
+
+  - trigger: ":now"
+    replace: "{{now}}"
+    vars:
+      - name: now
+        type: date
+        params:
+          format: "%Y-%m-%d %H:%M"

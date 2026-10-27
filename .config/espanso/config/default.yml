@@ -1,0 +1,9 @@
+# espanso configuration, shared by every machine (stowed to ~/.config/espanso).
+# Snippets are in ../match/. Options: https://espanso.org/docs/configuration/options/
+# yaml-language-server: $schema=https://raw.githubusercontent.com/espanso/espanso/dev/schemas/config.schema.json
+
+# ALT+SPACE opens the search bar to find a snippet by name
+search_shortcut: ALT+SPACE
+
+# No popup on every start and config reload
+show_notifications: false
