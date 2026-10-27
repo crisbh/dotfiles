@@ -92,7 +92,7 @@ echo "$out"
 check "second run finds everything stowed" 'grep -q "already stowed" <<<"$out"'
 
 echo "==== interactive zsh"
-out=$(in_pty 'timeout 300 zsh -ic "print VAULT=\$VAULT; whence -p todo repos dotfiles-doctor"; echo "exit=$?"')
+out=$(in_pty 'timeout --foreground 300 zsh -ic "print VAULT=\$VAULT; whence -p todo repos dotfiles-doctor"; echo "exit=$?"')
 echo "$out"
 check "zsh starts" 'grep -q "^exit=0" <<<"$out"'
 check "\$VAULT is set" 'grep -q "^VAULT=$HOME/notes" <<<"$out"'
@@ -107,7 +107,8 @@ echo "==== neovim"
 timeout 900 nvim -n --headless "+Lazy! sync" +qa >/dev/null 2>&1
 out=$(nvim -n --headless +'lua io.write(#require("lazy").plugins())' +qa 2>&1)
 echo "plugins: $out"
-check "Neovim loads its plugins" '[[ $out =~ ^[0-9]+$ && $out -gt 0 ]]'
+# plugins may print after the count (copilot.lua downloading its server)
+check "Neovim loads its plugins" '[[ $out =~ ^([0-9]+) && ${BASH_REMATCH[1]} -gt 0 ]]'
 
 echo "==== python tests"
 check "python tests pass" '(cd ~/.dotfiles/scripts/tests && python3 -m unittest 2>&1 | tail -3)'
