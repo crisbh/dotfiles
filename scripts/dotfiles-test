@@ -72,7 +72,7 @@ fail() { echo "RESULT ❌ $1"; failed=1; }
 check() { if eval "$2"; then pass "$1"; else fail "$1"; fi; }
 # install.sh tees to /dev/tty and sudo reads the terminal: give it a pty and
 # pipe the answers straight into install.sh
-in_pty() { script -qec "$1" /dev/null 2>&1 | sed -E 's/\x1b\[[0-9;?]*[A-Za-z]//g; s/\r//g'; }
+in_pty() { script -qec "$1" /dev/null 2>&1 | sed -E 's/\x1b\[[0-9;? ]*[A-Za-z]//g; s/\r//g'; }
 
 cd ~ && git clone -q /src ~/.dotfiles && git -C ~/.dotfiles log --oneline -1
 cd ~/.dotfiles
