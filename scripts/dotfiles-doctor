@@ -92,6 +92,12 @@ case ":$PATH:" in
   *":$DOT/scripts:"* | *":$HOME/scripts:"*) ok "scripts/ is on \$PATH" ;;
   *) bad "scripts/ is not on \$PATH" ;;
 esac
+# Identity is per machine, so .gitconfig leaves it to ~/.gitconfig.local
+if email=$(git config user.email); then
+  ok "git user.email=$email"
+else
+  meh "git user.email is not set: put [user] in ~/.gitconfig.local"
+fi
 
 # ── Stow links ────────────────────────────────────────────────────────────────
 section "Stow links"

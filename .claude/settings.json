@@ -1,5 +1,9 @@
 {
-  "model": "opus",
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
+  "model": "opus[1m]",
   "hooks": {
     "SessionStart": [
       {
@@ -67,10 +71,6 @@
     }
   },
   "tui": "fullscreen",
-  "theme": "dark",
-  "agentPushNotifEnabled": true,
-  "attribution": {
-    "commit": "",
-    "pr": ""
-  }
+  "theme": "auto",
+  "agentPushNotifEnabled": true
 }
