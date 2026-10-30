@@ -2,7 +2,6 @@
 # installing or removing something, run `brew bundle dump --force --no-describe`
 # to a scratch file and copy the relevant lines here (see AGENTS.md). Leave out
 # per-machine state such as `link: false`, and mark every tap `trusted: true`.
-tap "0xjemm/youtube-music-macos", trusted: true
 tap "espanso/espanso", trusted: true
 tap "felixkratz/formulae", "https://github.com/FelixKratz/homebrew-formulae", trusted: true
 tap "gromgit/brewtils", trusted: true
@@ -105,7 +104,6 @@ cask "skim"
 cask "tabula"
 cask "visual-studio-code"
 cask "wezterm"
-cask "youtube-music"
 cask "zen"
 cargo "cargo-update"
 npm "@mermaid-js/mermaid-cli"
