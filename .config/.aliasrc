@@ -11,7 +11,7 @@ alias gP="git push"
 alias s="git status"
 
 # git custom scripts
-alias cm="commit"
+alias com="commit"
 alias pu="push"
 
 # Shortcuts
