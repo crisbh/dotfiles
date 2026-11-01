@@ -6,6 +6,7 @@
 # Usage:
 #   bash install.sh            # install packages (prompted) + stow
 #   bash install.sh --no-pkgs  # skip package install, just stow
+#   bash install.sh --yes      # answer yes to every prompt (with --no-pkgs: stow only)
 #
 # Fedora note: the Obsidian vault is not on iCloud there. Clone it once with
 #   git clone <your-vault-repo> ~/notes
@@ -17,6 +18,31 @@ set -u
 TARGET_DIR="$HOME"
 SOURCE_DIR="."
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# stow deploys SOURCE_DIR, so run from the repo whatever the caller's directory
+cd "$DIR" || exit 1
+
+PKGS=1 YES=0
+for arg in "$@"; do
+	case "$arg" in
+		--no-pkgs) PKGS=0 ;;
+		--yes | -y) YES=1 ;;
+		*)
+			echo "Unknown argument: $arg (see the header of install.sh)"
+			exit 2
+			;;
+	esac
+done
+
+# ask "<question>" — true on y/Y; with --yes, true without asking
+ask() {
+	local answer
+	if [[ $YES -eq 1 ]]; then
+		echo "$1 (y/n): y"
+		return 0
+	fi
+	read -rp "$1 (y/n): " answer
+	[[ "$answer" =~ ^[Yy]$ ]]
+}
 
 # --- Detect OS ---
 case "$(uname -s)" in
@@ -86,9 +112,8 @@ install_packages() {
 	fi
 }
 
-if [[ "${1:-}" != "--no-pkgs" ]]; then
-	read -p "Install packages for $OS? (y/n): " PKG_CONFIRM
-	if [[ "$PKG_CONFIRM" =~ ^[Yy]$ ]]; then
+if [[ $PKGS -eq 1 ]]; then
+	if ask "Install packages for $OS?"; then
 		install_packages
 	else
 		echo "Skipping package install."
@@ -113,8 +138,7 @@ prepare_claude_dir() {
 		echo "Quit every Claude Code session, then re-run to move it out."
 		return 1
 	fi
-	read -rp "Move it to a real ~/.claude? (y/n): " CLAUDE_CONFIRM
-	[[ "$CLAUDE_CONFIRM" =~ ^[Yy]$ ]] || return 1
+	ask "Move it to a real ~/.claude?" || return 1
 
 	rm "$home_dir" && mkdir "$home_dir" || return 1
 	# Everything except the tracked files moves; stow links those back in
@@ -159,13 +183,13 @@ if [[ $DRY_RUN_STATUS -ne 0 ]]; then
 elif ! grep -qE '^(LINK|UNLINK|MKDIR|RMDIR):' <<<"$DRY_RUN_OUTPUT"; then
 	echo "Everything is already stowed."
 else
-	read -p "Proceed with stow deployment? (y/n): " CONFIRMATION
-
-	if [[ "$CONFIRMATION" =~ ^[Yy]$ ]]; then
+	if ask "Proceed with stow deployment?"; then
 		echo "Deploying configuration files..."
 		stow --target "$TARGET_DIR" "$SOURCE_DIR"
 		echo "Installation complete! In tmux, press prefix + I to install the plugins."
 	else
 		echo "Installation canceled."
+		exit 1
 	fi
 fi
+echo "Cron: \`$DIR/scripts/dotfiles-cron --install\` installs crontab.in for this machine."

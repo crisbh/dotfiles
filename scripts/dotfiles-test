@@ -70,15 +70,14 @@ failed=0
 pass() { echo "RESULT ✅ $1"; }
 fail() { echo "RESULT ❌ $1"; failed=1; }
 check() { if eval "$2"; then pass "$1"; else fail "$1"; fi; }
-# install.sh tees to /dev/tty and sudo reads the terminal: give it a pty and
-# pipe the answers straight into install.sh
+# interactive zsh wants a terminal
 in_pty() { script -qec "$1" /dev/null 2>&1 | sed -E 's/\x1b\[[0-9;? ]*[A-Za-z]//g; s/\r//g'; }
 
 cd ~ && git clone -q /src ~/.dotfiles && git -C ~/.dotfiles log --oneline -1
 cd ~/.dotfiles
 
 echo "==== install.sh"
-out=$(in_pty 'printf "y\\ny\\n" | bash install.sh; echo "exit=$?"')
+out=$(bash install.sh --yes 2>&1; echo "exit=$?")
 echo "$out"
 check "install.sh exits 0" 'grep -q "^exit=0" <<<"$out"'
 check "install.sh deploys" 'grep -q "Installation complete" <<<"$out"'
@@ -87,7 +86,7 @@ for d in .claude .config .ssh .tmux .tmux/plugins; do
 done
 
 echo "==== install.sh again"
-out=$(in_pty 'printf "n\\n" | bash install.sh; echo "exit=$?"')
+out=$(bash install.sh --no-pkgs --yes 2>&1; echo "exit=$?")
 echo "$out"
 check "second run finds everything stowed" 'grep -q "already stowed" <<<"$out"'
 
