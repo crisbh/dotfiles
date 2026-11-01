@@ -34,7 +34,10 @@ git clone git@github.com:crisbh/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 bash install.sh            # install packages (asks first), then deploy
 bash install.sh --no-pkgs  # only deploy
+bash install.sh --yes      # answer yes to every prompt
 ```
+
+After pulling changes (or merging a PR), `dotfiles-update` does the rest on each machine: it pulls `main`, re-stows, installs the crontab rendered from `crontab.in`, reloads tmux and runs `dotfiles-doctor`.
 
 Packages come from the `Brewfile` on macOS and `packages-fedora.txt` on Fedora. Deployment uses [GNU stow](https://www.gnu.org/software/stow/): the repo mirrors the layout of `$HOME`, and every file not listed in `.stow-local-ignore` is symlinked into place (the script shows a dry run before changing anything). To deploy by hand instead:
 
