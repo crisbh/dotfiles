@@ -17,7 +17,7 @@ The dotfiles I use on my own machines, macOS and Fedora, aimed at a smooth termi
 | | |
 |---|---|
 | Shell | `zsh` (plugins via zinit, aliases in `.config/.aliasrc`) |
-| Terminal | `wezterm` (also configs for `kitty`) |
+| Terminal | `wezterm` |
 | Editor | `neovim` |
 | Session manager | `tmux` |
 | PDF reader | `zathura` |

@@ -92,7 +92,6 @@ cask "git-credential-manager"
 cask "hiddenbar"
 cask "iterm2"
 cask "sozercan/repo/kaset", trusted: true
-cask "kitty"
 cask "libcblite"
 cask "mactex-no-gui"
 cask "macvim-app"

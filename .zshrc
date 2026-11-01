@@ -160,13 +160,8 @@ export MANPAGER="less -R --use-color -Dd+g -Du+b"
 # Aliases
 # --------------------------------------------
 
-# Load aliases and shortcuts if existent.
+# Load aliases, shortcuts and functions if existent.
 [ -f "$HOME/.config/.aliasrc" ] && source "$HOME/.config/.aliasrc"
-
-# --------------------------------------------
-# Load custom functions
-# --------------------------------------------
-[ -f "$HOME/.bash_functions" ] && source "$HOME/.bash_functions"
 
 # --------------------------------------------
 # Key bindings
