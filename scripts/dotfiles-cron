@@ -40,12 +40,12 @@ render() {
   shopt -u patsub_replacement 2>/dev/null || true
   if [[ "$DOTFILES_OS" == macos ]]; then
     local brew="${BREW_PREFIX:-$(brew --prefix 2>/dev/null || echo /opt/homebrew)}"
-    path="$brew/bin:$brew/sbin:/usr/local/bin:/usr/bin:/bin:$DOT/scripts"
+    path="$HOME/.local/bin:$brew/bin:$brew/sbin:/usr/local/bin:/usr/bin:/bin:$DOT/scripts"
     vault="${VAULT:-$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/kosmos}"
     bash="$brew/bin/bash"
     owner="test -f ~/.vault-owner && "
   else
-    path="/usr/local/bin:/usr/bin:/bin:$DOT/scripts"
+    path="$HOME/.local/bin:/usr/local/bin:/usr/bin:/bin:$DOT/scripts"
     vault="${VAULT:-$HOME/notes}"
     bash="/usr/bin/env bash"
     owner=""

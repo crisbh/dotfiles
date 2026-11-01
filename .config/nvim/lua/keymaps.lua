@@ -94,7 +94,13 @@ vim.keymap.set(
 -- Reports a failed or unstartable job instead of letting it vanish silently.
 local function run_script(name, opts)
   opts = opts or {}
-  local cmd = { os.getenv("HOME") .. "/.dotfiles/scripts/" .. name }
+  -- vault-tools commands live in ~/.local/bin, the old names in the dotfiles' scripts/
+  local exe = vim.fn.exepath(name)
+  if exe == "" then
+    vim.notify(name .. " not found on PATH (is vault-tools installed?)", vim.log.levels.ERROR)
+    return
+  end
+  local cmd = { exe }
   for _, arg in ipairs(opts.args or {}) do
     table.insert(cmd, arg)
   end

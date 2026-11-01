@@ -5,8 +5,9 @@ from __future__ import annotations
 import importlib.machinery
 import importlib.util
 import unittest
+from pathlib import Path
 
-from fixture import TESTS
+TESTS = Path(__file__).resolve().parent
 
 _loader = importlib.machinery.SourceFileLoader("arxiv2bib", str(TESTS.parent / "arxiv2bib"))
 _spec = importlib.util.spec_from_loader("arxiv2bib", _loader)

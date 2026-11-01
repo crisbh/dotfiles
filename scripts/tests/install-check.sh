@@ -50,7 +50,7 @@ echo "$out"
 check "second run finds everything stowed" 'grep -q "already stowed" <<<"$out"'
 
 echo "==== interactive zsh"
-out=$(in_pty 'timeout --foreground 300 zsh -ic "print VAULT=\$VAULT; whence -p todo repos dotfiles-doctor"; echo "exit=$?"')
+out=$(in_pty 'timeout --foreground 300 zsh -ic "print VAULT=\$VAULT; whence -p repos dotfiles-doctor"; echo "exit=$?"')
 echo "$out"
 check "zsh starts" 'grep -q "^exit=0" <<<"$out"'
 check "\$VAULT is set" 'grep -q "^VAULT=$HOME/notes" <<<"$out"'

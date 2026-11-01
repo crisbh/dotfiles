@@ -19,6 +19,9 @@ else
 fi
 export RED GREEN YELLOW BOLD RESET
 
+# The task pipeline and vault tools (todo, vault, vault-sync, day, zet, note)
+export VAULT_TOOLS_URL="git+ssh://git@github.com/crisbh/vault-tools.git"
+
 # die "<message>" — print an error to stderr and exit 1
 die() {
   printf '%s❌ %s%s\n' "$RED" "$*" "$RESET" >&2

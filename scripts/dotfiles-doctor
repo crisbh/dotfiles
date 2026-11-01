@@ -72,7 +72,7 @@ fi
 
 if have python3; then
   py=$(python3 -c 'import sys; print("%d.%d" % sys.version_info[:2])')
-  if version_ge "$py" 3.9; then ok "python3 $py (scripts need 3.9+)"; else bad "python3 $py is too old: todo, vault and arxiv2bib need 3.9+"; fi
+  if version_ge "$py" 3.9; then ok "python3 $py (scripts need 3.9+)"; else bad "python3 $py is too old: arxiv2bib needs 3.9+"; fi
 fi
 if have nvim; then
   nv=$(nvim --version | head -1 | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?')
@@ -91,6 +91,16 @@ fi
 case ":$PATH:" in
   *":$DOT/scripts:"* | *":$HOME/scripts:"*) ok "scripts/ is on \$PATH" ;;
   *) bad "scripts/ is not on \$PATH" ;;
+esac
+# todo, vault, vault-sync, day, zet and note come from vault-tools, a uv tool
+if have todo && have vault-sync; then
+  ok "vault-tools: $(command -v todo)"
+else
+  meh "vault-tools is not installed (todo, vault, vault-sync, day, zet, note): uv tool install $VAULT_TOOLS_URL"
+fi
+case ":$PATH:" in
+  *":$HOME/.local/bin:"*) ;;
+  *) meh "$HOME/.local/bin is not on \$PATH (uv tools such as vault-tools)" ;;
 esac
 # Identity is per machine, so .gitconfig leaves it to ~/.gitconfig.local
 if email=$(git config user.email); then

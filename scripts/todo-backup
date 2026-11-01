@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# todo-backup: kept for cron jobs, Neovim keymaps and muscle memory;
-# same as `todo backup` (see `todo --help`).
+# todo-backup: kept for Neovim keymaps and muscle memory;
+# same as `todo backup` (vault-tools; see `todo --help`).
 
-exec "$(dirname "$(readlink -f "$0")")/todo" "backup" "$@"
+exec todo "backup" "$@"

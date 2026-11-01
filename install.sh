@@ -84,6 +84,20 @@ brew_repair() {
 	fi
 }
 
+# --- vault-tools: todo, vault, vault-sync, day, zet, note (a uv tool) ---
+VAULT_TOOLS_URL="git+ssh://git@github.com/crisbh/vault-tools.git"
+install_vault_tools() {
+	if ! command -v uv >/dev/null 2>&1; then
+		echo "uv not found: skipping vault-tools (install uv, then run \`uv tool install $VAULT_TOOLS_URL\`)."
+		return 1
+	fi
+	# Batch mode: fail instead of prompting when this machine has no SSH key for GitHub yet
+	GIT_SSH_COMMAND="ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new" uv tool install "$VAULT_TOOLS_URL" || {
+		echo "Could not install vault-tools (it needs an SSH key for GitHub): run \`uv tool install $VAULT_TOOLS_URL\` later."
+		return 1
+	}
+}
+
 # --- Install packages ---
 install_packages() {
 	if [[ "$OS" == macos ]]; then
@@ -115,6 +129,7 @@ install_packages() {
 if [[ $PKGS -eq 1 ]]; then
 	if ask "Install packages for $OS?"; then
 		install_packages
+		install_vault_tools
 	else
 		echo "Skipping package install."
 	fi

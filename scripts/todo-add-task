@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# todo-add-task: kept for cron jobs, Neovim keymaps and muscle memory;
-# same as `todo open` (see `todo --help`).
+# todo-add-task: kept for Neovim keymaps and muscle memory;
+# same as `todo open` (vault-tools; see `todo --help`).
 
-exec "$(dirname "$(readlink -f "$0")")/todo" "open" "$@"
+exec todo "open" "$@"

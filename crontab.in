@@ -2,7 +2,8 @@
 # never with `crontab` directly: dotfiles-cron fills in the {{...}} placeholders
 # for this machine and keeps lines prefixed with `macos:` or `linux:` only on
 # that OS. Scripts run from cron cannot have a .* extension (no .sh), or they
-# fail to run.
+# fail to run. todo and vault-sync come from vault-tools (uv tool install, in
+# ~/.local/bin).
 #
 # The Macs share the vault through iCloud, so the task jobs and vault-sync run
 # only on the Mac that has ~/.vault-owner (`touch ~/.vault-owner` on exactly one
@@ -19,18 +20,18 @@ macos:# Daily APOD wallpaper (~/.APOD_Mac_Daily is not in the dotfiles)
 macos:0 10 * * * test -x ~/.APOD_Mac_Daily/apod_daily && ~/.APOD_Mac_Daily/apod_daily
 
 macos:# Back up todo.md and active.md (rolling, keeps last 10 copies each)
-macos:0 9 * * * {{OWNER}}{{BASH}} {{SCRIPTS}}/todo-backup
+macos:0 9 * * * {{OWNER}}todo backup
 
 macos:# Move done tasks to done.md
-macos:0 10 * * * {{OWNER}}{{BASH}} {{SCRIPTS}}/todo-mark-done
-macos:0 18 * * * {{OWNER}}{{BASH}} {{SCRIPTS}}/todo-mark-done
+macos:0 10 * * * {{OWNER}}todo done
+macos:0 18 * * * {{OWNER}}todo done
 
 # Share 0-tasks, 0-zettelkasten and templates through GitHub, hourly: at :05 on
 # the Mac (clear of the todo jobs) and :35 on Fedora, so they never push at the
 # same minute
-macos:5 * * * * {{OWNER}}{{BASH}} {{SCRIPTS}}/vault-sync --auto >> /tmp/vault-sync.log 2>&1
-linux:35 * * * * {{BASH}} {{SCRIPTS}}/vault-sync --auto >> /tmp/vault-sync.log 2>&1
-@reboot sleep 60 && {{OWNER}}{{BASH}} {{SCRIPTS}}/vault-sync --auto >> /tmp/vault-sync.log 2>&1
+macos:5 * * * * {{OWNER}}vault-sync --auto >> /tmp/vault-sync.log 2>&1
+linux:35 * * * * vault-sync --auto >> /tmp/vault-sync.log 2>&1
+@reboot sleep 60 && {{OWNER}}vault-sync --auto >> /tmp/vault-sync.log 2>&1
 
 # Repositories with unsynced work: refresh the cache for tmux and new shells,
 # and notify at the usual ends of the day

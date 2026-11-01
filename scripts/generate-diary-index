@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# generate-diary-index: kept for cron jobs, Neovim keymaps and muscle memory;
-# same as `vault index` (see `vault --help`).
+# generate-diary-index: kept for Neovim keymaps and muscle memory;
+# same as `vault index` (vault-tools; see `vault --help`).
 
-exec "$(dirname "$(readlink -f "$0")")/vault" "index" "$@"
+exec vault "index" "$@"

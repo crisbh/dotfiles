@@ -38,7 +38,7 @@ alias vimwiki="cd $VAULT && nvim -c ':VimwikiIndex'"
 alias wiki="vimwiki"
 alias idea="zet idea"
 
-# `todo` (scripts/todo) opens the list when run without a subcommand
+# `todo` (vault-tools) opens the list when run without a subcommand
 alias pomo="todo-pomodoro"
 alias p="todo-pomodoro"
 alias pp="todo-pomodoro 2"

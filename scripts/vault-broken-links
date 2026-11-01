@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# vault-broken-links: kept for cron jobs, Neovim keymaps and muscle memory;
-# same as `vault links` (see `vault --help`).
+# vault-broken-links: kept for Neovim keymaps and muscle memory;
+# same as `vault links` (vault-tools; see `vault --help`).
 
-exec "$(dirname "$(readlink -f "$0")")/vault" "links" "$@"
+exec vault "links" "$@"

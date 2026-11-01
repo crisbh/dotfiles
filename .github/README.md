@@ -86,18 +86,18 @@ Everything in `scripts/` is on `PATH`. Run any of them with `--help` for details
 | `stage` | Pick changed files with fzf and stage or unstage them, with a diff preview. |
 | `wt` | Git worktrees, one tmux session each: pick, create, remove, and clean up after merged PRs. tmux: prefix `W`. |
 | `tp` | Open a project in its own tmux session. tmux: prefix `P`. |
-| `todo` | Task pipeline for the notes vault: collect tasks from daily notes, tag them, move finished ones to `done.md`, pomodoros. |
-| `vault` | Vault maintenance: stats, broken links, orphaned notes, keeping secrets out of git, and `vault sync` to back it up to GitHub. |
-| `day`, `zet`, `note` | Open today's diary note, open or create a zettelkasten note, append a quick timestamped note. |
+| `todo`, `vault`, `day`, `zet`, `note` | The notes vault's task pipeline and maintenance tools, from [vault-tools](https://github.com/crisbh/vault-tools) (installed by `install.sh` as a uv tool). The old names (`todo-collect`, `vault-ls`, ...) are wrappers here. |
 | `repos` | Every repo's sync state across machines: `repos` to start the day (fetch, fast-forward, vault sync), `repos --leave` before switching machines (lazygit in each repo with unpushed work). Reminders: tmux status bar, new shells, and notifications at 16:00 and 18:00. |
 | `sq` | Slurm jobs in a picker: follow output, cancel, check efficiency. |
 | `arxiv2bib` | Fetch BibTeX for arXiv ids or DOIs into a `.bib` file. |
 | `rerun` | Run a command again whenever a file in the repo (or matching `-g GLOB`) changes. |
 | `formatter` | Format every recognised file in a project (ruff, stylua, shfmt, clang-format). |
 | `dotfiles-doctor` | Check a machine against what the dotfiles expect. |
+| `dotfiles-update` | After pulling or merging: pull, upgrade vault-tools, re-stow, install the crontab, reload tmux, run the doctor. |
+| `dotfiles-cron` | Render `crontab.in` for this machine, diff it against the installed crontab, install it. |
 | `macos-defaults` | Apply the macOS settings the dotfiles expect (key repeat, screenshot folder). |
 
-The notes scripts expect `$VAULT` to point at the notes vault, which `.zshrc` sets per OS.
+The notes tools expect `$VAULT` to point at the notes vault, which `.zshrc` sets per OS.
 
 ## Development
 

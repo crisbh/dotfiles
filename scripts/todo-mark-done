@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# todo-mark-done: kept for cron jobs, Neovim keymaps and muscle memory;
-# same as `todo done` (see `todo --help`).
+# todo-mark-done: kept for Neovim keymaps and muscle memory;
+# same as `todo done` (vault-tools; see `todo --help`).
 
-exec "$(dirname "$(readlink -f "$0")")/todo" "done" "$@"
+exec todo "done" "$@"

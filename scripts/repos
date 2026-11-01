@@ -185,7 +185,11 @@ pull_clean() {
 run_vault_sync() {
   [[ -n "${VAULT:-}" ]] || return 0
   printf '\n%s== vault%s\n' "$BOLD" "$RESET"
-  "$DOT/scripts/vault-sync" --auto || warn "vault-sync failed (see above)"
+  if ! command -v vault-sync >/dev/null; then
+    warn "vault-sync not found: install vault-tools (see dotfiles-doctor)"
+    return 0
+  fi
+  vault-sync --auto || warn "vault-sync failed (see above)"
 }
 
 # Number of unsynced repositories in the cache, and their names

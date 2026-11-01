@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 #
-# dotfiles-update: bring this machine up to date with the dotfiles: pull, stow,
-# install the crontab, reload tmux, then run dotfiles-doctor.
+# dotfiles-update: bring this machine up to date with the dotfiles: pull,
+# upgrade vault-tools, stow, install the crontab, reload tmux, then run
+# dotfiles-doctor.
 #
 #   dotfiles-update         pull (fast-forward only), stow, crontab (asks first), doctor
 #   dotfiles-update --yes   install the crontab without asking
@@ -48,6 +49,16 @@ else
   if grep -qxE 'Brewfile|packages-fedora.txt' <<<"$changed"; then
     warn "The package list changed: run \`bash $DOT/install.sh\` to install packages."
   fi
+fi
+
+# ── vault-tools ───────────────────────────────────────────────────────────────
+step "vault-tools"
+if ! command -v uv >/dev/null; then
+  warn "uv is not installed, so vault-tools cannot be updated."
+elif uv tool list 2>/dev/null | grep -q '^vault-tools '; then
+  GIT_SSH_COMMAND="ssh -o BatchMode=yes" uv tool upgrade vault-tools || warn "Could not upgrade vault-tools."
+else
+  warn "vault-tools is not installed: uv tool install $VAULT_TOOLS_URL"
 fi
 
 # ── Stow ──────────────────────────────────────────────────────────────────────
