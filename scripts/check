@@ -27,9 +27,10 @@ case "${1:-}" in
 esac
 
 # Shell scripts are recognised by shebang; libraries and test scripts by their
-# .sh suffix
+# .sh suffix. grep exits 2 on the lib/ and tests/ directories, which under
+# set -e would end the list before the libraries.
 mapfile -t files < <(
-  grep -lE '^#!(/usr/bin/env bash|/bin/bash)' -- * 2>/dev/null
+  grep -lE '^#!(/usr/bin/env bash|/bin/bash)' -- * 2>/dev/null || true
   ls lib/*.sh tests/*.sh
 )
 

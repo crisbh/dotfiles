@@ -13,7 +13,7 @@
 if [[ -z "${DOTFILES_OS:-}" ]]; then
   case "$(uname -s)" in
     Darwin) DOTFILES_OS=macos ;;
-    *)      DOTFILES_OS=linux ;;
+    *) DOTFILES_OS=linux ;;
   esac
 fi
 
@@ -25,26 +25,28 @@ pdate() {
   local rel="$1" fmt="$2"
 
   if command -v gdate >/dev/null 2>&1; then
-    gdate -d "$rel" "$fmt"; return
+    gdate -d "$rel" "$fmt"
+    return
   fi
   if date -d "$rel" "$fmt" >/dev/null 2>&1; then
-    date -d "$rel" "$fmt"; return          # GNU date (Linux)
+    date -d "$rel" "$fmt"
+    return # GNU date (Linux)
   fi
 
   # BSD date (macOS without coreutils): translate to a -v adjustment.
   local adj=""
   case "$rel" in
-    today|now)  adj="" ;;
-    yesterday)  adj="-v-1d" ;;
-    tomorrow)   adj="-v+1d" ;;
+    today | now) adj="" ;;
+    yesterday) adj="-v-1d" ;;
+    tomorrow) adj="-v+1d" ;;
     *)
       if [[ "$rel" =~ ^([+-]?)([0-9]+)[[:space:]]*(day|days|week|weeks|month|months|year|years)$ ]]; then
         local sign="${BASH_REMATCH[1]:-+}" num="${BASH_REMATCH[2]}" unit="${BASH_REMATCH[3]}"
         case "$unit" in
-          day|days)     unit=d ;;
-          week|weeks)   unit=w ;;
-          month|months) unit=m ;;
-          year|years)   unit=y ;;
+          day | days) unit=d ;;
+          week | weeks) unit=w ;;
+          month | months) unit=m ;;
+          year | years) unit=y ;;
         esac
         adj="-v${sign}${num}${unit}"
       else
@@ -53,16 +55,16 @@ pdate() {
       fi
       ;;
   esac
-  date $adj "$fmt"
+  date ${adj:+"$adj"} "$fmt"
 }
 
 # psed_i <sed-args...> <file> — in-place sed that works on both GNU and BSD.
 #   psed_i 's/foo/bar/g' file
 psed_i() {
   if sed --version >/dev/null 2>&1; then
-    sed -i "$@"        # GNU sed (Linux)
+    sed -i "$@" # GNU sed (Linux)
   else
-    sed -i '' "$@"     # BSD sed (macOS)
+    sed -i '' "$@" # BSD sed (macOS)
   fi
 }
 
@@ -74,7 +76,8 @@ pnotify() {
   elif command -v notify-send >/dev/null 2>&1; then
     # cron jobs do not get the desktop session's bus address
     if [[ -z "${DBUS_SESSION_BUS_ADDRESS:-}" && -S "/run/user/$(id -u)/bus" ]]; then
-      export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u)/bus"
+      DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u)/bus"
+      export DBUS_SESSION_BUS_ADDRESS
     fi
     notify-send "$title" "$msg"
   fi
@@ -96,13 +99,13 @@ require_cmds() {
   local pkgs=()
   for c in "${missing[@]}"; do
     case "$c:$DOTFILES_OS" in
-      rg:*)             pkgs+=(ripgrep) ;;
-      fd:macos)         pkgs+=(fd) ;;
-      fd:linux)         pkgs+=(fd-find) ;;
-      timew:macos)      pkgs+=(timewarrior) ;;
-      timew:linux)      pkgs+=(timew) ;;
-      notify-send:*)    pkgs+=(libnotify) ;;
-      *)                pkgs+=("$c") ;;
+      rg:*) pkgs+=(ripgrep) ;;
+      fd:macos) pkgs+=(fd) ;;
+      fd:linux) pkgs+=(fd-find) ;;
+      timew:macos) pkgs+=(timewarrior) ;;
+      timew:linux) pkgs+=(timew) ;;
+      notify-send:*) pkgs+=(libnotify) ;;
+      *) pkgs+=("$c") ;;
     esac
   done
 
