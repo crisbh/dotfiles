@@ -147,20 +147,15 @@ fi
 
 # ── Cron ──────────────────────────────────────────────────────────────────────
 section "Cron jobs"
-current=$(crontab -l 2>/dev/null || true)
-# crontab-macos is installed on every Mac, crontab-fedora on Linux.
-if [[ "$DOTFILES_OS" == macos ]]; then cronfile="$DOT/crontab-macos"; else cronfile="$DOT/crontab-fedora"; fi
-if [[ -f "$cronfile" ]]; then
-  # Expected: the jobs in the crontab file that run dotfiles scripts
-  while IFS= read -r script; do
-    if grep -q "scripts/$script" <<<"$current"; then
-      ok "$script is scheduled"
-    else
-      meh "$script is not scheduled here (it is in $(basename "$cronfile"))"
-    fi
-  done < <(grep -oE 'scripts/[a-z-]+' "$cronfile" | sort -u | cut -d/ -f2)
+# The whole crontab must match crontab.in rendered for this machine, so an old
+# crontab that still runs some of the same scripts is caught too
+if [[ -z "$(crontab -l 2>/dev/null)" ]]; then
+  meh "no crontab on this machine (install it with dotfiles-cron --install)"
+elif changes=$("$DOT/scripts/dotfiles-cron" --diff 2>&1); then
+  ok "the crontab matches crontab.in"
+else
+  meh "the crontab differs from crontab.in in $(grep -cE '^[-+]([^-+]|$)' <<<"$changes") line(s): see dotfiles-cron --diff, fix with dotfiles-cron --install"
 fi
-[[ -n "$current" ]] || meh "no crontab on this machine"
 
 # ── Dotfiles repo ─────────────────────────────────────────────────────────────
 section "Dotfiles repo"

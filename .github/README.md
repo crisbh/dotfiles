@@ -55,12 +55,12 @@ It reports missing tools, broken symlinks, unstowed files, missing cron jobs and
 
 ### Another Mac
 
-The Macs share the Brewfile and `crontab-macos`, and see the same vault through iCloud. On the new Mac:
+The Macs share the Brewfile and the crontab (`crontab.in`), and see the same vault through iCloud. On the new Mac:
 
 1. Install the Xcode command line tools (`xcode-select --install`) and [Homebrew](https://brew.sh), and set up an SSH key for GitHub.
 2. Clone into `~/.dotfiles` (cron and the scripts expect that path) and run `bash install.sh`, then press prefix + `I` in tmux and open `nvim` once to install the plugins.
 3. Log in: `gh auth login`, `claude`, and git-credential-manager on first push.
-4. `macos-defaults`, then `crontab ~/.dotfiles/crontab-macos`. Do not create `~/.vault-owner`: only one Mac runs `vault-sync` and the task jobs on the iCloud vault, and that file marks it.
+4. `macos-defaults`, then `dotfiles-cron --install`. Do not create `~/.vault-owner`: only one Mac runs `vault-sync` and the task jobs on the iCloud vault, and that file marks it.
 5. Run `dotfiles-doctor`.
 
 ## Neovim

@@ -1,5 +1,4 @@
-crontab-macos
-crontab-fedora
+crontab.in
 install.sh
 
 # Repo docs / package manifests — not deployed to $HOME

@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+#
+# dotfiles-cron: render crontab.in for this machine, compare it with the
+# installed crontab, and install it.
+#
+#   dotfiles-cron                   print the crontab for this machine
+#   dotfiles-cron --diff            show how the installed crontab differs; exits 1 if it does
+#   dotfiles-cron --install [--yes] show the diff, then install (--yes: without asking)
+#
+# Placeholders: {{PATH}}, {{VAULT}}, {{SCRIPTS}}, {{BASH}} and {{OWNER}} (the
+# ~/.vault-owner test on macOS, empty on Linux). Lines starting with `macos:` or
+# `linux:` are kept, without the prefix, only on that OS. $VAULT, $BREW_PREFIX
+# and $DOTFILES_OS override what is detected.
+
+set -euo pipefail
+
+# shellcheck source=lib/common.sh
+source "${DOTFILES:-$HOME/.dotfiles}/scripts/lib/common.sh"
+
+DOT="${DOTFILES:-$HOME/.dotfiles}"
+TEMPLATE="$DOT/crontab.in"
+
+mode="print" yes=0
+for arg in "$@"; do
+  case "$arg" in
+    --diff) mode="diff" ;;
+    --install) mode="install" ;;
+    --yes | -y) yes=1 ;;
+    -h | --help)
+      usage
+      exit 0
+      ;;
+    *) die "Unknown argument: $arg" ;;
+  esac
+done
+
+render() {
+  local path vault bash owner line prev=x
+  # bash 5.2+ would read `&` in a replacement as the matched text (the && in owner)
+  shopt -u patsub_replacement 2>/dev/null || true
+  if [[ "$DOTFILES_OS" == macos ]]; then
+    local brew="${BREW_PREFIX:-$(brew --prefix 2>/dev/null || echo /opt/homebrew)}"
+    path="$brew/bin:$brew/sbin:/usr/local/bin:/usr/bin:/bin:$DOT/scripts"
+    vault="${VAULT:-$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/kosmos}"
+    bash="$brew/bin/bash"
+    owner="test -f ~/.vault-owner && "
+  else
+    path="/usr/local/bin:/usr/bin:/bin:$DOT/scripts"
+    vault="${VAULT:-$HOME/notes}"
+    bash="/usr/bin/env bash"
+    owner=""
+  fi
+
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    case "$line" in
+      "$DOTFILES_OS:"*) line="${line#*:}" ;;
+      macos:* | linux:*) continue ;;
+    esac
+    line="${line//\{\{PATH\}\}/$path}"
+    line="${line//\{\{VAULT\}\}/$vault}"
+    line="${line//\{\{SCRIPTS\}\}/$DOT/scripts}"
+    line="${line//\{\{BASH\}\}/$bash}"
+    line="${line//\{\{OWNER\}\}/$owner}"
+    # skipped lines of the other OS would leave runs of blank lines
+    [[ -z "$line" && -z "$prev" ]] && continue
+    printf '%s\n' "$line"
+    prev=$line
+  done <"$TEMPLATE"
+}
+
+[[ -f "$TEMPLATE" ]] || die "No template at $TEMPLATE"
+wanted=$(render)
+[[ $mode == print ]] && {
+  printf '%s\n' "$wanted"
+  exit 0
+}
+
+installed=$(crontab -l 2>/dev/null || true)
+if [[ "$installed" == "$wanted" ]]; then
+  echo "The installed crontab matches crontab.in."
+  exit 0
+fi
+
+diff -u --label installed --label crontab.in <(printf '%s\n' "$installed") <(printf '%s\n' "$wanted") || true
+[[ $mode == diff ]] && exit 1
+
+if [[ $yes -eq 1 ]] || confirm "Install this crontab?"; then
+  printf '%s\n' "$wanted" | crontab -
+  echo "Installed the crontab."
+else
+  echo "Left the crontab as it is."
+  exit 1
+fi
