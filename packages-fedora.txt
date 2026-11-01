@@ -2,10 +2,12 @@
 # Installed by install.sh:  sudo dnf install -y $(grep -vE '^#|^$' packages-fedora.txt)
 # zsh plugins + powerlevel10k are managed by zinit (see .zshrc), so not listed here.
 
-# --- Essentials the dotfiles depend on (jq: Claude Code hooks) ---
+# --- Essentials the dotfiles depend on (jq: Claude Code hooks; gitleaks: the
+# pre-commit hook's secret scan) ---
 stow
 zsh
 git
+gitleaks
 tmux
 jq
 

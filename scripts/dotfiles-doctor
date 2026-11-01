@@ -52,6 +52,7 @@ done
 if [[ "$DOTFILES_OS" == linux ]]; then
   if have notify-send; then ok "notify-send"; else meh "notify-send is missing (pomodoro notifications)"; fi
 fi
+if have gitleaks; then ok "gitleaks"; else meh "gitleaks is missing: the pre-commit hook cannot scan commits for secrets"; fi
 for cmd in shellcheck shfmt ruff stylua; do
   if have "$cmd" mason; then ok "$cmd"; else meh "$cmd is missing (scripts/check, formatting); install it with :Mason"; fi
 done

@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+#
+# pre-commit: scan the staged changes for secrets (keys, tokens, passwords)
+# with gitleaks, then run the repository's own pre-commit hook.
+#
+# Installed for every repository by core.hooksPath in ~/.gitconfig, like
+# commit-msg. Without gitleaks it only warns. A false positive goes in the
+# repository's .gitleaksignore (the fingerprint gitleaks prints); `git commit
+# --no-verify` skips the hook once.
+
+set -euo pipefail
+
+if command -v gitleaks >/dev/null 2>&1; then
+  if ! gitleaks git --pre-commit --staged --redact --no-banner --verbose --log-level warn; then
+    echo "pre-commit: gitleaks found what looks like a secret in the staged changes (above)." >&2
+    echo "Unstage it, or add its fingerprint to .gitleaksignore if it is not a secret." >&2
+    exit 1
+  fi
+else
+  echo "pre-commit: gitleaks is not installed, so staged changes were not scanned for secrets." >&2
+fi
+
+local_hook="$(git rev-parse --git-common-dir)/hooks/pre-commit"
+if [[ -x "$local_hook" ]]; then
+  exec "$local_hook" "$@"
+fi
