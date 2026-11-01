@@ -34,8 +34,8 @@ alias tma="tmux a"
 alias tms="tmux ls"
 
 # Vault and task system
-alias vimwiki="cd $VAULT && nvim -c ':VimwikiIndex'"
-alias wiki="vimwiki"
+# pick a note in the vault (vimwiki is gone; obsidian.nvim takes over in Markdown buffers)
+alias wiki='cd "$VAULT" && nvim -c "Telescope find_files"'
 alias idea="zet idea"
 
 # `todo` (scripts/todo) opens the list when run without a subcommand
