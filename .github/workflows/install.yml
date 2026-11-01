@@ -1,0 +1,47 @@
+# Install the dotfiles on a fresh Fedora container and check the result (the
+# same checks as dotfiles-test, without the Lima VM)
+name: install
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - install.sh
+      - packages-fedora.txt
+      - .stow-local-ignore
+      - .zshrc
+      - .zprofile
+      - .config/.aliasrc
+      - .tmux.conf
+      - ".config/nvim/**"
+      - scripts/dotfiles-doctor
+      - scripts/tests/install-check.sh
+      - .github/workflows/install.yml
+  pull_request:
+    paths:
+      - install.sh
+      - packages-fedora.txt
+      - .stow-local-ignore
+      - .zshrc
+      - .zprofile
+      - .config/.aliasrc
+      - .tmux.conf
+      - ".config/nvim/**"
+      - scripts/dotfiles-doctor
+      - scripts/tests/install-check.sh
+      - .github/workflows/install.yml
+  workflow_dispatch:
+
+jobs:
+  fedora:
+    runs-on: ubuntu-latest
+    container: registry.fedoraproject.org/fedora:latest
+    timeout-minutes: 30
+    steps:
+      # actions/checkout only makes a git repository when git is installed,
+      # and install-check.sh clones it
+      - name: Install git
+        run: dnf install -y -q git
+      - uses: actions/checkout@v4
+      - name: Install and check
+        run: bash scripts/tests/install-check.sh "$GITHUB_WORKSPACE"

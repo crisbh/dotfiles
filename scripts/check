@@ -26,10 +26,11 @@ case "${1:-}" in
     ;;
 esac
 
-# Shell scripts are recognised by shebang; libraries by their .sh suffix
+# Shell scripts are recognised by shebang; libraries and test scripts by their
+# .sh suffix
 mapfile -t files < <(
   grep -lE '^#!(/usr/bin/env bash|/bin/bash)' -- * 2>/dev/null
-  ls lib/*.sh
+  ls lib/*.sh tests/*.sh
 )
 
 failed=0
