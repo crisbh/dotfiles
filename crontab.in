@@ -8,9 +8,9 @@
 # only on the Mac that has ~/.vault-owner (`touch ~/.vault-owner` on exactly one
 # Mac); the OWNER placeholder is that test on macOS and empty on Linux. Running
 # them on two Macs would process done.md twice and run git on a .git directory
-# that iCloud is syncing. Fedora has no task jobs: vault-sync processes the tasks itself
-# after pulling (todo collect + todo done), and the vault owner's backups cover
-# the shared todo.md.
+# that iCloud is syncing. Fedora has no task jobs: vault-sync processes the
+# tasks itself after pulling (todo collect + todo done), and the vault owner's
+# backups cover the shared todo.md.
 
 PATH={{PATH}}
 VAULT="{{VAULT}}"
